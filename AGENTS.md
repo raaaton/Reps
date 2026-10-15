@@ -1,182 +1,49 @@
-# AGENTS.md
+# Sport — instructions du projet natif
 
-## Project
+## Produit et expérience
 
-Sport is a personal, offline-first iOS workout tracker built with React Native, Expo and TypeScript.
+Sport est une application personnelle iPhone, locale et hors ligne, en Swift/SwiftUI. La demande du 11 octobre 2026 remplace Expo/React Native/TypeScript, dont les instructions sont conservées dans docs/archive/AGENTS-expo.md.
 
-The primary target is iOS. Android compatibility is not a priority unless it comes for free without compromising the iOS experience.
+**Priorité permanente : l’expérience qu’aurait une app Apple dédiée à ce besoin.** Respecter au maximum les [Human Interface Guidelines Apple](https://developer.apple.com/design/human-interface-guidelines), référence explicite demandée par l’utilisateur. Consulter les chapitres concernés avant toute décision UI ; distinguer leurs recommandations des choix propres à Sport. Utiliser composants natifs, hiérarchie sobre et interactions familières. SwiftUI ne suffit pas : vérifier le résultat sur iPhone à chaque jalon. Respecter Dynamic Type, VoiceOver, zones sûres, apparences système, SF Symbols, gestes et transitions standard. Aucun faux verre, dégradé gratuit ou carte décorative répétée.
 
-## Core principles
+Évaluer les idées de manière critique ; signaler les solutions inutiles ou disproportionnées. Préserver vocabulaire et règles métier ; ne pas changer silencieusement le périmètre.
 
-1. Prefer native iOS behavior and appearance over generic React Native UI.
-2. Keep the application local-first and offline-first.
-3. Do not add a backend, authentication account, analytics, ads, or remote database unless explicitly requested.
-4. Prefer Expo APIs and existing platform capabilities before writing custom native code.
-5. Keep native iOS code isolated and minimal.
-6. Do not replace an existing architecture with a new library unless there is a concrete reason.
-7. Do not introduce dependencies for trivial problems.
-8. Do not create fake Liquid Glass effects when a native API is available.
-9. Preserve the user's existing workout model and terminology.
-10. Optimize for maintainability by an owner who knows TypeScript/React but is not a Swift expert.
+## Stack et environnement
 
-## iOS
+- Swift 6.4, SwiftUI, Swift Package Manager, xtool Linux ; iOS 26 minimum.
+- Reprendre le vrai squelette retrouvé dans ~/Documents/Code/iOS/HelloSport. Conserver son source local et ses caches.
+- Conserver/adopter Package.swift, xtool.yml et Sources/. Pas de projet Xcode comme build principal, npm, Expo, React Native, CocoaPods, CI macOS ou SideStore.
+- Utiliser le SDK déjà enregistré, sans réinstallation ; SDKSettings.json indique actuellement iPhoneOS 27.1.
+- Limiter les dépendances ; vérifier toute nouvelle dépendance contre le SDK et xtool.
+- Nom affiché Sport ; identifiant configuré stable com.raaaton.sport. Contrôler l’identifiant effectif après provisioning xtool.
+- Vues petites, organisation par fonctionnalité, logique hors des écrans, transitions explicites et concurrence Swift 6 maîtrisée.
 
-The application should feel like a modern native iOS application.
+## Travail par jalon
 
-Prefer:
+1. Lire les documents Sport et l’ExecPlan avant édition ; les validations historiques ne prouvent pas l’état Swift.
+2. Implémenter uniquement le jalon validé. Suivre .agents/PLANS.md ; nouveaux ExecPlans dans docs/exec-plans/, car .agents/ est en lecture seule dans ce workspace.
+3. Exécuter lint Swift, tests applicables et **xtool dev build**. Conserver les caches et rapporter les résultats réels.
+4. Avant installation, vérifier identité, capacités et effets de provisioning. **Avant la première installation Sport, demander confirmation de la suppression de HelloSport sur l’iPhone. Jamais de suppression de son code local.**
+5. Utiliser ~/omarchy-apple-dev/device-run.sh depuis Sport quand les conditions sont réunies. En cas d’erreur de signature/provisioning, arrêter et rapporter le message exact ; ne pas révoquer/remplacer certificats ou profils pour contourner l’erreur.
+6. Installer chaque build prête à tester sur l’iPhone avant de demander une review utilisateur (instruction explicite du 11 octobre 2026). L’autorisation de ce workflow persiste : ne pas redemander une permission d’installation à chaque jalon, sauf effet inattendu ou blocage de signature. Rapporter modifications, vérifications, limites et checklist appareil ; attendre le retour explicite sur iPhone avant le jalon suivant. Une compilation n’est pas une validation iPhone.
 
-* SF Symbols
-* native navigation
-* native sheets
-* native gestures
-* Dynamic Type
-* system typography
-* native haptics
-* Liquid Glass on supported iOS versions
-* platform conventions
+En mode auto_review, soumettre directement les escalades nécessaires au reviewer après un blocage réel du sandbox. Ne pas changer le mode de permission. Ne pas réinitialiser le dépôt, supprimer des données ou nettoyer les caches.
 
-Avoid:
+## Données et métier
 
-* web-like cards
-* excessive rounded rectangles
-* arbitrary gradients
-* fake glassmorphism
-* unnecessary shadows
-* custom controls that duplicate native iOS controls
+- SQLite sera la source de vérité ; migrations et transactions obligatoires. Aucun backend, compte, analytics, publicité ou dépendance aux apps Apple pour fonctionner.
+- Préserver l’historique après redémarrage et changements de planning/inventaire ; instantanés des charges/compositions.
+- Machine à états explicite : inactif, séance/série active, série terminée, repos, exercice terminé, séance terminée ou annulée. Annuler ne supprime pas les séries sauvegardées.
+- Repos par échéance absolue persistée, pause/reprise/skip et feedback ; exact malgré suspension. Les Live Activities reflètent cet état sans timer indépendant.
 
-## React / TypeScript
+## Confidentialité
 
-Use strict TypeScript.
-
-Prefer small components and feature-based organization.
-
-Avoid:
-
-* `any`
-* giant components
-* deeply nested prop drilling
-* duplicated business logic
-* unnecessary global state
-
-Keep business logic out of screen components when practical.
-
-## Data
-
-SQLite is the source of truth for workout data.
-
-Do not use Numbers, Apple Notes, or Apple Reminders as the internal database.
-
-External Apple integrations must never be required for the application to function.
-
-All database schema changes must have a migration.
-
-## Workout logic
-
-Workout state must be explicit and predictable.
-
-Do not implement the workout flow as a collection of unrelated booleans.
-
-The workout flow should distinguish:
-
-* idle
-* active workout
-* active set
-* completed set
-* resting
-* completed exercise
-* completed workout
-* cancelled workout
-
-## Timer
-
-The rest timer is a real application feature, not a wrapper around the system Timer app.
-
-The timer must support:
-
-* start
-* pause
-* resume
-* skip
-* cancel
-* completion feedback
-
-The timer must remain correct when the app changes state or moves into the background.
-
-## Progress photos
-
-Progress photos are highly private.
-
-Never store the main photo files unencrypted.
-
-Use:
-
-* AES-GCM encryption for vault files
-* a randomly generated encryption key
-* Keychain/SecureStore for the key
-* biometric authentication for key access
-* secure clearing of decrypted photo state when locking the vault
-
-Do not log:
-
-* encryption keys
-* photo paths
-* decrypted image data
-* biometric results
-
-Never put private progress photos in logs, crash messages, analytics, notifications, or screenshots generated by the application.
-
-## Security
-
-Do not implement cryptography manually.
-
-Use established platform or Expo cryptographic primitives.
-
-Security-sensitive changes require:
-
-1. implementation
-2. code review
-3. a clear test plan
-4. explicit manual testing on a physical iPhone
-
-## Testing
-
-Before considering a feature complete:
-
-* run TypeScript checks
-* run lint
-* run tests
-* manually test the feature on the iPhone when UI or platform behavior is involved
-
-Do not claim a feature is tested if only static analysis was performed.
-
-## Agent behavior
-
-Before implementing a large feature:
-
-1. inspect the relevant code
-2. read the relevant documentation
-3. identify existing patterns
-4. make the smallest coherent implementation
-5. test it
-6. report what changed and what remains unverified
-
-For significant features or refactors, use an ExecPlan described in `.agent/PLANS.md`.
-
-Do not perform unrelated refactors while implementing a feature.
-
-Do not silently change product requirements.
-
-When a requirement is ambiguous, choose the simplest behavior consistent with the existing product specification and document the assumption.
+- Aucun import de vraie photo avant un coffre sécurisé.
+- CryptoKit AES-GCM pour originaux et miniatures ; clé aléatoire dans le Keychain protégée par biométrie courante et cet appareil ; LocalAuthentication natif.
+- Aucun secret, chemin privé, image ou résultat biométrique dans les logs, notifications ou captures générées. Effacer l’état déchiffré au verrouillage. Ne jamais régénérer automatiquement une clé inaccessible.
+- Changements sécurité : implémentation, revue indépendante, tests documentés et validation physique iPhone obligatoires.
+- Prototype de toute API/extension incertaine avant intégration complète ; produits SwiftPM et configuration xtool/plist pour les extensions.
 
 ## Documentation
 
-Keep:
-
-* `docs/PROJECT.md` as the product specification
-* `docs/DESIGN.md` as the visual and interaction specification
-* `docs/SECURITY.md` as the security specification
-* `docs/ROADMAP.md` as the implementation roadmap
-* `.agent/PLANS.md` as the format for execution plans
-
-Update documentation when the implementation changes a documented behavior.
-Update the root `README.md` at the end of every major roadmap stage. Keep its shipped-feature summary, stage validation status, development commands, and outstanding manual checks current.
+PROJECT.md décrit le produit cible ; README et docs/ROADMAP.md décrivent ce qui est livré/validé. Maintenir docs/DESIGN.md, docs/SECURITY.md, docs/BUILD.md et l’ExecPlan. Actualiser README en fin de jalon. Les archives Expo sont conservées comme historique, jamais comme instructions de build courantes.

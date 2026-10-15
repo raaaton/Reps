@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+<!-- Phosphor-inspired barbell geometry adapted for overlapping glass layers; see Resources/IconSources. -->
+<g transform="rotate(-32 256 256)"><g transform="translate(128 128)" fill="url(#material)" fill-opacity="0.94" stroke="#EFFFFF" stroke-opacity="0.5" stroke-width="1.5">
+<rect x="56" y="48" width="48" height="160" rx="16"/>
+<rect x="152" y="48" width="48" height="160" rx="16"/>
+</g></g>
+<defs><linearGradient id="material" x1="72" y1="48" x2="184" y2="208" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A3F0F6"/><stop offset="0.48" stop-color="#4DD9E8"/><stop offset="1" stop-color="#22A4BB"/>
+</linearGradient></defs></svg>

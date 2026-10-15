@@ -1,0 +1,49 @@
+# Import/export entraînement — extension autorisée du jalon7
+
+## Objectif et spécification
+
+Demande explicite du12octobre : avancer maintenant import/export et fournir beaucoup de données CSV pour tester Progression. Exclusion impérative : aucune photo privée dans le CSV, avertissement visible à l’export. Cette extension ne valide pas automatiquement la recette iPhone du7 et ne commence ni coffre8 ni animations9. Le reste du10 demeure futur.
+
+Swift6.4/SwiftUI/SwiftPM/xtool Linux existant, iOS26+, même Sport/app-extension/certificat, zéro dépendance. Documentation Sport auditée précédemment dans cette conversation ; relire les sections import/export et les documents actualisés avant édition. Archives Expo historiques. Références HIG file-management/sheets et documentation Apple fileImporter/fileExporter consultées ; accès URL security-scoped borné à la lecture, sélecteurs système Fichiers. Exécution native directement demandée ; pas de nouvelle gate d’autorisation de conception des skills, pas de Git/worktree exploitable. Baseline Sources et tests /tmp/sport-import-before.
+
+Formats : JSON sport.training version1, données d’entraînement/configuration/objectifs/snapshots/préférences de rappels, manifest includesPrivatePhotos=false. Aucun média, clé, autorisation iOS ni vieux repos/LiveActivity. Export/import bloqué durant une séance active : demander terminer/abandonner, jamais tronquer une séance ni rejouer un timer. CSV Sport version1 UTF8/BOM/CRLF/virgule, une ligne par série avec métadonnées répétées ; rows exercise/workout pour préserver états vides. Instantanés/compositions conservés. Format documenté, pas de compatibilité Numbers arbitraire prétendue. Photos privées exclues et CSV n’est pas une sauvegarde des réglages.
+
+CSV import : aperçu, nombre ajouté/identique et conflits ; validation complète avant transaction, doublons identiques ignorés, IDs différents ou contenu contradictoire refusés sans écriture. Aucun catalogue/planning existant écrasé : définitions archivées dans historique. JSON restore : aperçu + alerte centrée explicite de remplacement de l’entraînement/configuration, sauvegarde précédente automatiquement conservée dans SQLite et exportable depuis Réglages. Permissions système jamais restaurées ; préférences de rappels conservées mais aucune permission demandée par import. Compare dataset original avant mutation pour refuser aperçu périmé. Migrations/backup/écritures transactionnelles, récupération conservée si rollback.
+
+Bornes :10MiB input,100000records/sets,10000workouts,1000exercices,7joursplanning ; validation champs/types/enums/dates Gregoriane/timestamps/métriques/Feeling/IDs/relations/compositions et objectifs figés. Décimales au millième pourkg/seconds etau dixième Feelings anciens ; pas de nombres flottants pour stockage. Noms avec virgules/guillemets/newlines Unicode roundtrip ; protection formules de tableur réversible pour texte CSV. Pas de logs de contenu personnel.
+
+## Plan et interfaces
+
+1. Tests domaine avant code : JSON/CSV roundtrip indépendant, v7 migration préservev6, CSV guillemets/CRLF/BOM/formulas, invalid/mode/date/dup/schema/private manifest ; imports atomic/nooverwrite/idempotence/stale/active/undo, objectifs/snapshots/préférences historiques.
+   Créer TrainingTransferModels.swift, TrainingTransferValidation.swift, TrainingCSV.swift, TrainingTransferRepository.swift. Codable des modèles existants ; migration7 import_recovery. APIs : exportTraining()->TrainingArchive ; previewTrainingImport(archive/records)->TrainingImportPreview(expected:TrainingDataSet) ; applyTrainingImport(preview)->counts ; recoveryArchive()->TrainingArchive?. Réutiliser transactions internes, pas d’appel repository public imbriquant transaction.
+2. Prototype FileDocument + fileImporter/fileExporter compilé avecxtool avant écran complet. Réglages→Données→exportCSV/JSON, importer→aperçu→confirmation ; copieavantimport exportable. Work viaTrainingStore et refresh notifications/activity existant après commit. Erreurs génériques, annulation sans écriture. CSV de test généré déterministe dans docs/fixtures et ressourceApp mêmeoctets ; compte/validation via vraisparseurs etstats hôte.
+3. Suite/lint/build, revue indépendante finale mandatée executing-plans, corrections importantes observées RED→GREEN. Version0.7.1(17), metadata→packaging→6tests/inspectionunsigned ; préflightUSBidentité/certificat→device-run.sh→postflight. README/ROADMAP/BUILD/DESIGN/SECURITY/PROJECT, formatCSV/fixture/recette à jour. Arrêt pour test iPhone.
+
+## Review focus
+
+- Fichier externe malformé/grand, clés/photos/version inconnues, collisions globalesID et SQLbound, Unicode/formules CSV ; aucune écriture partielle.
+- JSON réversible : définitions archivées/charges inconnues/objectifs obsolètes/notesexactes/séancesannulées, ordre stable du dataset et copie précédente récupérable.
+- Aperçu périmé/autreconnexionSQLite/doubletap/chronoactif : refus atomique sans reset ni replayLiveActivity.
+- Lectureurlscoped/annulation/grandfichier : aucun accès horsduréelocale ni contenu personnel logs ; FileDocument natif réellementcompilé.
+- Démonstrationexplicitementfictive et prévisualisée, vraieimportidempotente valide ; graphes/calendrier/menus accessibles et avertissementphotos à l’export.
+
+## Ledger
+
+- [x] Domaine/transferts/test
+- [x] Prototype/UI/CSV de test
+- [x] Revue/vérification/déploiement/docs
+- [ ] Recette iPhone
+
+Interfaces : Models/Validation → CSV et Repository ; Repository.preview(expecteddataset) → UIconfirm ; Repository.apply → refreshTrainingStore/notifications sanspermissions. restorebackup persistée dans même transaction que remplacement ; rollback conservaancienétat. Pas de données demo injectées automatiquement ou de remplacement sur appareil par l’agent.
+
+Domaine premierGREEN101tests sans échec (sport-transfer-first-green.log). Premier testAPIRED compilation sur APIsabsentes, pasREDcomportemental ; attentes des migrations existantes passent désormaisv7 en conservant assertions de données. Deux défauts reproduits comportementalement : CSVvide illisible et envelopephotos inconnu accepté (sport-transfer-edge-red.log), corrigés mais GREEN non exécuté. État annulé avec préparation/objectif/composition conservé observéGREEN dans ce runciblé ; pas de timerrejoué.
+Prototype FileDocument/importer/exporter : étapes Swift compilées, édition des liens bloquée « LLVM ERROR: IO failure on output stream: No space left on device », aucune compilation complète prétendue. / avait27Mo libres, utilisateur a libéré de l’espace :11Go constatés. Aucun cache supprimé par l’agent ; nouvelle autorisation utilisateur pour nettoyage futur ciblé, évitera effacement global contenantSDK.
+Revue indépendante statique :0Critical,3Important (taillefinale, amplificationCSVligne, date noncanonique). Tests ajoutés pour limites/dates/rollbackSQL et fixture117/752 ; corrections écrites : sérialisation finale avant mutation, JSONcompact, bornes de champs dèsparse, exportCSVincrémental, dates ASCIIYYYY-MM-DD. Impossible d’exécuter ces nouveaux tests : escalade rejetée parce que revue automatique atteint sa limite d’usage, nonjugement sécurité. Aucun contournement, pas de re-review. Lintstrict code0 sur dernières sources ; fixture validée indépendamment parPython117séances/752séries/copieidentique, parseurSwiftfixture encore non exécuté.
+Final:Ruling: éléments declined — compilation/concurrence/filepicker, Fichiers/VoiceOver/rendu nécessitentbuildpuisiPhone ; compatibilité Numbers réelle nonprétendue ; événements des repos terminés sont un état d’exécution, exclus du format sans perdre les séries. Coût : CSV/JSON ne transfèrent pas le journal de repos détaillé, et les APIUI ne sont pas encore entièrement liées/testées.
+Version préparée0.7.1(17), app encoreinstallée0.7.0(16), sans nouvellepermission/capacité/dependance. Blocageavanttestsfinaux/build/installation ; question de reprise ou commandes manuelles envoyée. Aucune confirmation du7déduite de l’extension demandée.
+
+Blocage de revue automatique levé lors d’une seule tentative normale après lecture du statut compte (ordinaryUsageAllowed true, quotas18%/3%). Aucun bypass ou changement depermissions. Heure de reset ducompte :13octobre01h23Paris (23h23UTC12oct), mais ce reset n’était pas nécessaire pour reprise.
+Suite finale107tests code0 : nouvelles régressions/fixture/récupérationSQL/limite/date et toutes précédentes. Les3findingimportants n’ont pas de runRED avantfix en raison de l’indisponibilitétemporaireservice ; corrections statiques couvertes parGREEN, nepas les présenter commeRED→GREEN observé. Les2correctionsCSVvide/unknownpayload ont bienRED observé avantfix puisGREENfinal. Pas de re-review. FileDocument/UI final xtoolcode0,16,66s ; ceci valide aussi la liaison duprototype aprèsdéblocage disque. Lintstrict code0. Datasetdemo valideavecparseurSwift117sessions752sets, roundtripréexport etstats/grille vérifiésparvraisdomaine. Sixmetadata code0,générationdepuisconstvaluesréels code0 ; empaquetage/inspection/déploiementen cours.
+
+Livraisoncomplete0.7.1(17) : générationmetadata code0 ; packaging2,18s code0 ;6tests metadata/inspectionunsigned code0. Le bundle réel embarque le CSVexact. PréflightUSB code0 :ancienne0.7.0 même identité etcertificatvalide>24h/présentchezApple. Scriptdevice-run code0,buildincrémental2,06s,installation/vérification100%. Postflightdirect code0 :0.7.1(17) sousmêmeidentité, uneextensionWidgetKit, deuxprofilsvalides/CMSvérifiés,mêmecertificatetlocalinchangé ; aucun AppGroup/push/permissionsensible/dépendance nouvelle.
+Sources/docs/format/fixture actualisés. Aucun import réel exécuté sur donnéespersonnelles par l’agent. Recette Fichiers/annuler/doublons/récupérationJSON/graphiques/notifications/LA/VoiceOver et Numbers laissée à l’utilisateur suriPhone. STOPavant8 ;7nonimplicitementvalidé.

@@ -1,71 +1,181 @@
+<p align="center">
+  <img src="docs/images/app-icon.png" width="120" height="120" alt="Sport app icon" />
+</p>
+
+<p align="center">
+  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Sport" />
+  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Sport" />
+  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Sport" />
+  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Sport" />
+</p>
+
 # Sport
 
-Sport est une application personnelle de suivi d'entraînement, conçue d'abord pour iOS avec React Native, Expo et TypeScript. Elle fonctionne localement et hors ligne : les séances et l'inventaire sont stockés dans SQLite, sans compte ni backend.
+**Sport** is a native, local-first iPhone workout app built for focused training, clear progression, and full ownership of your data.
 
-## État du projet
+It is written with **SwiftUI**, **SQLite**, and Apple system APIs. There is no account, backend, analytics, advertising, or in-app runtime network dependency.
 
-| Étape | État |
+Plan your workouts, prepare your added weight, follow each set, rest with Dynamic Island, and review your progress — all offline.
+
+---
+
+## Download
+
+Download **Sport-1.0.0.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+
+Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
+
+Requires **iOS 26.0 or later** on iPhone. Dynamic Island appears on supported devices; rest activities also work on the Lock Screen.
+
+A `SHA256SUMS.txt` file accompanies each release. See [building and distribution](docs/BUILD.md) for the exact workflow.
+
+---
+
+## Features
+
+### Plan and prepare
+
+- Create and edit workouts, choose their day, and order exercises.
+- Track repetitions or timed holds, including free-duration exercises.
+- Set precise repetition and added-weight goals.
+- Manage a weighted backpack and its available load combinations.
+- Review your goals and the actual items needed before starting.
+
+### Train with a clear flow
+
+- One warm-up movement derived from the first working exercise.
+- A full-target bodyweight warm-up for weighted goals, or two half-target sets for bodyweight goals.
+- Half rest between warm-up sets, followed by full rest before working sets.
+- A cancellable 3–2–1 countdown for timed holds.
+- Record completed repetitions, duration, added weight, and exercise effort (Feeling).
+- Correct a recorded set without restarting the rest timer.
+- Resume a workout after leaving the app.
+- Finish with one timed stretch movement, with its movement and target duration selected in preparation.
+- See the real total workout time, including rest and stretching.
+
+### Rest without watching the app
+
+- Persistent rest deadlines, pause, resume, and skip.
+- Live Activities on the Lock Screen and Dynamic Island.
+- Pause and resume directly from the activity.
+- Optional local workout and monthly photo reminders.
+
+### Understand your progress
+
+- Workout and exercise history, with manual entry and corrections.
+- Connected charts for workout volume, repetitions, added weight, and timed work.
+- Drag on charts to inspect individual sessions.
+- Period totals and a GitHub-style training activity grid.
+- Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
+- Suggestions never change your goals without your approval.
+- Warm-up and stretch results remain separate from working-set progression.
+
+### Keep photos private
+
+- A Face ID-protected progress-photo vault.
+- Encrypted originals and thumbnails using CryptoKit AES-GCM.
+- Immediate locking when leaving the vault or backgrounding the app, with its preview covered.
+- Date-based photo stacks and pose categories.
+- Compare matching poses, zoom, and switch between comparison photos.
+- Explicit photo export and confirmed deletion.
+
+The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable photo backup. Training CSV exports contain **no private photos or vault key**. See [security](docs/SECURITY.md).
+
+### Own your training data
+
+- **Import from Files** and **Export to Files**.
+- CSV preserves working sets, historical goals, and warm-up/stretch results.
+- Import replaces training history after preview and confirmation; it preserves your workout configuration.
+- Legacy Sport CSV files remain importable.
+
+---
+
+## Privacy by design
+
+- No account or server.
+- No analytics, advertising, tracking, or cloud database.
+- No application network requests.
+- No third-party runtime SDKs.
+- Local SQLite storage with transactional migrations.
+- Explicit camera, Face ID, and photo-export permissions.
+- Private photos excluded from training transfers and system backups.
+
+Sport itself does not upload your data or contact a server. Training data may be included in iOS device backups according to your system settings; the private vault is explicitly excluded. Exports and saving a photo to Photos are user-controlled. The source repository and release IPAs contain no on-device history, private photos, signing keys, or personal provisioning profiles.
+
+---
+
+## Design
+
+Sport favors native iOS components, familiar navigation, system typography, SF Symbols, restrained haptics, and useful animations.
+
+Its visual identity uses **Icy Cyan `#4DD9E8`** with neutral system surfaces. The layered `.icon` app icon gives iOS the foreground shapes and material settings needed for native depth and glass rendering.
+
+The interface is currently **English**. Exercise names and other personal content are preserved as entered.
+
+---
+
+## Technology
+
+| | |
 | --- | --- |
-| Fondations, navigation native et tabs Liquid Glass | Validée sur iPhone |
-| Séances, séries, persistance et repos | Validée sur iPhone |
-| Progression et historique 2.0 | Validée sur iPhone |
-| Système de lest | Implémenté; validation iPhone à faire |
-| Notifications locales et planning éditable | Implémentés; validation iPhone à faire |
-| Coffre de photos de progression | Implémenté; development build et validation iPhone obligatoires |
-| Live Activity / Dynamic Island (étape 9) | Présentation et expiration programmée implémentées; validation de cette version iOS 26 sur iPhone en attente |
+| UI | SwiftUI |
+| Persistence | SQLite |
+| Language | Swift 6.4 |
+| Build system | Swift Package Manager + xtool on Linux |
+| Minimum OS | iOS 26.0 |
+| Rest activities | ActivityKit, WidgetKit, App Intents |
+| Photo protection | CryptoKit, Keychain, LocalAuthentication |
+| App icon | Layered `.icon`, compiled locally |
+| Runtime package dependencies | None |
+| Backend / application network access | None |
 
-Les fonctions livrées comprennent Aujourd'hui, le démarrage et la reprise d'une séance, la saisie des séries, le timer de repos et sa Live Activity, l'historique avec ajout/modification/suppression, la progression basée sur les performances, le calcul des charges réalisables à partir du matériel, les notifications locales, et un coffre privé pour les photos de progression.
+## Build from source
 
-Le système de lest utilise un sac fixe de 3,0 kg et des objets dont les poids sont combinés à la demande. Les séances conservent la charge et sa composition telles qu'elles ont été enregistrées, même si l'inventaire change ensuite.
-
-Les rappels locaux de séance sont opt-in et utilisent les jours actifs du planning. Chaque séance dispose de sa propre heure de rappel, à la minute, configurée dans Réglages > Planning; une heure absente ne programme aucun rappel. La page Planning permet aussi de déplacer, renommer, activer/désactiver et composer chaque séance avec les exercices disponibles, dans un ordre choisi. Les rappels de progression photo sont mensuels, à 06:00 par défaut, et ne contiennent aucune information privée. Les requêtes de séance sont programmées concrètement sur 28 jours et ignorent une date où une séance a déjà commencé.
-
-Le sélecteur d'heure utilise le composant natif SwiftUI `DatePicker` via `@expo/ui`, compatible avec Expo Go en SDK 57. Sport cible désormais iOS 26 minimum. Le repos expose une Live Activity via `expo-widgets`, rendue en SwiftUI dans l'extension: countdown système basé sur l'échéance SQLite, exercice et prochaine série, bouton Pause/Reprendre, réconciliation au lancement et lien vers la bonne séance. Une seconde activité locale est programmée à l'échéance pour demander à iOS d'afficher `Repos terminé` dans l'Île dynamique, même si l'app est suspendue; pause, reprise, skip et fin anticipée annulent ou remplacent cette échéance. Expo Go ne contient pas cette extension; il faut installer l'IPA GitHub avec SideStore pour la valider. Shortcuts n'est pas encore implémenté.
-
-Le coffre chiffre les photos et leurs miniatures en AES-256-GCM dans le conteneur privé de Sport. La clé aléatoire est gardée dans SecureStore avec la protection du jeu biométrique actuel et de cet appareil. Progression demande une action explicite de Face ID, se verrouille en quittant l'onglet et masque l'aperçu natif de l'app lors des transitions vers l'arrière-plan. L'import depuis Photos ou la caméra crée une copie indépendante. L'export vers Photos est explicite et la copie exportée n'est plus protégée par le coffre. Le coffre nécessite un development build iOS : Expo Go ne contient pas le module local de protection de fichiers/aperçus, et ne permet pas de valider Face ID.
-
-## Développement
-
-Prérequis : Node.js et npm. Depuis la racine du dépôt :
+The development workflow uses Linux and an already-configured Swift Apple SDK and xtool installation. No macOS build runner or Xcode project is required.
 
 ```sh
-npm ci
-npx expo start --go
+git clone https://github.com/raaaton/Sport.git
+cd Sport
+bash scripts/release-local.sh
 ```
 
-`npm start` lance Expo en mode Go. Ouvre ensuite le projet avec Expo Go. Le coffre Face ID et la Live Activity nécessitent une vraie build iOS; la Live Activity se teste avec l'IPA non signée, après installation avec SideStore.
+The script produces a verified, unsigned `dist/Sport-1.0.0.ipa` and checksum. It does not sign, install, or upload anything.
 
-## Build iOS pour SideStore
+The icon and App Intents metadata steps use the configured Linux tools described in [BUILD.md](docs/BUILD.md). An Apple SDK is required but is not redistributed here.
 
-Chaque push vers `main` déclenche un build iOS non signé sur GitHub Actions et publie l'IPA comme asset d'une Release GitHub normale. SideStore est chargé de signer l'IPA pour l'iPhone. Voir [docs/BUILD.md](docs/BUILD.md) pour le workflow, le versioning et les étapes d'installation.
+---
 
-Pour lancer la version web :
+## Testing and validation
 
-```sh
-npm run web
+The current suite contains **169 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
+
+The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
+
+These checks do **not** run SwiftUI or prove Face ID, notifications, haptics, or Live Activity rendering on an iPhone. Physical-device testing is still required. See [TESTING.md](docs/TESTING.md) for examples and current limits.
+
+## Project structure
+
+```text
+Sources/
+├── Sport/                 # App, native views and platform services
+├── SportCore/             # Domain, SQLite and transitions
+├── SportLiveSupport/      # Shared activity state and adapters
+├── SportRestWidget/       # WidgetKit extension
+└── CSQLite/               # System SQLite module
+Resources/SportIcon.icon/  # Editable vector icon layers
+Tests/Host/                # Linux domain and persistence tests
+Tests/Metadata/            # App Intents metadata regression tests
+scripts/                   # Local build, metadata and release verification
 ```
 
-## Vérifications
+## Contributing
 
-```sh
-npx tsc --noEmit
-npm run lint
-npm test
-npx expo install --check
-npx expo export --platform ios
-git diff --check
-```
+Issues are welcome. This remains a personal app; there is no commitment to a public support schedule.
 
-L'export iOS vérifie la génération du bundle JavaScript; il ne remplace pas un test sur iPhone. La présentation resserrée, l'unique bouton Pause/Reprendre et l'expiration programmée nécessitent encore une validation sur iPhone avec l'IPA construite pour iOS 26 minimum. Vérifier l'expansion à l'échéance quand Sport est au premier plan puis suspendue, l'annulation en pause/reprise/skip, et le rendu sur Lock Screen et Dynamic Island.
+## License
 
-## Organisation
+See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phosphor-icons/core) silhouette; its MIT notice is retained in [Resources/IconSources](Resources/IconSources) and included in the app.
 
-- `app/` — routes Expo Router et navigation
-- `src/features/` — écrans et logique par fonctionnalité : Today, workout, History, progression, Settings et lest
-- `src/shared/` — base SQLite, thème, haptics et composants partagés
-- `tests/` — tests automatisés du domaine et des accès SQLite
-- `docs/DESIGN.md` — conventions visuelles et d'interaction
-- `PROJECT.md` — spécification produit
-- `.agent/exec-plans/` — plans de travail des étapes importantes
+---
 
-SQLite est la source de vérité des données d'entraînement. Les changements de schéma passent par des migrations; aucune donnée d'entraînement ne dépend d'un service distant.
+<p align="center"><strong>Sport</strong><br />Native. Offline. Focused.</p>

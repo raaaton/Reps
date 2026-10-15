@@ -1,41 +1,44 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
 .DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+/xtool
+
+/.bsp
+__pycache__/
+/Tests/Host/.build/
+
+# Local agent configuration and development records
+/.agents/
+/.agent/
+/.claude/
+/.codex/
+/.aws/
+/docs/internal/
+
+# Personal exports and distributable build products
+/outputs/
+/dist/
+*.ipa
+*.dSYM/
+*.log
+
+# Never publish credentials, provisioning or on-device data
+.env
+.env.*
+!.env.example
+*.mobileprovision
+*.p12
+*.p8
 *.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+*.key
+*.der
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*

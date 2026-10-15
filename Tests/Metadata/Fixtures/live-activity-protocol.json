@@ -1,0 +1,17 @@
+{
+  "systemProtocols": [
+    "com.apple.link.systemProtocol.SessionStarting"
+  ],
+  "systemProtocolMetadata": [
+    "com.apple.link.systemProtocol.SessionStarting",
+    {
+      "empty": {}
+    }
+  ],
+  "systemProtocolMetadataV2": [
+    "com.apple.link.systemProtocol.SessionStarting",
+    {
+      "empty": {}
+    }
+  ]
+}

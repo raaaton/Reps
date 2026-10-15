@@ -1,57 +1,81 @@
-# Builds iOS de Sport
+# Build and distribute Sport on Linux
 
-## Développement local
+Sport uses Swift Package Manager and xtool. The main product is `Sport`, its embedded extension is `SportRestWidget`, and `xtool.yml` describes both bundles. There is no primary Xcode project.
 
-Depuis Linux ou macOS, avec Node.js et npm installés :
+## Requirements
+
+- Linux x86-64 with Swift 6.4.
+- An Apple SDK registered with xtool (the release environment uses iPhoneOS SDK 27.1).
+- xtool, with the existing environment pinned to commit `f0a1f90efdbb0dc023e276ff529da92618da7a87`.
+- Python 3, system SQLite, and `swift format`.
+- The configured Linux `actool` and `appintentsmeta.py` tools from the local `omarchy-apple-dev` environment. The helper scripts currently resolve them beneath `~/omarchy-apple-dev/tools/`.
+
+Apple SDKs, toolchains, credentials, and development profiles are not included in this repository. The release scripts never install or replace them.
+
+## Verify and build an unsigned Release IPA
 
 ```sh
-npm ci
-npx expo start --go
+bash scripts/release-local.sh
 ```
 
-Expo Go sert au test quotidien des écrans qui ne nécessitent pas de code natif personnalisé. Le coffre Face ID et la protection native des fichiers doivent être vérifiés dans une vraie build iOS.
+This runs:
 
-## Build iOS automatique
+1. Host tests, Swift lint, and metadata regression tests.
+2. Layered app-icon compilation with the installed Linux `actool`.
+3. An optimized `xtool dev build --configuration release`.
+4. App Intents metadata extraction from that Release compilation.
+5. A second Release build to embed those metadata resources.
+6. Inspection of the real unsigned app and widget.
+7. IPA packaging with `xtool dev build --configuration release --ipa`.
+8. IPA inspection and SHA-256 generation.
 
-Un push vers `main` lance `.github/workflows/build-ios.yml` :
+Outputs:
 
 ```text
-git commit
-git push origin main
-        ↓
-GitHub Actions (runner macOS / Xcode)
-        ↓
-Expo prebuild → CocoaPods → Release iphoneos non signée
-        ↓
-validation → GitHub Release normale avec l'IPA jointe
+dist/Sport-1.0.0.ipa
+dist/SHA256SUMS.txt
 ```
 
-Le workflow peut aussi être lancé manuellement dans GitHub : **Actions → Build iOS IPA → Run workflow**, en sélectionnant `main`. Il utilise `npm ci` et le lockfile du dépôt. Il ne fait pas appel à EAS.
+The IPA has the standard `Payload/Sport.app` layout with its embedded WidgetKit extension. It contains no private developer certificate, provisioning profile, or user database. It must be signed by the recipient before installation; it is not an App Store or universally installable enterprise package.
 
-Le fichier attaché au Release suit cette forme :
+The build script does not authenticate with Apple, sign, install, publish, or modify developer certificates.
 
-```text
-Sport-1.0.0-build42-a1b2c3d.ipa
+## Fast local development
+
+After the SDK and tools are already configured:
+
+```sh
+swift test --package-path Tests/Host
+swift format lint --strict --recursive Package.swift Sources Tests/Host/Package.swift Tests/Host/Tests
+python3 scripts/build-app-icon.py
+mkdir -p .build/live-metadata/{app,widget}/Metadata.appintents
+xtool dev build
+python3 scripts/build-live-metadata.py
+xtool dev build
+python3 scripts/verify-foundation.py
+python3 -m unittest discover -s Tests/Metadata -v
 ```
 
-Expo prebuild also generates the `ExpoWidgetsTarget` extension required by the Live Activity. A version-guarded postinstall patch routes Sport's activity to a minimal native SwiftUI presentation in Expo Widgets' existing ActivityKit extension; Expo still owns activity creation, updates, recovery, and ending. The timer uses SwiftUI's deadline-based countdown. The workflow verifies this patch, the app-group entitlement, activity support and disabled Live Activity push setting, then checks that the unsigned extension is embedded in `Sport.app` inside the IPA. The extension is compiled with the app and remains unsigned for SideStore; no Apple signing secret or EAS build is used. Expo Go does not contain `expo-widgets`, so validate this feature with the generated IPA on a real iPhone.
+Keep `.build`, xtool, and toolchain caches for incremental builds. On a fresh checkout, create the two empty metadata directories before the first build. These bootstrap directories are replaced with real compiler-derived metadata before the second build and mandatory bundle inspection. The release script handles this automatically. Use `--configuration release` for metadata after a Release build.
 
-La version marketing vient de `app.json`, le build number est le numéro de run GitHub, et le suffixe est le hash court du commit. Chaque run produit le tag `build-<numéro>-<hash>` et une Release normale, marquée comme la plus récente. Aucun artifact secondaire n'est téléversé.
+## USB installation for the app owner
 
-### Signature et compte Apple
+Signing and USB installation are separate from public IPA production:
 
-GitHub compile `iphoneos/Release` pour arm64 avec la signature Xcode désactivée. Il emballe le bundle résultant sous `Payload/Sport.app` dans une archive IPA et vérifie notamment son bundle identifier, son architecture, son plist et l'absence de signature/provisioning profile.
+```sh
+~/omarchy-apple-dev/device-run.sh
+```
 
-Cette IPA est **non signée**. Elle n'est pas directement installable par iOS en l'état : SideStore doit la re-signer pour l'appareil avec le certificat de développement lié au compte Apple de l'utilisateur. GitHub Actions n'a besoin d'aucun Apple ID, certificat, provisioning profile, team ID ou secret Apple. Aucun abonnement Apple Developer payant n'est requis pour produire cette build; le compte et les limites d'utilisation de SideStore restent indépendants du pipeline. Avec un compte Apple gratuit, SideStore indique notamment des limites de nombre d'apps et d'App IDs actifs [dans sa FAQ](https://docs.sidestore.io/docs/faq).
+This uses the existing Apple authentication, checks the connected iPhone, and runs xtool's development deployment. The configured bundle ID remains `com.raaaton.sport`; xtool may apply its existing team prefix during free provisioning. Confirm the installed identity and certificate before replacing the app.
 
-### Installer depuis SideStore
+Stop on unexpected signing/provisioning errors. Do not revoke or replace a certificate to repair a build. A successful build is not a successful device test.
 
-1. Dans **Releases** du dépôt GitHub, ouvrir la Release voulue et télécharger son fichier `.ipa` sur l'iPhone.
-2. Ouvrir/importer l'IPA dans SideStore (depuis Fichiers ou le partage iOS), puis lancer l'installation. SideStore signe l'app avec le compte Apple configuré dans SideStore.
-3. Si SideStore n'est pas encore installé et configuré, suivre son [guide officiel d'installation](https://docs.sidestore.io/docs/installation/install) avant d'importer Sport.
+## GitHub Releases
 
-Le guide SideStore peut demander d'approuver le profil développeur dans Réglages et d'activer LocalDevVPN selon l'état de configuration de l'appareil. La procédure peut varier selon la version d'iOS et de SideStore. L'IPA n'est pas déclarée installable tant que l'import, la signature SideStore, l'ouverture de l'app et le coffre Face ID n'ont pas été vérifiés sur l'iPhone cible.
+The public distribution is built locally rather than on a macOS Actions runner. After verifying the source commit, IPA, and checksum, publish a versioned tag and attach only the public IPA, checksum, and release notes. Never upload a development-signed IPA containing personal profiles or credentials.
 
-## EAS
+After upload, download the release asset and compare its SHA-256 with the local artifact. GitHub Actions is not required to generate the current release.
 
-EAS n'est plus utilisé par ce pipeline. `eas.json` et les références de projet EAS dans `app.json` sont conservés temporairement : aucune build GitHub ne les utilise, et ils pourront être supprimés après validation d'un Release GitHub puis d'une installation SideStore réussie. Cette vérification réelle n'a pas encore eu lieu.
+## Reproducibility limits
+
+The source and packaging steps are versioned. The SDK and configured Linux Apple tooling are external prerequisites. This is a documented local build, not a claim that a clean generic Linux host can compile iOS apps without those tools, nor a claim of byte-for-byte reproducible builds.

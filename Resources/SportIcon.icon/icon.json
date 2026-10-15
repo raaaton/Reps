@@ -1,0 +1,121 @@
+{
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "Body.svg",
+          "name": "Body",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1.3275,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name": "Body",
+      "specular": true,
+      "blur-material": 0.01,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.24
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.22
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "OuterWeights.svg",
+          "name": "OuterWeights",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1.3275,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name": "OuterWeights",
+      "specular": true,
+      "blur-material": 0.025,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.2
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "Handle.svg",
+          "name": "Handle",
+          "opacity": 1,
+          "blend-mode": "normal",
+          "glass": true,
+          "position": {
+            "scale": 1.3275,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name": "Handle",
+      "specular": true,
+      "blur-material": 0.025,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.12
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.1
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared",
+    "circles": [
+      "watchOS"
+    ]
+  },
+  "fill": {
+    "linear-gradient": [
+      "extended-gray:0.12157,1.00000",
+      "extended-gray:0.05882,1.00000"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0.0
+      },
+      "stop": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    }
+  },
+  "fill-specializations": [
+    {
+      "appearance": "dark",
+      "value": {
+        "automatic-gradient": "srgb:0.04706,0.05490,0.07059,1.00000"
+      }
+    }
+  ]
+}

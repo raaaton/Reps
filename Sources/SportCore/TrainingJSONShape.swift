@@ -1,0 +1,97 @@
+import Foundation
+
+extension TrainingTransfer {
+  // Closed format: unknown fields are rejected, rather than silently discarding future/private data.
+  static func checkJSONShape(_ data: Data) throws {
+    let root = try JSONSerialization.jsonObject(with: data)
+    func object(_ raw: Any, _ allowed: [String]) throws -> [String: Any] {
+      guard let value = raw as? [String: Any], Set(value.keys).isSubset(of: Set(allowed)) else {
+        throw invalid
+      }
+      return value
+    }
+    func array(_ raw: Any?) throws -> [Any] {
+      guard let values = raw as? [Any] else { throw invalid }
+      return values
+    }
+    func definition(_ raw: Any) throws {
+      _ = try object(
+        raw,
+        [
+          "id", "name", "tracking", "setCount", "minimumReps", "maximumReps", "durationSeconds",
+          "isEnabled",
+        ])
+    }
+    func components(_ raw: Any?) throws {
+      guard let raw, !(raw is NSNull) else { return }
+      for component in try array(raw) { _ = try object(component, ["id", "name", "grams"]) }
+    }
+    func goal(_ raw: Any?) throws {
+      guard let raw, !(raw is NSNull) else { return }
+      let value = try object(raw, ["definition", "load", "repetitions"])
+      try definition(value["definition"] ?? NSNull())
+      let load = try object(value["load"] ?? NSNull(), ["grams", "components"])
+      try components(load["components"])
+    }
+    let envelope = try object(
+      root, ["format", "version", "includesPrivatePhotos", "createdAt", "contents"])
+    let contents = try object(
+      envelope["contents"] ?? NSNull(), ["configuration", "notifications", "workouts"])
+    let c = try object(
+      contents["configuration"] ?? NSNull(),
+      ["exercises", "schedules", "restSeconds", "weightItems", "goals"])
+    for ex in try array(c["exercises"]) { try definition(ex) }
+    for schedule in try array(c["schedules"]) {
+      _ = try object(
+        schedule, ["id", "name", "weekday", "isEnabled", "reminderMinutes", "exerciseIDs"])
+    }
+    for item in try array(c["weightItems"]) {
+      _ = try object(item, ["id", "name", "grams", "isEnabled"])
+    }
+    for item in try array(c["goals"]) { try goal(item) }
+    _ = try object(
+      contents["notifications"] ?? NSNull(), ["workoutsEnabled", "photosEnabled", "photoMinutes"])
+    for raw in try array(contents["workouts"]) {
+      let w = try object(
+        raw,
+        [
+          "id", "scheduleID", "name", "dayKey", "startedAt", "endedAt", "status", "restSeconds",
+          "exercises", "rest", "support",
+        ])
+      if let raw = w["support"], !(raw is NSNull) {
+        let support = try object(raw, ["steps", "restID", "restAnchorID"])
+        let steps = try array(support["steps"])
+        guard steps.count <= 4 else { throw invalid }
+        for step in steps {
+          _ = try object(
+            step,
+            [
+              "id", "kind", "name", "instructions", "number", "count", "tracking",
+              "targetRepetitions", "targetDurationMS", "restAfterMS", "startedAt", "completedAt",
+              "repetitions", "durationMS",
+            ])
+        }
+      }
+      for raw in try array(w["exercises"]) {
+        let e = try object(
+          raw,
+          [
+            "id", "definition", "sets", "feelingTenths", "setStartedAt", "setWeightGrams",
+            "setEndedAt", "setComponents", "goal",
+          ])
+        try definition(e["definition"] ?? NSNull())
+        try components(e["setComponents"])
+        try goal(e["goal"])
+        for raw in try array(e["sets"]) {
+          let set = try object(
+            raw,
+            [
+              "id", "number", "repetitions", "durationMS", "weightGrams", "completedAt",
+              "components",
+            ])
+          try components(set["components"])
+        }
+      }
+    }
+  }
+}

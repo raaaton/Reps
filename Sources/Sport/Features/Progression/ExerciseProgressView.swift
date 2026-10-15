@@ -1,0 +1,268 @@
+import Foundation
+import SportCore
+import SwiftUI
+
+private struct TrendRequest: Hashable, Sendable {
+  let months: Int
+  let metric: SessionTrendMetric
+  let weight: Int?
+  let revision: Int
+  let tracking: TrackingMode
+  let retry: Int
+}
+private struct TrendProjection: Sendable {
+  let request: TrendRequest
+  let points: [SessionTrendPoint]
+  let weights: [Int]
+  let weight: Int?
+  let repetitionTotal: Int?
+}
+struct ExerciseProgressView: View {
+  @EnvironmentObject private var store: TrainingStore
+  let exercise: TrainingExercise
+  @State private var months = 3
+  @State private var metric: SessionTrendMetric
+  @State private var requestedWeight: Int?
+  @State private var projection: TrendProjection?
+  @State private var selectedIndex: Int?
+  @State private var retry = 0
+  @State private var loading = true
+  @State private var error: String?
+  init(exercise: TrainingExercise) {
+    self.exercise = exercise
+    _metric = State(initialValue: exercise.tracking == .duration ? .duration : .volume)
+  }
+  private var request: TrendRequest {
+    TrendRequest(
+      months: months, metric: metric, weight: requestedWeight, revision: store.historyRevision,
+      tracking: exercise.tracking, retry: retry)
+  }
+  private var definition: TrainingExercise? {
+    if case .ready(let snapshot) = store.phase {
+      return snapshot.exercises.first { $0.id == exercise.id }
+    }
+    return nil
+  }
+  private var displayedMetric: SessionTrendMetric { projection?.request.metric ?? metric }
+  private var displayedMonths: Int { projection?.request.months ?? months }
+  private var points: [SessionTrendPoint] { projection?.points ?? [] }
+  private var selected: SessionTrendPoint? {
+    if let selectedIndex, points.indices.contains(selectedIndex) { return points[selectedIndex] }
+    return points.last
+  }
+  private var summaryTotal: Int? {
+    guard let projection else { return nil }
+    if displayedMetric == .volume { return projection.points.last?.cumulativeTotal }
+    if displayedMetric == .repetitions { return projection.repetitionTotal }
+    return points.last?.total
+  }
+  var body: some View {
+    List {
+      Section {
+        Picker("Period", selection: $months) {
+          Text("1 Month").tag(1)
+          Text("3 Months").tag(3)
+          Text("1 Year").tag(12)
+        }.pickerStyle(.segmented)
+        Picker("Metric", selection: $metric) {
+          if exercise.tracking == .repetitions {
+            Text("Volume").tag(SessionTrendMetric.volume)
+          }
+          Text(exercise.tracking == .duration ? "Duration" : "Repetitions").tag(
+            exercise.tracking == .duration ? SessionTrendMetric.duration : .repetitions)
+          Text("Added Weight").tag(SessionTrendMetric.load)
+        }.pickerStyle(.segmented)
+      }.listRowBackground(Color.clear)
+      if loading && projection == nil {
+        Section { ProgressView("Loading workouts…") }
+      } else if let error, projection == nil {
+        Section {
+          Text(error).foregroundStyle(.secondary)
+          Button("Try Again") { retry += 1 }
+        }
+      } else if let projection {
+        if displayedMetric == .duration,
+          !projection.weights.isEmpty
+        {
+          Section {
+            Picker(
+              "Load to Compare",
+              selection: Binding(get: { projection.weight }, set: { requestedWeight = $0 })
+            ) {
+              if displayedMetric == .duration {
+                Text("All Loads").tag(Optional<Int>.none)
+              }
+              ForEach(projection.weights, id: \.self) { grams in
+                Text(grams == 0 ? "Bodyweight" : "\(WorkoutLabels.weight(grams)) kg").tag(
+                  Optional(grams))
+              }
+            }
+          }
+        }
+        if let last = points.last, let summaryTotal {
+          Section {
+            VStack(alignment: .leading, spacing: 6) {
+              Text(TrendPresentation.summaryTitle(displayedMetric)).font(.headline)
+              Text(TrendPresentation.value(summaryTotal, metric: displayedMetric)).font(.largeTitle)
+                .fontWeight(.semibold)
+              Text(
+                displayedMetric == .volume || displayedMetric == .repetitions
+                  ? (displayedMonths == 12
+                    ? "Past Year"
+                    : displayedMonths == 1 ? "Past Month" : "Past 3 Months")
+                  : "Last Workout · \(WorkoutLabels.day(last.performance.dayKey))"
+              ).font(
+                .subheadline
+              ).foregroundStyle(.secondary)
+              if displayedMetric != .volume, let first = points.first, points.count > 1 {
+                let delta = last.total - first.total
+                Text(
+                  "\(displayedMetric == .repetitions ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.value(abs(delta), metric: displayedMetric)) since the first workout shown"
+                ).font(.subheadline).foregroundStyle(.secondary)
+              }
+              Text("\(points.count) \(points.count == 1 ? "workout" : "workouts") in this period")
+                .font(.caption).foregroundStyle(.secondary)
+            }
+            ExerciseTrendChart(
+              points: points, metric: displayedMetric, selectedIndex: $selectedIndex
+            )
+            .id(projection.request)
+            .overlay(alignment: .topTrailing) {
+              if loading { ProgressView().accessibilityLabel("Updating chart") }
+            }
+            Text(
+              displayedMetric == .volume
+                ? "The curve shows each workout’s volume, from oldest to newest."
+                : "Workouts are evenly spaced from oldest to newest."
+            ).font(
+              .caption
+            ).foregroundStyle(.secondary)
+            Text(TrendPresentation.unitDescription(displayedMetric)).font(.caption).foregroundStyle(
+              .secondary)
+            if displayedMetric == .volume, summaryTotal == 0 {
+              Text(
+                "Without added weight, this volume is 0 kg. Use Repetitions to follow bodyweight results."
+              )
+              .font(.caption).foregroundStyle(.secondary)
+            }
+            if points.count == 1 {
+              Text(
+                displayedMetric == .volume
+                  ? "Only one recorded workout in this period."
+                  : "Only one workout: another workout is needed to show change."
+              ).font(.caption).foregroundStyle(.secondary)
+            }
+          }
+        } else {
+          Section {
+            ContentUnavailableView(
+              displayedMetric == .duration && projection.weight != nil
+                ? "No Workouts for This Load" : "No Workouts in This Period",
+              systemImage: "chart.xyaxis.line",
+              description: Text(
+                displayedMetric == .duration && projection.weight != nil
+                  ? "Choose another period or load. Select All Loads to include workouts with mixed loads."
+                  : "Choose another period to see this exercise’s completed workouts."
+              ))
+          }.listRowBackground(Color.clear)
+        }
+        if let selected {
+          Section(selectedIndex == nil ? "Last Workout — Details" : "Selected Workout") {
+            LabeledContent("Date", value: WorkoutLabels.day(selected.performance.dayKey))
+            LabeledContent(
+              displayedMetric == .volume
+                ? "Volume for This Workout" : TrendPresentation.title(displayedMetric),
+              value: TrendPresentation.value(selected.total, metric: displayedMetric))
+            ForEach(selected.performance.exercise.sets) { set in
+              LabeledContent("Set \(set.number)", value: WorkoutLabels.performance(set))
+            }
+            if let feeling = selected.performance.exercise.feelingTenths {
+              LabeledContent("Feeling", value: "\(WorkoutLabels.feeling(feeling)) / 10")
+            }
+            NavigationLink("Open Workout") {
+              WorkoutHistoryDetail(workoutID: selected.workoutID)
+            }
+          }
+        }
+      }
+      if let error, projection != nil {
+        Section {
+          Text(error).foregroundStyle(.secondary)
+          Button("Try Again") { retry += 1 }
+        }
+      }
+      if let definition {
+        Section("Next Workout") { ExerciseGoalRow(exercise: definition) }
+      } else {
+        Section {
+          Text("Archived exercise. Past results remain available.").foregroundStyle(
+            .secondary)
+        }
+      }
+      Section {
+        NavigationLink("All Results") { ExerciseHistoryView(exercise: exercise) }
+      }
+    }
+    .navigationTitle(exercise.name).navigationBarTitleDisplayMode(.inline)
+    .onChange(of: exercise.tracking) { _, mode in
+      metric = mode == .duration ? .duration : .volume
+      requestedWeight = nil
+    }
+    .task(id: request) { await load() }
+  }
+  private func load() async {
+    loading = true
+    error = nil
+    let request = request
+    let metric = request.metric
+    let months = request.months
+    let requested = request.weight
+    let tracking = request.tracking
+    do {
+      let records = try await store.exerciseHistory(exerciseID: exercise.id)
+      let value = try await Task.detached(priority: .userInitiated) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let since = calendar.startOfDay(
+          for: calendar.date(byAdding: .month, value: -months, to: Date()) ?? Date())
+        let choices =
+          metric == .duration
+          ? SessionTrends.weights(
+            records: records, tracking: tracking, since: since, calendar: calendar) : []
+        let weight: Int?
+        if metric == .duration, let requested, choices.contains(requested) {
+          weight = requested
+        } else {
+          weight = nil
+        }
+        let points: [SessionTrendPoint]
+        if metric == .volume {
+          points = try SessionTrends.cumulativeVolume(
+            records: records, since: since, calendar: calendar)
+        } else {
+          points = SessionTrends.points(
+            records: records, metric: metric, tracking: tracking, weight: weight, since: since,
+            calendar: calendar)
+        }
+        let repetitionTotal: Int? =
+          metric == .repetitions
+          ? try SessionTrends.total(points: points) : nil
+        return TrendProjection(
+          request: request, points: points, weights: choices, weight: weight,
+          repetitionTotal: repetitionTotal)
+      }.value
+      guard !Task.isCancelled, self.request == request else { return }
+      // Publish matching labels, filters, points and selection together; never empty the list.
+      withTransaction(Transaction(animation: nil)) {
+        projection = value
+        selectedIndex = nil
+        loading = false
+      }
+    } catch {
+      if !Task.isCancelled, self.request == request {
+        self.error = error.localizedDescription
+        loading = false
+      }
+    }
+  }
+}
