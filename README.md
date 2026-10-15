@@ -27,7 +27,7 @@ Public IPAs are built locally on Linux in **Release** configuration and distribu
 
 Requires **iOS 26.0 or later** on iPhone. Dynamic Island appears on supported devices; rest activities also work on the Lock Screen.
 
-A `SHA256SUMS.txt` file accompanies each release. See [building and distribution](docs/BUILD.md) for the exact workflow.
+Each release provides the IPA directly. See [building and distribution](docs/BUILD.md) for the exact workflow.
 
 ---
 
@@ -139,7 +139,7 @@ cd Sport
 bash scripts/release-local.sh
 ```
 
-The script produces a verified, unsigned `dist/Sport-1.0.0.ipa` and checksum. It does not sign, install, or upload anything.
+The script produces a verified, unsigned `dist/Sport-1.0.0.ipa` only. It does not sign, install, or upload anything.
 
 The icon and App Intents metadata steps use the configured Linux tools described in [BUILD.md](docs/BUILD.md). An Apple SDK is required but is not redistributed here.
 

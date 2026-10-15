@@ -16,5 +16,4 @@ xtool dev build --configuration release --ipa
 mkdir -p dist
 cp xtool/Sport.ipa "dist/Sport-$version.ipa"
 python3 scripts/verify-release.py "dist/Sport-$version.ipa"
-(cd dist && sha256sum "Sport-$version.ipa" > SHA256SUMS.txt)
-printf 'Ready: dist/Sport-%s.ipa and dist/SHA256SUMS.txt (unsigned; re-sign before installation).\n' "$version"
+printf 'Ready: dist/Sport-%s.ipa (unsigned; re-sign before installation).\n' "$version"

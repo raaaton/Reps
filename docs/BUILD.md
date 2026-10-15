@@ -27,13 +27,12 @@ This runs:
 5. A second Release build to embed those metadata resources.
 6. Inspection of the real unsigned app and widget.
 7. IPA packaging with `xtool dev build --configuration release --ipa`.
-8. IPA inspection and SHA-256 generation.
+8. IPA inspection.
 
 Outputs:
 
 ```text
 dist/Sport-1.0.0.ipa
-dist/SHA256SUMS.txt
 ```
 
 The IPA has the standard `Payload/Sport.app` layout with its embedded WidgetKit extension. It contains no private developer certificate, provisioning profile, or user database. It must be signed by the recipient before installation; it is not an App Store or universally installable enterprise package.
@@ -72,7 +71,7 @@ Stop on unexpected signing/provisioning errors. Do not revoke or replace a certi
 
 ## GitHub Releases
 
-The public distribution is built locally rather than on a macOS Actions runner. After verifying the source commit, IPA, and checksum, publish a versioned tag and attach only the public IPA, checksum, and release notes. Never upload a development-signed IPA containing personal profiles or credentials.
+The public distribution is built locally rather than on a macOS Actions runner. After verifying the source commit and IPA, publish a versioned tag with release notes and attach only the public IPA. Do not generate or publish a separate checksum file for future releases. Never upload a development-signed IPA containing personal profiles or credentials.
 
 After upload, download the release asset and compare its SHA-256 with the local artifact. GitHub Actions is not required to generate the current release.
 
