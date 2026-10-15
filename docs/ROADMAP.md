@@ -135,3 +135,5 @@ Livraison 0.12.0 confirmée par lecture appareil : version48, même identité/ce
 1.0.0 (49) — distribution native publique préparée le 15 octobre : README anglais, historique Git Expo conservé, build Release local et IPA non signée inspectée, SHA256 fourni. 169tests/6metadata/lint/xtool réussis. Pas de fonctionnalité manquante dans le périmètre demandé ; le dernier enchaînement échauffement/étirement et les recettes manuelles d’accessibilité restent à confirmer sur iPhone. Sauvegarde portable abandonnée. Voir [publication 1.0.0](exec-plans/2026-10-15-version-one-release.md) et [limites des tests](TESTING.md).
 
 1.0.0 (49) installée par le workflow USB existant ; contrôle après installation réussi, mêmes identité/certificat et profils app/widget valides. La version publique est une IPA Release non signée construite séparément, destinée à être re-signée par chaque destinataire.
+
+Publication 1.0.0 terminée : [Release publique](https://github.com/raaaton/Sport/releases/tag/v1.0.0), IPA locale Release + SHA256. Téléchargement depuis GitHub, comparaison octet pour octet et nouvelle inspection réussis. Ancien historique Git conservé, aucun force-push.
