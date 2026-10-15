@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="docs/images/app-icon.png" width="120" height="120" alt="Sport app icon" />
-</p>
-
-<p align="center">
   <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Sport" />
   <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Sport" />
   <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Sport" />
