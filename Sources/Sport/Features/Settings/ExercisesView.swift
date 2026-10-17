@@ -216,7 +216,11 @@ struct ExerciseEditor: View {
         ).disabled(saving)
       }
       ToolbarItem(placement: .confirmationAction) {
-        Button("Save", systemImage: "checkmark") { save() }.labelStyle(.iconOnly).disabled(saving)
+        Button {
+          save()
+        } label: {
+          SportConfirmationLabel(title: "Save")
+        }.labelStyle(.iconOnly).disabled(saving)
       }
     }
     .interactiveDismissDisabled(saving)

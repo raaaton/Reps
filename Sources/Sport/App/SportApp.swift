@@ -17,10 +17,14 @@ struct SportApp: App {
   }
 
   private var restWake: RestWake? {
-    guard scenePhase == .active, let rest = store.workouts.active?.rest,
-      rest.status == .running, let deadline = rest.deadline
-    else { return nil }
-    return RestWake(id: rest.id, deadline: deadline, clockRevision: clockRevision)
+    guard scenePhase == .active, let workout = store.workouts.active else { return nil }
+    if let rest = workout.rest, rest.status == .running, let deadline = rest.deadline {
+      return RestWake(id: rest.id, deadline: deadline, clockRevision: clockRevision)
+    }
+    if let step = workout.currentSupport, let deadline = step.automaticDeadline {
+      return RestWake(id: step.id, deadline: deadline, clockRevision: clockRevision)
+    }
+    return nil
   }
 
   var body: some Scene {

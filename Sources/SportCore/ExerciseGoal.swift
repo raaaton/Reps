@@ -23,7 +23,7 @@ public struct ExerciseGoal: Codable, Equatable, Sendable {
     switch definition.tracking {
     case .repetitions:
       guard let repetitions, repetitions.count == definition.setCount,
-        repetitions.allSatisfy({ $0 > 0 && $0 <= (definition.maximumReps ?? 0) })
+        repetitions.allSatisfy({ $0 > 0 })
       else { throw TrainingError.invalid("Enter a valid target for each set.") }
     case .duration:
       guard repetitions == nil else {
@@ -43,7 +43,9 @@ public struct ExerciseGoal: Codable, Equatable, Sendable {
     }
   }
 }
-public enum GoalReason: Sendable { case initial, increaseLoad, addRepetition, keep, duration }
+public enum GoalReason: Sendable {
+  case initial, increaseLoad, decreaseLoad, addRepetition, keep, duration
+}
 public struct GoalSuggestion: Equatable, Sendable {
   public let goal: ExerciseGoal
   public let reason: GoalReason
@@ -56,6 +58,36 @@ public struct GoalContext: Sendable {
   public let isAvailable: Bool
 }
 public enum GoalEngine {
+  public static func matchingGoal(
+    target: TrainingExercise, previous: WorkoutExercise, loads: [AvailableLoad],
+    proposedLoad: AvailableLoad? = nil
+  ) -> ExerciseGoal? {
+    guard previous.definition.id == target.id, previous.definition.tracking == target.tracking,
+      previous.definition.setCount == target.setCount,
+      previous.definition.minimumReps == target.minimumReps,
+      previous.definition.maximumReps == target.maximumReps,
+      previous.definition.durationSeconds == target.durationSeconds,
+      previous.sets.count == target.setCount,
+      previous.sets.enumerated().allSatisfy({ $0.element.number == $0.offset + 1 }),
+      Set(previous.sets.map(\.weightGrams)).count == 1,
+      let grams = previous.sets.first?.weightGrams,
+      let load = proposedLoad ?? loads.first(where: { $0.grams == grams })
+    else { return nil }
+    let reps: [Int]?
+    if target.tracking == .repetitions {
+      guard previous.sets.allSatisfy({ ($0.repetitions ?? 0) > 0 && $0.durationMS == nil }) else {
+        return nil
+      }
+      reps = previous.sets.map { $0.repetitions ?? 0 }
+    } else {
+      guard previous.sets.allSatisfy({ $0.repetitions == nil && ($0.durationMS ?? 0) > 0 }) else {
+        return nil
+      }
+      reps = nil
+    }
+    let goal = ExerciseGoal(definition: target, load: load, repetitions: reps)
+    return (try? goal.validated()) == nil ? nil : goal
+  }
   public static func suggestion(
     target: TrainingExercise, previous: WorkoutExercise?, loads: [AvailableLoad]
   ) -> GoalSuggestion? {
@@ -65,7 +97,19 @@ public enum GoalEngine {
       guard (try? goal.validated()) != nil else { return nil }
       return GoalSuggestion(goal: goal, reason: reason, source: previous)
     }
-    if target.tracking == .duration { return result(.bodyweight, nil, .duration) }
+    let assessment = Progression.assess(target: target, previous: previous, loads: loads)
+    if assessment.status == .decrease, let load = assessment.nextLoad, let previous,
+      var goal = matchingGoal(target: target, previous: previous, loads: loads, proposedLoad: load)
+    {
+      goal.load = load
+      return GoalSuggestion(goal: goal, reason: .decreaseLoad, source: previous)
+    }
+    if target.tracking == .duration {
+      let load =
+        previous.flatMap { matchingGoal(target: target, previous: $0, loads: loads)?.load }
+        ?? .bodyweight
+      return result(load, nil, .duration)
+    }
     guard let minimum = target.minimumReps, let maximum = target.maximumReps else { return nil }
     let baseline = Array(repeating: minimum, count: target.setCount)
     guard let previous, previous.definition.id == target.id,
@@ -77,7 +121,6 @@ public enum GoalEngine {
           && $0.element.durationMS == nil && $0.element.weightGrams >= 0
       })
     else { return result(.bodyweight, baseline, .initial) }
-    let assessment = Progression.assess(target: target, previous: previous, loads: loads)
     if assessment.status == .increase, let load = assessment.nextLoad {
       return result(load, baseline, .increaseLoad)
     }
@@ -85,7 +128,7 @@ public enum GoalEngine {
       let grams = previous.sets.first?.weightGrams,
       let load = loads.first(where: { $0.grams == grams })
     else { return nil }
-    var reps = previous.sets.map { min(maximum, $0.repetitions ?? minimum) }
+    var reps = previous.sets.map { $0.repetitions ?? minimum }
     if feeling < 80, let lowest = reps.min(), lowest < maximum,
       let index = reps.firstIndex(of: lowest)
     {

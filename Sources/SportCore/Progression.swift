@@ -1,5 +1,5 @@
 public enum ProgressionStatus: Sendable, Equatable {
-  case insufficient, maintain, achieved, increase, noHeavierLoad
+  case insufficient, maintain, achieved, increase, noHeavierLoad, decrease, noLighterLoad
 }
 public struct ProgressionAssessment: Sendable, Equatable {
   public let status: ProgressionStatus
@@ -23,6 +23,22 @@ public enum Progression {
     func result(_ status: ProgressionStatus, _ next: AvailableLoad? = nil) -> ProgressionAssessment
     {
       ProgressionAssessment(status: status, referenceGrams: reference, nextLoad: next)
+    }
+    let effort = feelingTenths ?? previous.feelingTenths
+    let validSets = previous.sets.allSatisfy {
+      target.tracking == .duration
+        ? $0.repetitions == nil && ($0.durationMS ?? 0) > 0
+        : $0.durationMS == nil && ($0.repetitions ?? 0) > 0
+    }
+    if let effort, (91...100).contains(effort), validSets,
+      Set(previous.sets.map(\.weightGrams)).count == 1
+    {
+      guard
+        let lower = loads.filter({ $0.grams >= 0 && $0.grams < reference }).max(by: {
+          $0.grams < $1.grams
+        })
+      else { return result(.noLighterLoad) }
+      return result(.decrease, lower)
     }
     switch target.tracking {
     case .duration:

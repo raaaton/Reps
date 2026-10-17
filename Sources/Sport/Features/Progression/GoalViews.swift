@@ -70,14 +70,17 @@ struct ExerciseGoalRow: View {
   }
 }
 
+private enum GoalRoute: Hashable { case customize }
+
 struct GoalEditor: View {
   @EnvironmentObject private var store: TrainingStore
   @Environment(\.dismiss) private var dismiss
   let context: GoalContext
   @State private var saving = false
+  @State private var path: [GoalRoute] = []
   @State private var error: String?
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $path) {
       List {
         if let goal = context.adopted {
           Section("Current Goal") {
@@ -99,9 +102,7 @@ struct GoalEditor: View {
           }
         }
         Section {
-          NavigationLink {
-            GoalCustomizationView(context: context, onSaved: { dismiss() })
-          } label: {
+          NavigationLink(value: GoalRoute.customize) {
             Label("Customize", systemImage: "slider.horizontal.3")
           }
           LabeledContent("Program", value: TrainingLabels.target(context.exercise))
@@ -112,13 +113,18 @@ struct GoalEditor: View {
           )
         }
       }
+      .navigationDestination(for: GoalRoute.self) { _ in
+        GoalCustomizationView(context: context, onSaved: { dismiss() })
+      }
       .disabled(saving)
       .navigationTitle(context.exercise.name).navigationBarTitleDisplayMode(.inline)
       .interactiveDismissDisabled(saving)
       .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Close", systemImage: "xmark") { dismiss() }.tint(.white).disabled(
-            saving)
+        if path.isEmpty {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Close", systemImage: "xmark") { dismiss() }.tint(.white).disabled(
+              saving)
+          }
         }
       }
       .alert(
@@ -136,6 +142,8 @@ struct GoalEditor: View {
     case .initial: "A starting target to adapt to your preferred load."
     case .increaseLoad:
       "Maximum reached on every set and Feeling below 8: try the next available load."
+    case .decreaseLoad:
+      "Feeling above 9: try the next lighter available load with the same targets."
     case .addRepetition: "Keep the same load and add one repetition to a weaker set."
     case .keep: "Keep the target from the last comparable workout."
     case .duration: "Keep the configured duration. Added weight is your choice."
@@ -172,7 +180,7 @@ private struct GoalCustomizationView: View {
     let initial = context.adopted?.repetitions
     _reps = State(
       initialValue: initial?.count == count
-        ? initial!.map { min(context.exercise.maximumReps ?? 1, max(1, $0)) }
+        ? initial!.map { max(1, $0) }
         : Array(repeating: context.exercise.minimumReps ?? 1, count: count))
   }
   var body: some View {
@@ -183,7 +191,9 @@ private struct GoalCustomizationView: View {
           ForEach(reps.indices, id: \.self) { index in
             Stepper(
               "Set \(index + 1): \(reps[index]) repetitions", value: $reps[index],
-              in: 1...(context.exercise.maximumReps ?? 1))
+              in:
+                1...max(context.exercise.maximumReps ?? 1, context.adopted?.repetitions?.max() ?? 1)
+            )
           }
         } else {
           LabeledContent(
@@ -209,13 +219,12 @@ private struct GoalCustomizationView: View {
     .navigationTitle("Customize").navigationBarTitleDisplayMode(.inline)
     .interactiveDismissDisabled(saving)
     .toolbar {
-      ToolbarItem(placement: .cancellationAction) {
-        Button("Cancel", systemImage: "xmark") { dismiss() }.tint(.white).labelStyle(
-          .iconOnly
-        ).disabled(saving)
-      }
       ToolbarItem(placement: .confirmationAction) {
-        Button("Save", systemImage: "checkmark") { save() }.labelStyle(.iconOnly).disabled(
+        Button {
+          save()
+        } label: {
+          SportConfirmationLabel(title: "Save")
+        }.labelStyle(.iconOnly).disabled(
           saving || !store.availableLoads.contains(load) || context.exercise.setCount > 1000)
       }
     }

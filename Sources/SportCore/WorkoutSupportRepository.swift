@@ -55,44 +55,52 @@ extension SportRepository {
   {
     try WorkoutClock.validate(now)
     try database.transaction {
-      let w = try readWorkout(id: workoutID)
-      // Repeated delivery cannot advance another step or restart its rest.
-      if w.support?.steps.first(where: { $0.id == stepID })?.completedAt != nil { return }
-      guard w.status == .active, w.phase(at: now) == .support, let step = w.currentSupport,
-        step.id == stepID, let start = step.startedAt, now > start, var support = w.support
-      else {
-        throw TrainingError.invalid("Start the current warm-up or stretch first.")
+      try finishSupportInTransaction(
+        workoutID: workoutID, stepID: stepID, repetitions: repetitions, now: now)
+    }
+  }
+  func finishSupportInTransaction(workoutID: String, stepID: String, repetitions: Int?, now: Int)
+    throws
+  {
+    let w = try readWorkout(id: workoutID)
+    // Repeated delivery cannot advance another step or restart its rest.
+    if w.support?.steps.first(where: { $0.id == stepID })?.completedAt != nil { return }
+    guard w.status == .active, w.phase(at: now) == .support, let step = w.currentSupport,
+      step.id == stepID, let start = step.startedAt, now > start, var support = w.support
+    else {
+      throw TrainingError.invalid("Start the current warm-up or stretch first.")
+    }
+    let completedAt = min(now, step.automaticDeadline ?? now)
+    let index = support.steps.firstIndex { $0.id == stepID }!
+    if step.tracking == .repetitions {
+      guard let repetitions, (1...10000).contains(repetitions) else {
+        throw TrainingError.invalid("Enter a valid repetition count.")
       }
-      let index = support.steps.firstIndex { $0.id == stepID }!
-      if step.tracking == .repetitions {
-        guard let repetitions, (1...10000).contains(repetitions) else {
-          throw TrainingError.invalid("Enter a valid repetition count.")
-        }
-        support.steps[index].repetitions = repetitions
-      } else {
-        support.steps[index].durationMS = now - start
-      }
-      support.steps[index].completedAt = now
-      if step.restAfterMS > 0 {
-        guard let anchor = w.exercises.first else { throw TrainingError.storage }
-        let restID = UUID().uuidString
-        let deadline = try WorkoutClock.adding(step.restAfterMS, to: now)
-        // Negative slots cannot collide with any working-set rest.
-        try database.execute(
-          "INSERT INTO workout_rests VALUES(?,?,?,?,'running',?,NULL)",
-          [
-            .text(restID), .text(workoutID), .text(anchor.id), .integer(-step.number),
-            .integer(deadline),
-          ])
-        support.restID = restID
-        support.restAnchorID = anchor.id
-      }
-      try writeSupport(support, workoutID: workoutID)
-      if support.steps.allSatisfy({ $0.completedAt != nil }) {
-        try database.execute(
-          "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
-          [.integer(now), .text(workoutID)])
-      }
+      support.steps[index].repetitions = repetitions
+    } else {
+      support.steps[index].durationMS = completedAt - start
+    }
+    support.steps[index].completedAt = completedAt
+    if step.restAfterMS > 0 {
+      guard let anchor = w.exercises.first else { throw TrainingError.storage }
+      let restID = UUID().uuidString
+      let deadline = try WorkoutClock.adding(step.restAfterMS, to: completedAt)
+      // Negative slots cannot collide with any working-set rest.
+      try database.execute(
+        "INSERT INTO workout_rests VALUES(?,?,?,?,'running',?,NULL)",
+        [
+          .text(restID), .text(workoutID), .text(anchor.id), .integer(-step.number),
+          .integer(deadline),
+        ])
+      support.restID = restID
+      support.restAnchorID = anchor.id
+    }
+    try writeSupport(support, workoutID: workoutID)
+    if support.steps.allSatisfy({ $0.completedAt != nil }) {
+      try database.execute(
+        "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
+        [.integer(completedAt), .text(workoutID)])
+      try matchGoalsToCompletedWorkout(id: workoutID)
     }
   }
 }

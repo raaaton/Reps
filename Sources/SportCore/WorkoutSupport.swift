@@ -44,6 +44,12 @@ public struct WorkoutSupportStep: Codable, Equatable, Identifiable, Sendable {
   public var completedAt: Int? = nil
   public var repetitions: Int? = nil
   public var durationMS: Int? = nil
+  public var automaticDeadline: Int? {
+    guard kind == .stretch, completedAt == nil, let startedAt, let targetDurationMS else {
+      return nil
+    }
+    return try? WorkoutClock.adding(targetDurationMS, to: startedAt)
+  }
   public func countdown(at now: Int) -> Int {
     guard tracking == .duration, let startedAt, startedAt > now else { return 0 }
     return min(3, (startedAt - now + 999) / 1000)

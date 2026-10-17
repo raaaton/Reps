@@ -1,6 +1,22 @@
 import Foundation
 
 extension SportRepository {
+  // Completion updates the baseline, never adopts a proposed load change.
+  func matchGoalsToCompletedWorkout(id: String) throws {
+    let workout = try readWorkout(id: id)
+    guard workout.status == .completed else { return }
+    let snapshot = try readSnapshot()
+    let loads = try WeightInventory.loads(items: snapshot.weightItems)
+    for performance in workout.exercises {
+      guard let target = snapshot.exercises.first(where: { $0.id == performance.definition.id }),
+        let goal = GoalEngine.matchingGoal(target: target, previous: performance, loads: loads),
+        try readLatestPerformance(exerciseID: target.id)?.id == performance.id
+      else { continue }
+      try database.execute(
+        "INSERT INTO exercise_goals VALUES(?,?) ON CONFLICT(catalogue_id) DO UPDATE SET payload=excluded.payload",
+        [.text(target.id), try ExerciseGoal.encode(goal)])
+    }
+  }
   func readGoals() throws -> [ExerciseGoal] {
     try database.query("SELECT payload FROM exercise_goals ORDER BY catalogue_id").map {
       try ExerciseGoal.decode($0.text("payload"))

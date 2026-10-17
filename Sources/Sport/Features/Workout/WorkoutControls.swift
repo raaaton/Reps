@@ -157,9 +157,10 @@ struct RestControls: View {
               if rest.status == .paused {
                 Image(systemName: "play.fill")
               } else {
-                Image(systemName: "pause.fill").foregroundStyle(.white)
+                Image(systemName: "pause.fill").foregroundStyle(.black)
               }
             }
+            .tint(.black)
             .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
             .frame(maxWidth: .infinity)
           }

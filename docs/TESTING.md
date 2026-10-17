@@ -23,7 +23,7 @@ Checking `restored == original` after all those operations is useful: it verifie
 
 ## Validation layers
 
-- **169 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
+- **182 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
 - **6 metadata tests:** compatibility and strictness of the App Intents metadata adapter, using recorded compiler fixtures.
 - **Swift lint:** formatting and source consistency, not functional correctness.
 - **xtool builds:** the app and extension compile against the configured iOS SDK.
@@ -34,7 +34,7 @@ Checking `restored == original` after all those operations is useful: it verifie
 
 Linux host tests do not execute SwiftUI, a camera, Face ID, or the iPhone's WidgetKit runtime. There is currently no automated XCUITest or simulator UI suite in this Linux workflow. The preview of an icon or chart is not proof of its physical-device appearance.
 
-For 1.0.0, no requested feature remains unimplemented. The latest warm-up/stretch sequence still needs an explicit user device confirmation. Detailed accessibility, large text, notification delivery, suspension and supported icon-appearance checks remain manual where no specific device result has been reported. Historical development notes must not be read as proof that every manual scenario passed.
+The installed 1.0.1 build was accepted by the user before publication. Detailed individual device scenarios remain useful: verify the new inter-exercise rest while rating Feeling, exact automatic stretch completion and sound, goal carry-forward, lighter-load proposals above 9, toolbar glyph contrast and unfiltered timed charts on the iPhone. Resume after backgrounding during the final stretch while an exercise chart is already open: the completed workout must appear without another user edit. Detailed accessibility, large text, notification delivery, suspension and supported icon-appearance checks remain manual where no specific device result has been reported. Historical development notes must not be read as proof that every manual scenario passed.
 
 ## Commands
 
@@ -45,3 +45,5 @@ swift format lint --strict --recursive Package.swift Sources Tests/Host/Package.
 ```
 
 These tests never require the user's private photos or real training database.
+
+The stretch deadline is persisted and reconciled to the exact target after suspension. The foreground app uses its existing completion sound. Background sound at the deadline is not scheduled by a new notification or Live Activity and is not guaranteed while iOS suspends Sport.

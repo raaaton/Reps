@@ -118,7 +118,7 @@ struct WorkoutSupportFlowView: View {
               perform {
                 try await store.finishSupport(workout: workout, step: step, repetitions: nil)
               }
-            }, showsWeight: false,
+            }, automaticDeadline: step.automaticDeadline, showsWeight: false,
             finishTitle: step.kind == .warmUp ? "Finish Warm-up Set" : "Finish Stretch",
             headerTitle: step.kind == .warmUp
               ? "Warm-up Set \(step.number) of \(step.count)"

@@ -62,11 +62,15 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
     let session = try await start(repository, sets: 1)
     try await record(repository, session, time: now)
     var current = try await repository.workout(id: session.id)
-    XCTAssertEqual(current.phase, .feeling, "No rest after the final set of an exercise")
+    XCTAssertEqual(current.phase, .feeling, "Feeling remains available during transition rest")
     let first = try XCTUnwrap(current.currentExercise)
     XCTAssertEqual(first.sets.first?.repetitions, 10)
     try await repository.saveFeeling(
       workoutID: session.id, exerciseID: first.id, tenths: 73, now: now + 13_000)
+    current = try await repository.workout(id: session.id)
+    XCTAssertEqual(current.phase, .resting)
+    try await repository.changeRest(
+      id: try XCTUnwrap(current.rest?.id), action: .skip, now: now + 13_500)
     current = try await repository.workout(id: session.id)
     XCTAssertEqual(current.phase, .readySet)
     XCTAssertEqual(current.currentExercise?.definition.tracking, .duration)
@@ -283,6 +287,8 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
       workoutID: session.id, exerciseID: first.id, tenths: 0, now: now + 13_000)
     current = try await repository.workout(id: session.id)
     let timed = try XCTUnwrap(current.currentExercise)
+    try await repository.changeRest(
+      id: try XCTUnwrap(current.rest?.id), action: .skip, now: now + 13_500)
     try await repository.beginSet(
       workoutID: session.id, exerciseID: timed.id, number: 1, now: now + 14_000)
     let reopened = try SportRepository(path: file)

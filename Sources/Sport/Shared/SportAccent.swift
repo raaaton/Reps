@@ -22,3 +22,12 @@ private struct SportProminentButton: ViewModifier {
 extension View {
   func sportProminentButton() -> some View { modifier(SportProminentButton()) }
 }
+
+// Keep confirmation glyphs dark inside native accent-filled toolbar actions.
+struct SportConfirmationLabel: View {
+  let title: String
+  var body: some View {
+    Image(systemName: "checkmark")
+      .foregroundStyle(.black).tint(.black).accessibilityLabel(title)
+  }
+}

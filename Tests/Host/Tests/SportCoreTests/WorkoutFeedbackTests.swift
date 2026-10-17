@@ -58,6 +58,10 @@ final class WorkoutFeedbackTests: XCTestCase, @unchecked Sendable {
       XCTAssertEqual(
         WorkoutFeedback.change(from: before, to: after), index == 1 ? .success : .selection)
       session = try await repository.workout(id: session.id)
+      if let rest = session.rest {
+        try await repository.changeRest(id: rest.id, action: .skip, now: time + 15_000)
+        session = try await repository.workout(id: session.id)
+      }
     }
     let next = try await repository.startWorkout(
       scheduleID: "pull-abs", now: helper.now + 90_000, calendar: helper.calendar, restart: true)

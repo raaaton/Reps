@@ -45,11 +45,11 @@ final class TrainingStore: ObservableObject {
         repository = try await SportRuntime.shared.repository()
       }
       guard let repository else { throw TrainingError.storage }
-      let snapshot = try await repository.snapshot()
-      let preferences = try await repository.reminderContext().preferences
       workoutGeneration += 1
       let workoutRequest = workoutGeneration
       let overview = try await repository.workoutOverview(now: WorkoutClock.now)
+      let snapshot = try await repository.snapshot()
+      let preferences = try await repository.reminderContext().preferences
       consumeFeedback(overview)
       if workoutGeneration == workoutRequest {
         workouts = overview
@@ -59,6 +59,7 @@ final class TrainingStore: ObservableObject {
         availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
         phase = .ready(snapshot)
         notificationPreferences = preferences
+        if !overview.expiredStretchIDs.isEmpty { historyRevision += 1 }
       }
       await refreshLiveActivity(retry: true)
       await LocalReminderCoordinator.shared.refresh()
@@ -282,9 +283,18 @@ final class TrainingStore: ObservableObject {
       workoutRefreshPending = false
       workoutGeneration += 1
       let request = workoutGeneration
+      let configurationRequest = generation
       do {
         let overview = try await repository.workoutOverview(now: WorkoutClock.now)
         consumeFeedback(overview)
+        if !overview.expiredStretchIDs.isEmpty {
+          let snapshot = try await repository.snapshot()
+          if generation == configurationRequest && workoutGeneration == request {
+            availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+            phase = .ready(snapshot)
+            historyRevision += 1
+          }
+        }
         if workoutGeneration == request {
           workouts = overview
           workoutError = nil
@@ -301,11 +311,11 @@ final class TrainingStore: ObservableObject {
   {
     generation += 1
     let request = generation
-    let snapshot = try await repository.snapshot()
-    let preferences = try await repository.reminderContext().preferences
     workoutGeneration += 1
     let workoutRequest = workoutGeneration
     let overview = try await repository.workoutOverview(now: WorkoutClock.now)
+    let snapshot = try await repository.snapshot()
+    let preferences = try await repository.reminderContext().preferences
     consumeFeedback(overview)
     var event = workoutFeedback.event(from: feedbackBaseline, to: overview)
     if workoutGeneration == workoutRequest {
@@ -322,7 +332,9 @@ final class TrainingStore: ObservableObject {
       historyRevision += 1
     }
     // Do not wait for ActivityKit or notification reconciliation to acknowledge saved state.
-    if let event, overview.expiredRestIDs.isEmpty { SportHaptics.shared.play(event) }
+    if let event, overview.expiredRestIDs.isEmpty && overview.expiredStretchIDs.isEmpty {
+      SportHaptics.shared.play(event)
+    }
     await refreshLiveActivity()
     await LocalReminderCoordinator.shared.refresh()
   }
@@ -342,7 +354,8 @@ final class TrainingStore: ObservableObject {
   func consumeWorkoutLink() { pendingWorkoutID = nil }
 
   private func consumeFeedback(_ overview: WorkoutOverview) {
-    pendingRestFeedback = pendingRestFeedback || !overview.expiredRestIDs.isEmpty
+    pendingRestFeedback =
+      pendingRestFeedback || !overview.expiredRestIDs.isEmpty || !overview.expiredStretchIDs.isEmpty
     if pendingRestFeedback && UIApplication.shared.applicationState == .active {
       pendingRestFeedback = false
       restFeedback.play()

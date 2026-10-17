@@ -137,3 +137,10 @@ Livraison 0.12.0 confirmée par lecture appareil : version48, même identité/ce
 1.0.0 (49) installée par le workflow USB existant ; contrôle après installation réussi, mêmes identité/certificat et profils app/widget valides. La version publique est une IPA Release non signée construite séparément, destinée à être re-signée par chaque destinataire.
 
 Publication 1.0.0 terminée : [Release publique](https://github.com/raaaton/Sport/releases/tag/v1.0.0), IPA locale Release + SHA256. Téléchargement depuis GitHub, comparaison octet pour octet et nouvelle inspection réussis. Ancien historique Git conservé, aucun force-push.
+
+
+17 octobre — 1.0.1 (50), correctif local autorisé après utilisation : repos entre exercices, objectifs alignés sur résultats réels, proposition de baisse du lest au-dessus de 9, arrêt exact de l’étirement et son de fin au premier plan, Pause/coches noirs sur cyan, Customize sans croix, graphiques chronométrés toutes charges. 182 tests métier et 6 metadata passent ; lint et build xtool réels réussis. Installation/contrôles finaux et retour iPhone à consigner dans [ExecPlan](exec-plans/2026-10-17-workout-refinements.md). Aucun push ni release avant le retour utilisateur.
+
+1.0.1 (50) installée et contrôlée après déploiement : même identité/certificat, profils app/widget valides et capacités inchangées. Métadonnées et inspection finale réussies. Attente du retour iPhone ; aucune publication GitHub.
+
+Retour utilisateur « cb push » : correctif installé 1.0.1 accepté et publication GitHub autorisée. Construction locale de l’IPA Release et vérifications avant publication ; seule l’IPA sera jointe, sans fichier checksum. Ce retour global ne constitue pas un relevé individuel de chaque recette d’accessibilité ou d’exécution en arrière-plan.

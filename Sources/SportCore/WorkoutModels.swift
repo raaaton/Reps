@@ -92,6 +92,18 @@ public struct WorkoutSession: Codable, Identifiable, Equatable, Sendable {
   public var workFinished: Bool { exercises.allSatisfy { $0.feelingTenths != nil } }
   public var currentSupport: WorkoutSupportStep? { support?.current(workFinished: workFinished) }
   public var isSupportRest: Bool { rest != nil && support?.restID == rest?.id }
+  public var restDestination: WorkoutExercise? {
+    guard let rest, rest.status == .running || rest.status == .paused else { return nil }
+    if isSupportRest { return currentExercise }
+    guard let index = exercises.firstIndex(where: { $0.id == rest.exerciseID }) else { return nil }
+    let source = exercises[index]
+    guard rest.afterSet == source.sets.count else { return nil }
+    if rest.afterSet < source.definition.setCount { return source }
+    guard rest.afterSet == source.definition.setCount, index + 1 < exercises.count else {
+      return nil
+    }
+    return exercises[index + 1]
+  }
   public var currentExercise: WorkoutExercise? {
     exercises.first { $0.feelingTenths == nil }
   }
@@ -105,7 +117,7 @@ public struct WorkoutSession: Codable, Identifiable, Equatable, Sendable {
     if currentSupport != nil { return .support }
     guard let exercise = currentExercise else { return .completed }
     if exercise.sets.count == exercise.definition.setCount { return .feeling }
-    if let rest, rest.exerciseID == exercise.id, rest.afterSet == exercise.sets.count,
+    if let rest, restDestination?.id == exercise.id,
       rest.status == .running || rest.status == .paused
     {
       return .resting
@@ -129,6 +141,7 @@ public struct WorkoutOverview: Equatable, Sendable {
   public let active: WorkoutSession?
   public let history: [WorkoutSummary]
   public let expiredRestIDs: [String]
+  public var expiredStretchIDs: [String] = []
   public static let empty = WorkoutOverview(active: nil, history: [], expiredRestIDs: [])
 }
 public enum WorkoutWeight {

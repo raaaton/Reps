@@ -114,7 +114,7 @@ final class RestActivityTests: XCTestCase, @unchecked Sendable {
     try await record(repository, skipped, time: now + 30_000)
     let lastSet = try await repository.workout(id: ready.id)
     XCTAssertEqual(lastSet.phase(at: now + 50_000), .feeling)
-    XCTAssertNil(RestActivitySnapshot.current(in: lastSet, at: now + 50_000))
+    XCTAssertEqual(RestActivitySnapshot.current(in: lastSet, at: now + 50_000)?.nextSet, 1)
     try await repository.cancelWorkout(id: ready.id, now: now + 60_000)
     let cancelled = try await repository.workout(id: ready.id)
     XCTAssertNil(RestActivitySnapshot.current(in: cancelled, at: now + 60_000))

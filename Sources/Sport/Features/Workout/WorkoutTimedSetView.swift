@@ -3,7 +3,7 @@ import SportLiveSupport
 import SwiftUI
 import UIKit
 
-// The timeline displays the persisted start; it never starts a second timer or writes on expiry.
+// Display persisted starts/deadlines; repository reconciliation owns automatic stretch completion.
 struct WorkoutTimedSetView: View {
   @Environment(\.scenePhase) private var scenePhase
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -13,6 +13,7 @@ struct WorkoutTimedSetView: View {
   let busy: Bool
   let cancel: () -> Void
   let finish: () -> Void
+  var automaticDeadline: Int? = nil
   var showsWeight = true
   var finishTitle = "Finish Set"
   var headerTitle: String? = nil
@@ -50,8 +51,10 @@ struct WorkoutTimedSetView: View {
         } else {
           Section {
             WorkoutTimerDisplay(
-              value: WorkoutLabels.time(max(0, now - (exercise.setStartedAt ?? now))),
-              label: "Set duration"
+              value: WorkoutLabels.time(
+                automaticDeadline.map { max(0, $0 - now + 999) / 1000 * 1000 }
+                  ?? max(0, now - (exercise.setStartedAt ?? now))),
+              label: automaticDeadline == nil ? "Set duration" : "Stretch time remaining"
             )
             .onAppear {
               guard observedCountdown else { return }
@@ -66,18 +69,25 @@ struct WorkoutTimedSetView: View {
           } header: {
             Text(headerTitle ?? "Set \(exercise.sets.count + 1) of \(exercise.definition.setCount)")
           }
-          Section {
-            Button(action: finish) {
-              WorkoutActionLabel(
-                title: busy ? "Saving…" : finishTitle,
-                systemImage: "checkmark", isWorking: busy)
-            }
-            .sportProminentButton().controlSize(.large)
-            .listRowBackground(Color.clear).listRowSeparator(.hidden)
-            .disabled(busy)
-          } footer: {
-            if exercise.setWeightGrams == nil {
-              Text("The timer will stop before you enter the added weight.")
+          if automaticDeadline != nil {
+            Section {
+              Text("The hold ends automatically at the target duration.").foregroundStyle(
+                .secondary)
+            }.listRowBackground(Color.clear)
+          } else {
+            Section {
+              Button(action: finish) {
+                WorkoutActionLabel(
+                  title: busy ? "Saving…" : finishTitle,
+                  systemImage: "checkmark", isWorking: busy)
+              }
+              .sportProminentButton().controlSize(.large)
+              .listRowBackground(Color.clear).listRowSeparator(.hidden)
+              .disabled(busy)
+            } footer: {
+              if exercise.setWeightGrams == nil {
+                Text("The timer will stop before you enter the added weight.")
+              }
             }
           }
         }
@@ -110,5 +120,6 @@ struct WorkoutActionLabel: View {
     }
     .frame(maxWidth: .infinity)
     .foregroundStyle(SportAccentColors(accentChoice).ink)
+    .tint(SportAccentColors(accentChoice).ink)
   }
 }

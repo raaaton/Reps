@@ -17,7 +17,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.0.0.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+Download **Sport-1.0.1.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -46,12 +46,12 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Record completed repetitions, duration, added weight, and exercise effort (Feeling).
 - Correct a recorded set without restarting the rest timer.
 - Resume a workout after leaving the app.
-- Finish with one timed stretch movement, with its movement and target duration selected in preparation.
+- Finish with one timed stretch movement, selected in preparation; each hold stops automatically at its target duration.
 - See the real total workout time, including rest and stretching.
 
 ### Rest without watching the app
 
-- Persistent rest deadlines, pause, resume, and skip.
+- Persistent rest deadlines between sets and between exercises, with pause, resume, and skip.
 - Live Activities on the Lock Screen and Dynamic Island.
 - Pause and resume directly from the activity.
 - Optional local workout and monthly photo reminders.
@@ -63,7 +63,8 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Drag on charts to inspect individual sessions.
 - Period totals and a GitHub-style training activity grid.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
-- Suggestions never change your goals without your approval.
+- After a completed live workout, future goals match its actual repetitions and available uniform load; configured timed targets stay unchanged.
+- Suggested increases or decreases in added weight require your approval.
 - Warm-up and stretch results remain separate from working-set progression.
 
 ### Keep photos private
@@ -135,7 +136,7 @@ cd Sport
 bash scripts/release-local.sh
 ```
 
-The script produces a verified, unsigned `dist/Sport-1.0.0.ipa` only. It does not sign, install, or upload anything.
+The script produces a verified, unsigned IPA in `dist/`, named with the version from the app plist. It does not sign, install, or upload anything.
 
 The icon and App Intents metadata steps use the configured Linux tools described in [BUILD.md](docs/BUILD.md). An Apple SDK is required but is not redistributed here.
 
@@ -143,7 +144,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **169 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
+The current suite contains **182 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 
@@ -175,3 +176,5 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 ---
 
 <p align="center"><strong>Sport</strong><br />Native. Offline. Focused.</p>
+
+Version 1.0.1 (50) adds inter-exercise rest, goals carried forward from completed workouts, lighter-load suggestions above Feeling 9, and automatic stretch completion. The user accepted the installed build before authorizing publication.

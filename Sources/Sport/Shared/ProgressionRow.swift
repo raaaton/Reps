@@ -6,11 +6,13 @@ struct ProgressionResult: View {
   var body: some View {
     switch assessment.status {
     case .insufficient: EmptyView()
-    case .increase:
+    case .increase, .decrease:
       if let load = assessment.nextLoad {
         Text("Next load: \(WorkoutLabels.weight(load.grams)) kg")
           .foregroundStyle(.tint)
       }
+    case .noLighterLoad:
+      Text("Feeling above 9. No lighter load available.").foregroundStyle(.secondary)
     case .noHeavierLoad:
       Text("Goal reached. No heavier load available.").foregroundStyle(.secondary)
     case .achieved:

@@ -32,7 +32,7 @@ This runs:
 Outputs:
 
 ```text
-dist/Sport-1.0.0.ipa
+dist/Sport-<version>.ipa
 ```
 
 The IPA has the standard `Payload/Sport.app` layout with its embedded WidgetKit extension. It contains no private developer certificate, provisioning profile, or user database. It must be signed by the recipient before installation; it is not an App Store or universally installable enterprise package.

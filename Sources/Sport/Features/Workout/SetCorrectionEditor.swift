@@ -52,7 +52,11 @@ struct SetCorrectionEditor: View {
             saving)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button("Save", systemImage: "checkmark") { save() }.labelStyle(.iconOnly).disabled(saving)
+          Button {
+            save()
+          } label: {
+            SportConfirmationLabel(title: "Save")
+          }.labelStyle(.iconOnly).disabled(saving)
         }
         ToolbarItemGroup(placement: .keyboard) {
           Spacer()

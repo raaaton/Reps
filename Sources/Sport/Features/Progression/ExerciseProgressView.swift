@@ -5,7 +5,6 @@ import SwiftUI
 private struct TrendRequest: Hashable, Sendable {
   let months: Int
   let metric: SessionTrendMetric
-  let weight: Int?
   let revision: Int
   let tracking: TrackingMode
   let retry: Int
@@ -13,8 +12,6 @@ private struct TrendRequest: Hashable, Sendable {
 private struct TrendProjection: Sendable {
   let request: TrendRequest
   let points: [SessionTrendPoint]
-  let weights: [Int]
-  let weight: Int?
   let repetitionTotal: Int?
 }
 struct ExerciseProgressView: View {
@@ -22,7 +19,6 @@ struct ExerciseProgressView: View {
   let exercise: TrainingExercise
   @State private var months = 3
   @State private var metric: SessionTrendMetric
-  @State private var requestedWeight: Int?
   @State private var projection: TrendProjection?
   @State private var selectedIndex: Int?
   @State private var retry = 0
@@ -34,7 +30,7 @@ struct ExerciseProgressView: View {
   }
   private var request: TrendRequest {
     TrendRequest(
-      months: months, metric: metric, weight: requestedWeight, revision: store.historyRevision,
+      months: months, metric: metric, revision: store.historyRevision,
       tracking: exercise.tracking, retry: retry)
   }
   private var definition: TrainingExercise? {
@@ -81,24 +77,6 @@ struct ExerciseProgressView: View {
           Button("Try Again") { retry += 1 }
         }
       } else if let projection {
-        if displayedMetric == .duration,
-          !projection.weights.isEmpty
-        {
-          Section {
-            Picker(
-              "Load to Compare",
-              selection: Binding(get: { projection.weight }, set: { requestedWeight = $0 })
-            ) {
-              if displayedMetric == .duration {
-                Text("All Loads").tag(Optional<Int>.none)
-              }
-              ForEach(projection.weights, id: \.self) { grams in
-                Text(grams == 0 ? "Bodyweight" : "\(WorkoutLabels.weight(grams)) kg").tag(
-                  Optional(grams))
-              }
-            }
-          }
-        }
         if let last = points.last, let summaryTotal {
           Section {
             VStack(alignment: .leading, spacing: 6) {
@@ -156,13 +134,10 @@ struct ExerciseProgressView: View {
         } else {
           Section {
             ContentUnavailableView(
-              displayedMetric == .duration && projection.weight != nil
-                ? "No Workouts for This Load" : "No Workouts in This Period",
+              "No Workouts in This Period",
               systemImage: "chart.xyaxis.line",
               description: Text(
-                displayedMetric == .duration && projection.weight != nil
-                  ? "Choose another period or load. Select All Loads to include workouts with mixed loads."
-                  : "Choose another period to see this exercise’s completed workouts."
+                "Choose another period to see this exercise’s completed workouts."
               ))
           }.listRowBackground(Color.clear)
         }
@@ -206,7 +181,6 @@ struct ExerciseProgressView: View {
     .navigationTitle(exercise.name).navigationBarTitleDisplayMode(.inline)
     .onChange(of: exercise.tracking) { _, mode in
       metric = mode == .duration ? .duration : .volume
-      requestedWeight = nil
     }
     .task(id: request) { await load() }
   }
@@ -216,7 +190,6 @@ struct ExerciseProgressView: View {
     let request = request
     let metric = request.metric
     let months = request.months
-    let requested = request.weight
     let tracking = request.tracking
     do {
       let records = try await store.exerciseHistory(exerciseID: exercise.id)
@@ -225,30 +198,20 @@ struct ExerciseProgressView: View {
         calendar.timeZone = .current
         let since = calendar.startOfDay(
           for: calendar.date(byAdding: .month, value: -months, to: Date()) ?? Date())
-        let choices =
-          metric == .duration
-          ? SessionTrends.weights(
-            records: records, tracking: tracking, since: since, calendar: calendar) : []
-        let weight: Int?
-        if metric == .duration, let requested, choices.contains(requested) {
-          weight = requested
-        } else {
-          weight = nil
-        }
         let points: [SessionTrendPoint]
         if metric == .volume {
           points = try SessionTrends.cumulativeVolume(
             records: records, since: since, calendar: calendar)
         } else {
           points = SessionTrends.points(
-            records: records, metric: metric, tracking: tracking, weight: weight, since: since,
+            records: records, metric: metric, tracking: tracking, weight: nil, since: since,
             calendar: calendar)
         }
         let repetitionTotal: Int? =
           metric == .repetitions
           ? try SessionTrends.total(points: points) : nil
         return TrendProjection(
-          request: request, points: points, weights: choices, weight: weight,
+          request: request, points: points,
           repetitionTotal: repetitionTotal)
       }.value
       guard !Task.isCancelled, self.request == request else { return }

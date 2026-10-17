@@ -106,6 +106,17 @@ extension SportRepository {
           "UPDATE workout_rests SET status='finished',deadline=NULL,remaining_ms=NULL WHERE id=?",
           [.text(id)])
       }
+      var expiredStretchIDs: [String] = []
+      if let id = try activeWorkoutID() {
+        let workout = try readWorkout(id: id)
+        if let step = workout.currentSupport, let deadline = step.automaticDeadline,
+          deadline <= now
+        {
+          try finishSupportInTransaction(
+            workoutID: id, stepID: step.id, repetitions: nil, now: deadline)
+          expiredStretchIDs.append(step.id)
+        }
+      }
       let active = try activeWorkoutID().map { try readWorkout(id: $0) }
       let history = try database.query(
         """
@@ -122,7 +133,9 @@ extension SportRepository {
           startedAt: try row.integer("started_at"), endedAt: try row.optionalInteger("ended_at"),
           status: status, setCount: try row.integer("recorded_sets"))
       }
-      return WorkoutOverview(active: active, history: history, expiredRestIDs: expired)
+      return WorkoutOverview(
+        active: active, history: history, expiredRestIDs: expired,
+        expiredStretchIDs: expiredStretchIDs)
     }
   }
 
@@ -269,7 +282,7 @@ extension SportRepository {
     try database.execute(
       "UPDATE workout_exercises SET set_started_at=NULL,set_weight_grams=NULL,set_ended_at=NULL,set_load_components=NULL WHERE id=?",
       [.text(exerciseID)])
-    if number < exercise.definition.setCount {
+    if number < exercise.definition.setCount || workout.exercises.last?.id != exerciseID {
       let (duration, overflow) = workout.restSeconds.multipliedReportingOverflow(by: 1000)
       guard !overflow else { throw TrainingError.invalid("The rest duration is too long.") }
       let deadline = try WorkoutClock.adding(duration, to: completedAt)
@@ -301,6 +314,7 @@ extension SportRepository {
         try database.execute(
           "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
           [.integer(now), .text(workoutID)])
+        try matchGoalsToCompletedWorkout(id: workoutID)
       }
     }
   }
@@ -314,7 +328,9 @@ extension SportRepository {
       else { return }
       let rest = try readRest(row)
       let workout = try readWorkout(id: row.text("workout_id"))
-      guard workout.status == .active, workout.phase(at: now) == .resting, workout.rest?.id == id
+      guard workout.status == .active, workout.restDestination != nil,
+        workout.phase(at: now) == .resting || workout.phase(at: now) == .feeling,
+        workout.rest?.id == id
       else {
         return
       }
