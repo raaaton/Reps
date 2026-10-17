@@ -186,3 +186,5 @@ Livraison60confirmée : script0, installation/vérification100%, postflight vers
 Correction61 : popup dès Next Exercise/Continue to Stretching, Update Goal/Keep Current Goal avant transition ; aucun popup final. Marqueur transactionnel schema9 conserve les deux choix à la fin, après reprise ou stretching.199tests/strictlint/xtool21.05s réussis, revue ciblée sans P1/P2 ; contrôles finaux/install en cours. [ExecPlan](exec-plans/2026-10-18-exercise-goal-decision.md). Aucun push.
 
 Livraison61confirmée : script0, installation/vérification100%, postflight61/mêmes identités et certificat exact/profils valides.199tests et6metadata réussis ; validation iPhone requise avant tout push.
+
+Publication autorisée par « push » après61 : commit sourcea685dbb et tagv1.0.3 poussés normalement, Release https://github.com/raaaton/Sport/releases/tag/v1.0.3 publiée avec uniqueSport-1.0.3.ipa. BuildRelease locale/199tests/6metadata/lint/inspection réussis ; téléchargement GitHub identique octet pour octet et nouvelle inspection unsigned réussie. Aucun fichier checksum, aucun certificat/profil privé/donnée personnelle publié.

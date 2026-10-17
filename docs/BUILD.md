@@ -88,3 +88,5 @@ October18 local1.0.3(60): full196host tests,6metadata tests, strict lint and uns
 Correction61: training schema9 additive goal-decision markers; full199host tests,6metadata tests, strict lint and unsigned61inspection succeed. xtool21.05s then metadata packaging2.05s. Same-identity USB delivery underway; no publication.
 
 Release1.0.3(61) prepared locally: scripts/release-local.sh exits0 with199host tests,6metadata, strictlint, optimized build61.96s and unsigned IPA inspection passed. No personal profiles/signatures/data and no checksum attachment. Publication authorized by user after installed61.
+
+Publication1.0.3 verified: public Release has onlySport-1.0.3.ipa. Downloaded asset matches local Release build byte-for-byte and passes unsigned app/widget inspection again. Tagv1.0.3 points to sourcea685dbb; later verification documentation does not change the executable.
