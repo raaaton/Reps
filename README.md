@@ -1,4 +1,5 @@
-<img width="1500" height="440" alt="MJMlfidO" src="https://github.com/user-attachments/assets/0260f5e8-96e1-405f-a55b-2e43b89aa3f9" />
+<img src="https://github.com/user-attachments/assets/9c42ab11-26d1-44ce-9af0-ce5e9eaf47b8" />
+
 
 <p align="center">
   <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Sport" />
