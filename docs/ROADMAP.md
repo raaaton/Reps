@@ -144,3 +144,5 @@ Publication 1.0.0 terminée : [Release publique](https://github.com/raaaton/Spor
 1.0.1 (50) installée et contrôlée après déploiement : même identité/certificat, profils app/widget valides et capacités inchangées. Métadonnées et inspection finale réussies. Attente du retour iPhone ; aucune publication GitHub.
 
 Retour utilisateur « cb push » : correctif installé 1.0.1 accepté et publication GitHub autorisée. Construction locale de l’IPA Release et vérifications avant publication ; seule l’IPA sera jointe, sans fichier checksum. Ce retour global ne constitue pas un relevé individuel de chaque recette d’accessibilité ou d’exécution en arrière-plan.
+
+1.0.1 publiée après accord utilisateur : [Release](https://github.com/raaaton/Sport/releases/tag/v1.0.1), IPA construite localement, seul asset téléchargeable. Téléchargement distant identique au fichier local et inspection réussie.

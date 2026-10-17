@@ -38,3 +38,5 @@ Device review: transition rest while rating and after submitting Feeling, pause/
 Publication autorisée par le retour utilisateur « cb push » après installation. Acceptation globale de la build, sans prétendre que chaque scénario individuel a été rapporté. Préparation de la Release locale 1.0.1 ; pas de fichier SHA256SUMS conformément au choix utilisateur. Préserver commits/releases antérieurs, push normal uniquement.
 
 Vérification de publication : script release-local exécuté avec succès, 182 tests hôte/6 metadata/lint, build Release optimisé (58,53 s), extraction et intégration des métadonnées, inspection app/widget et IPA non signée réussies. Fichier dist/Sport-1.0.1.ipa prêt ; aucun fichier checksum généré. Publication du tag v1.0.1 et téléchargement de contrôle à terminer.
+
+Publication terminée : commit 487c35b poussé normalement sur main, tag v1.0.1 et Release https://github.com/raaaton/Sport/releases/tag/v1.0.1. Asset unique Sport-1.0.1.ipa, sans .txt ; téléchargement GitHub comparé octet pour octet au build local et nouvelle inspection du paquet réussis.
