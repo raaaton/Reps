@@ -277,7 +277,7 @@ final class TrainingTransferTests: XCTestCase, @unchecked Sendable {
       history: overview.history,
       ending: WorkoutClock.date(now + 86_400_000))
     XCTAssertTrue(days.contains { $0.state == .completed })
-    XCTAssertTrue(days.contains { $0.state == .partial })
+    XCTAssertTrue(days.contains { $0.state == .neutral })
   }
 
   func testCSVReplacementLeavesOnlyImportedHistoryAndRetainsAllSettingsAndRecovery() async throws {

@@ -141,7 +141,7 @@ struct GoalEditor: View {
     switch reason {
     case .initial: "A starting target to adapt to your preferred load."
     case .increaseLoad:
-      "Maximum reached on every set and Feeling below 8: try the next available load."
+      "Feeling below 8: try the next available load at the minimum repetition target."
     case .decreaseLoad:
       "Feeling above 9: try the next lighter available load with the same targets."
     case .addRepetition: "Keep the same load and add one repetition to a weaker set."
@@ -220,10 +220,8 @@ private struct GoalCustomizationView: View {
     .interactiveDismissDisabled(saving)
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
-        Button {
+        SportConfirmationButton(title: "Save") {
           save()
-        } label: {
-          SportConfirmationLabel(title: "Save")
         }.labelStyle(.iconOnly).disabled(
           saving || !store.availableLoads.contains(load) || context.exercise.setCount > 1000)
       }

@@ -165,7 +165,7 @@ private struct VaultMetadataEditor: View {
             vault.busy)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button {
+          SportConfirmationButton(title: "Save") {
             Task {
               if await vault.changeMetadata(
                 id: route.id, day: date, pose: pose, session: route.session)
@@ -173,8 +173,6 @@ private struct VaultMetadataEditor: View {
                 dismiss()
               }
             }
-          } label: {
-            SportConfirmationLabel(title: "Save")
           }
           .labelStyle(.iconOnly).disabled(vault.busy || !vault.allows(route.session))
         }

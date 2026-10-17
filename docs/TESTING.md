@@ -23,7 +23,7 @@ Checking `restored == original` after all those operations is useful: it verifie
 
 ## Validation layers
 
-- **182 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
+- **199 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
 - **6 metadata tests:** compatibility and strictness of the App Intents metadata adapter, using recorded compiler fixtures.
 - **Swift lint:** formatting and source consistency, not functional correctness.
 - **xtool builds:** the app and extension compile against the configured iOS SDK.
@@ -47,3 +47,11 @@ swift format lint --strict --recursive Package.swift Sources Tests/Host/Package.
 These tests never require the user's private photos or real training database.
 
 The stretch deadline is persisted and reconciled to the exact target after suspension. The foreground app uses its existing completion sound. Background sound at the deadline is not scheduled by a new notification or Live Activity and is not guaranteed while iOS suspends Sport.
+
+1.0.3: attendance tests cover no completed history, current day, rest days, cancellation, completed off-schedule days, first workout outside the window and Paris DST. iPhone checks: missed-day dot and labels, no Partial, native Cancel neutral in both appearances, destructive action still red, confirmation dismisses on vault lock/background.
+
+Photo category follow-up57: synthetic metadata tests cover Other decoding/roundtrip, category ordering before unassigned photos and same-category/different-date comparison constraints. Existing legacy metadata test remains unchanged. Verify add/edit/select/compare on iPhone; no agent access to real private media.
+
+Build60 tests add direct load-goal batch projection/adoption, whole-batch stale rejection, forced SQL rollback and real completed-live-to-next-workout goal inheritance. Native popup consent/Cancel and Accent-filled circular toolbar with black glyph need physical review.
+
+Build61 replaces completion-batch tests with transition-decision tests: explicit Keep preserves old goal, Update applied before next exercise, both preserved after real stretching completion and cancellation, restart and next-workout inheritance, stale goal/inventory rejection, SQL rollback and migration8→9 preserve active data. Full199tests pass. Native timing on Next Exercise/Continue to Stretching remains iPhone recipe; no end summary prompt.

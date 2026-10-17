@@ -31,31 +31,48 @@ struct RestSettingsView: View {
 struct RestEditor: View {
   @Environment(\.dismiss) private var dismiss
   @EnvironmentObject private var store: TrainingStore
-  @State private var minutes: String
-  @State private var seconds: String
+  @State private var minutes: Int
+  @State private var seconds: Int
+  private let initialMinutes: Int
+  private let initialSeconds: Int
   @State private var saving = false
   @State private var error: String?
 
   init(seconds: Int) {
-    _minutes = State(initialValue: String(seconds / 60))
-    _seconds = State(initialValue: String(seconds % 60))
+    initialMinutes = seconds / 60
+    initialSeconds = seconds % 60
+    _minutes = State(initialValue: seconds / 60)
+    _seconds = State(initialValue: seconds % 60)
   }
 
   var body: some View {
     Form {
       Section {
-        LabeledContent("Minutes") {
-          TextField("3", text: $minutes).keyboardType(.numberPad).multilineTextAlignment(.trailing)
-            .accessibilityLabel("Rest minutes")
+        HStack(spacing: 0) {
+          Picker("Minutes", selection: $minutes) {
+            ForEach(0...59, id: \.self) { value in
+              Text("\(value) min").tag(value)
+            }
+            if initialMinutes > 59 {
+              Text("\(initialMinutes) min").tag(initialMinutes)
+            }
+          }
+          .frame(maxWidth: .infinity)
+          .clipped()
+          .accessibilityLabel("Rest minutes")
+          Picker("Seconds", selection: $seconds) {
+            ForEach(Array(Set([0, 30, initialSeconds])).sorted(), id: \.self) { value in
+              Text("\(value) sec").tag(value)
+            }
+          }
+          .frame(maxWidth: .infinity)
+          .clipped()
+          .accessibilityLabel("Rest seconds")
         }
-        LabeledContent("Seconds") {
-          TextField("0", text: $seconds).keyboardType(.numberPad).multilineTextAlignment(.trailing)
-            .accessibilityLabel("Rest seconds")
-        }
+        .pickerStyle(.wheel)
+        .labelsHidden()
       } footer: {
-        Text(
-          "Choose a duration above zero. Seconds must be between 0 and 59."
-        )
+        Text("Changes apply to future workouts.")
       }
     }
     .disabled(saving)
@@ -68,11 +85,9 @@ struct RestEditor: View {
         ).disabled(saving)
       }
       ToolbarItem(placement: .confirmationAction) {
-        Button {
+        SportConfirmationButton(title: "Save") {
           save()
-        } label: {
-          SportConfirmationLabel(title: "Save")
-        }.labelStyle(.iconOnly).disabled(saving)
+        }.labelStyle(.iconOnly).disabled(saving || (minutes == 0 && seconds == 0))
       }
     }
     .interactiveDismissDisabled(saving)
@@ -89,8 +104,7 @@ struct RestEditor: View {
   }
 
   private func save() {
-    guard let minutes = Int(minutes), let seconds = Int(seconds), minutes >= 0,
-      (0...59).contains(seconds), minutes <= (Int.max - seconds) / 60,
+    guard minutes >= 0, (0...59).contains(seconds), minutes <= (Int.max - seconds) / 60,
       minutes * 60 + seconds > 0
     else {
       error = "Enter a valid duration above zero."

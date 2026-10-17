@@ -1,7 +1,7 @@
 import Foundation
 
 public enum VaultPhotoPose: String, Codable, CaseIterable, Sendable {
-  case frontRelaxed, frontFlexed, back
+  case frontRelaxed, frontFlexed, back, other
 }
 
 public struct VaultPhotoMetadata: Codable, Sendable, Equatable {
@@ -35,8 +35,12 @@ public enum VaultPhotoCollection {
       VaultPhotoDay(
         id: day,
         photos: photos.sorted {
-          let left = $0.metadata.pose.flatMap { VaultPhotoPose.allCases.firstIndex(of: $0) } ?? 3
-          let right = $1.metadata.pose.flatMap { VaultPhotoPose.allCases.firstIndex(of: $0) } ?? 3
+          let left =
+            $0.metadata.pose.flatMap { VaultPhotoPose.allCases.firstIndex(of: $0) }
+            ?? VaultPhotoPose.allCases.count
+          let right =
+            $1.metadata.pose.flatMap { VaultPhotoPose.allCases.firstIndex(of: $0) }
+            ?? VaultPhotoPose.allCases.count
           return left == right ? $0.id < $1.id : left < right
         })
     }.sorted { $0.id > $1.id }

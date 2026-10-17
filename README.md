@@ -17,7 +17,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.0.1.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+Download **Sport-1.0.3.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -54,17 +54,20 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Persistent rest deadlines between sets and between exercises, with pause, resume, and skip.
 - Live Activities on the Lock Screen and Dynamic Island.
 - Pause and resume directly from the activity.
-- Optional local workout and monthly photo reminders.
+- Native minutes/seconds rest picker with 30-second increments.
+- Optional 🏋️‍♂️ workout and 📸 monthly photo reminders.
 
 ### Understand your progress
 
 - Workout and exercise history, with manual entry and corrections.
 - Connected charts for workout volume, repetitions, added weight, and timed work.
 - Drag on charts to inspect individual sessions.
-- Period totals and a GitHub-style training activity grid.
+- Period totals and a GitHub-style training activity grid, from the first completed workout.
+- Neutral filler cells and missed scheduled-day dots; missed days use the current enabled schedule and exclude today.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
-- After a completed live workout, future goals match its actual repetitions and available uniform load; configured timed targets stay unchanged.
-- Suggested increases or decreases in added weight require your approval.
+- Review added-weight increases or decreases directly when moving to the next exercise or stretching.
+- Choose **Update Goal** or **Keep Current Goal**; your decision is saved and preserved at workout completion.
+- Other future goals match completed workout results; configured timed targets stay unchanged.
 - Warm-up and stretch results remain separate from working-set progression.
 
 ### Keep photos private
@@ -72,18 +75,18 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - A Face ID-protected progress-photo vault.
 - Encrypted originals and thumbnails using CryptoKit AES-GCM.
 - Immediate locking when leaving the vault or backgrounding the app, with its preview covered.
-- Date-based photo stacks and pose categories.
+- Date-based photo stacks: Front Relaxed, Front Flexed, Back, and Other.
 - Compare matching poses, zoom, and switch between comparison photos.
 - Explicit photo export and confirmed deletion.
 
-The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable photo backup. Training CSV exports contain **no private photos or vault key**. See [security](docs/SECURITY.md).
+The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable photo backup. Training exports contain **no private photos or vault key**. See [security](docs/SECURITY.md).
 
 ### Own your training data
 
-- **Import from Files** and **Export to Files**.
-- CSV preserves working sets, historical goals, and warm-up/stretch results.
-- Import replaces training history after preview and confirmation; it preserves your workout configuration.
-- Legacy Sport CSV files remain importable.
+- **Import from Files** and **Export to Files**. Export directly saves one JSON file containing current training data and settings, without format choices.
+- The JSON archive preserves workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals and training settings. Legacy CSV import remains supported.
+- CSV import replaces training history after preview and confirmation, preserving your configuration.
+- JSON restore replaces training data and settings after preview and confirmation.
 
 ---
 
@@ -144,7 +147,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **182 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
+The current suite contains **199 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 
@@ -176,5 +179,3 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 ---
 
 <p align="center"><strong>Sport</strong><br />Native. Offline. Focused.</p>
-
-Version 1.0.1 (50) adds inter-exercise rest, goals carried forward from completed workouts, lighter-load suggestions above Feeling 9, and automatic stretch completion. The user accepted the installed build before authorizing publication.

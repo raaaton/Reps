@@ -189,6 +189,7 @@ extension WorkoutSupportTests {
     let r = try SportRepository(path: path)
     let legacy = try await r.startWorkout(scheduleID: "pull-abs", now: now, calendar: calendar)
     let db = try SQLiteDatabase(path: path)
+    try db.execute("DROP TABLE workout_goal_decisions")
     try db.execute("DROP TABLE workout_support")
     try db.execute("PRAGMA user_version=7")
     let migrated = try SportRepository(path: path)
@@ -303,5 +304,34 @@ extension WorkoutSupportTests {
     XCTAssertEqual(try TrainingCSV.decode(TrainingCSV.encode([cancelled])), [cancelled])
     let exported = try await r.exportTraining(now: now + 12_000)
     XCTAssertEqual(try TrainingArchive.decode(exported.encoded()), exported)
+  }
+}
+
+extension WorkoutSupportTests {
+  func testExerciseGoalChoiceSurvivesStretchCompletionForUpdateAndKeep() async throws {
+    for update in [true, false] {
+      let r = try SportRepository(path: ":memory:")
+      let original = try await guided(r)
+      let (w, time) = try await warm(r, original)
+      let exercise = try XCTUnwrap(w.currentExercise)
+      try await r.beginSet(workoutID: w.id, exerciseID: exercise.id, number: 1, now: time)
+      try await r.recordSet(
+        workoutID: w.id, exerciseID: exercise.id, number: 1,
+        repetitions: 12, weightGrams: 3900, now: time + 1000)
+      let preview = try await r.exerciseLoadGoalDecision(
+        workoutID: w.id, exerciseID: exercise.id,
+        feelingTenths: 75, now: time + 2000)
+      let decision = try XCTUnwrap(preview)
+      try await r.resolveExerciseLoadGoal(decision, update: update, now: time + 2000)
+      let stretching = try await r.workout(id: w.id)
+      XCTAssertEqual(stretching.currentSupport?.kind, .stretch)
+      let step = try XCTUnwrap(stretching.currentSupport)
+      try await r.beginSupport(workoutID: w.id, stepID: step.id, now: time + 3000)
+      try await r.finishSupport(workoutID: w.id, stepID: step.id, now: time + 36_000)
+      let finished = try await r.workout(id: w.id)
+      let context = try await r.goalContext(exerciseID: "chin-ups")
+      XCTAssertEqual(finished.status, .completed)
+      XCTAssertEqual(context.adopted, update ? decision.suggestion.goal : nil)
+    }
   }
 }

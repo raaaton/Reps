@@ -87,3 +87,38 @@ final class ProgressionTests: XCTestCase {
       Progression.assess(target: timed, previous: record, loads: loads).status, .insufficient)
   }
 }
+
+extension ProgressionTests {
+  func testEasyBodyweightUsesSmallestPositiveLoadBeforeMaximumReps() {
+    let actual = previous(reps: [10, 9, 9, 8], feeling: 79, weights: [0, 0, 0, 0])
+    let choices = [5100, 0, 3900, 3000].map { AvailableLoad(grams: $0, components: []) }
+    let assessment = Progression.assess(target: target, previous: actual, loads: choices)
+    XCTAssertEqual(assessment.status, .increase)
+    XCTAssertEqual(assessment.nextLoad?.grams, 3000)
+    let goal = GoalEngine.suggestion(target: target, previous: actual, loads: choices)
+    XCTAssertEqual(goal?.goal.load.grams, 3000)
+    XCTAssertEqual(goal?.goal.repetitions, [8, 8, 8, 8])
+    XCTAssertEqual(goal?.reason, .increaseLoad)
+  }
+  func testFirstLoadRequiresFeelingBelowEightAndCompleteBodyweightSets() {
+    for effort in [80, 90] {
+      let actual = previous(reps: [10, 9, 9, 8], feeling: effort, weights: [0, 0, 0, 0])
+      let result = Progression.assess(target: target, previous: actual, loads: loads)
+      XCTAssertEqual(result.status, .maintain)
+      XCTAssertNil(result.nextLoad)
+    }
+    let incomplete = previous(reps: [10, 9, 8], feeling: 75, weights: [0, 0, 0])
+    XCTAssertEqual(
+      Progression.assess(target: target, previous: incomplete, loads: loads).status, .insufficient)
+    for weights in [[0, 3000, 0, 0], [3000, 3000, 3000, 3000]] {
+      let weighted = previous(reps: [10, 9, 9, 8], feeling: 75, weights: weights)
+      XCTAssertNil(Progression.assess(target: target, previous: weighted, loads: loads).nextLoad)
+    }
+  }
+  func testEasyBodyweightWithoutAvailableLoadDoesNotInventOne() {
+    let actual = previous(reps: [10, 9, 9, 8], feeling: 75, weights: [0, 0, 0, 0])
+    let result = Progression.assess(target: target, previous: actual, loads: [.bodyweight])
+    XCTAssertEqual(result.status, .noHeavierLoad)
+    XCTAssertNil(result.nextLoad)
+  }
+}

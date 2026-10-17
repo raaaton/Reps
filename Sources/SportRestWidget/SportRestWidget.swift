@@ -13,6 +13,7 @@ struct SportRestWidget: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RestActivityAttributes.self) { context in
       RestActivityLockScreen(context: context)
+        .activityBackgroundTint(.clear)
         .widgetURL(workoutURL(context.attributes.workoutID))
     } dynamicIsland: { context in
       DynamicIsland {

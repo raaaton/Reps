@@ -1,0 +1,11 @@
+# Native rest-duration wheels — 1.0.3 (58)
+
+User requests Apple-style real duration selection, preferably30second steps (5 or1 only as fallback). HIG Pickers reviewed: UIDatePicker countdown only hours/minutes, so use two native SwiftUI wheel Pickers with minutes0...59 and seconds0/30. Existing stored nonstandard seconds remain a selectable legacy value, and minutes above59 remain representable as an additional saved value; no rounding on open/save and no silent new limit in SQLite. Existing storage accepts positive durations; keep overflow/zero validation and disable Save at0:00. Preserve cancellation, busy protection, errors and saveRest path. Applies from Today Between sets or Settings, same editor. No active workout/timer mutation, permissions/dependencies/security change.
+
+Only UI state converts String to Int, no domain/migration changes. Do not add source-mirroring wheel tests. Verify lint, current planning tests, real xtool build, metadata generation/packaging/6 tests/bundle inspection. Pre/postflight same identity/certificate, authorized standard USB install; no GitHub push before device feedback. Recipe: choose2:30, cancel unchanged, reopen/save/persist;0:00 cannot save; saved odd seconds reopen unchanged; accessibility/large text, both entry points, active session rest unchanged. No runtime result claimed from Linux compilation.
+
+Implementation started; installed predecessor57 already postflight-confirmed. Keep caches and pending local changes.
+
+Local checks complete: strict lint clean,10 PlanningTests pass0.031s, xtool7.33s then metadata generation/packaging2.02s,6metadata tests pass and unsigned58bundle inspected. Preflight57same identity/exact certificate/valid app-widget profiles and unchanged capabilities. Standard USB58install started. Last full domain suite191passed for57; no business mutation here.
+
+Delivery complete: device-run.sh code0, installation/verification100%; direct postflight confirms1.0.3(58), exact existing certificate unchanged, same app/widget identities, valid profiles and unchanged capabilities. No provisioning error/repair. Await real iPhone wheel interaction/accessibility/cancel/save/persistence review before further milestone or GitHub publication. No actual personal rest setting changed by the agent.

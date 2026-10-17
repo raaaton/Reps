@@ -49,8 +49,8 @@ def main():
         "CFBundleDisplayName": "Sport",
         "CFBundleExecutable": "Sport",
         "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": "1.0.1",
-        "CFBundleVersion": "50",
+        "CFBundleShortVersionString": "1.0.3",
+        "CFBundleVersion": "61",
         "MinimumOSVersion": "26.0",
         "UIDeviceFamily": [1],
         "CFBundleDevelopmentRegion": "en",
@@ -69,7 +69,7 @@ def main():
     require(list((bundle / "PlugIns").iterdir()) == [extension], "Unexpected embedded extension")
     child = plistlib.loads((extension / "Info.plist").read_bytes())
     for key, value in {"CFBundleIdentifier": "com.raaaton.sport.rest-widget",
-                       "CFBundleShortVersionString": "1.0.1", "CFBundleVersion": "50",
+                       "CFBundleShortVersionString": "1.0.3", "CFBundleVersion": "61",
                        "MinimumOSVersion": "26.0", "CFBundleExecutable": "SportRestWidget",
                        "CFBundlePackageType": "XPC!"}.items():
         require(child.get(key) == value, f"Unexpected extension {key}")
@@ -111,7 +111,7 @@ def main():
 
     inspect_binary(bundle / "Sport")
     inspect_binary(extension / "SportRestWidget")
-    print("PASS: Sport 1.0.1 (50), com.raaaton.sport, arm64 iPhoneOS 26.0, English, unsigned.")
+    print("PASS: Sport 1.0.3 (61), com.raaaton.sport, arm64 iPhoneOS 26.0, English, unsigned.")
     print("PASS: one WidgetKit extension, app and extension intent metadata; no profile; declared Face ID/camera/Photos add-only purposes, no broad Photos access.")
     print("PASS: SwiftPM bundled rest sound present, mono PCM WAV, 0.30 seconds.")
     print("PASS: Sport layered icon present at app root and declared in Info.plist.")

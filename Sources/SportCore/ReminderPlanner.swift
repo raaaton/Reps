@@ -75,7 +75,8 @@ public enum ReminderPlanner {
           [.year, .month, .day, .hour, .minute, .second], from: occurrence)
         result.append(
           ReminderOccurrence(
-            id: "sport.local.workout.\(schedule.id).\(key)", kind: .workout, title: schedule.name,
+            id: "sport.local.workout.\(schedule.id).\(key)", kind: .workout,
+            title: "🏋️‍♂️ \(schedule.name)",
             body: "Your workout is scheduled for today.", components: components,
             repeats: false, date: occurrence))
       }
@@ -83,7 +84,7 @@ public enum ReminderPlanner {
     if context.preferences.photosEnabled {
       result.append(
         ReminderOccurrence(
-          id: "sport.local.photos.monthly", kind: .photos, title: "Monthly progress check",
+          id: "sport.local.photos.monthly", kind: .photos, title: "📸 Monthly progress check",
           body: "Time to review your progress.",
           components: DateComponents(
             day: 1, hour: context.preferences.photoMinutes / 60,

@@ -129,7 +129,7 @@ final class ProgressionIntegrationTests: XCTestCase, @unchecked Sendable {
     let days = TrainingAnalytics.attendance(
       history: TrainingAnalytics.summaries(in: overview), ending: ending, calendar: calendar)
     XCTAssertEqual(days.last?.key, "2026-10-12")
-    XCTAssertEqual(days.last?.state, .partial)
+    XCTAssertEqual(days.last?.state, .neutral)
     XCTAssertEqual(days.last?.workouts.first?.id, w.id)
     XCTAssertNil(TrainingAnalytics.date(for: "2026-02-30", calendar: calendar))
     var paris = Calendar(identifier: .gregorian)

@@ -8,7 +8,12 @@ extension SportRepository {
     let snapshot = try readSnapshot()
     let loads = try WeightInventory.loads(items: snapshot.weightItems)
     for performance in workout.exercises {
-      guard let target = snapshot.exercises.first(where: { $0.id == performance.definition.id }),
+      guard
+        try database.query(
+          "SELECT exercise_id FROM workout_goal_decisions WHERE exercise_id=?",
+          [.text(performance.id)]
+        ).isEmpty,
+        let target = snapshot.exercises.first(where: { $0.id == performance.definition.id }),
         let goal = GoalEngine.matchingGoal(target: target, previous: performance, loads: loads),
         try readLatestPerformance(exerciseID: target.id)?.id == performance.id
       else { continue }
@@ -65,6 +70,66 @@ extension SportRepository {
           "The latest result has changed. Review the suggestion again.")
       }
       try writeGoal(suggestion.goal, original: original)
+    }
+  }
+  public func exerciseLoadGoalDecision(
+    workoutID: String, exerciseID: String, feelingTenths: Int, now: Int
+  ) throws -> ExerciseLoadGoalDecision? {
+    try WorkoutClock.validate(now)
+    return try database.transaction {
+      try readExerciseLoadGoalDecision(
+        workoutID: workoutID, exerciseID: exerciseID, feelingTenths: feelingTenths, now: now)
+    }
+  }
+  private func readExerciseLoadGoalDecision(
+    workoutID: String, exerciseID: String, feelingTenths: Int, now: Int
+  ) throws -> ExerciseLoadGoalDecision? {
+    let workout = try readWorkout(id: workoutID)
+    guard let exercise = workout.currentExercise, exercise.id == exerciseID else {
+      throw TrainingError.invalid("This exercise is no longer current.")
+    }
+    guard workout.status == .active, workout.phase(at: now) == .feeling,
+      exercise.feelingTenths == nil, (0...100).contains(feelingTenths)
+    else {
+      throw TrainingError.invalid("This exercise is no longer waiting for Feeling.")
+    }
+    let snapshot = try readSnapshot()
+    guard let target = snapshot.exercises.first(where: { $0.id == exercise.definition.id }) else {
+      return nil
+    }
+    let loads = try WeightInventory.loads(items: snapshot.weightItems)
+    let rated = WorkoutExercise(
+      id: exercise.id, definition: exercise.definition, sets: exercise.sets,
+      feelingTenths: feelingTenths, setStartedAt: exercise.setStartedAt,
+      setWeightGrams: exercise.setWeightGrams,
+      setEndedAt: exercise.setEndedAt, setComponents: exercise.setComponents, goal: exercise.goal)
+    let original = snapshot.goals.first { $0.definition.id == target.id }
+    guard let suggestion = GoalEngine.suggestion(target: target, previous: rated, loads: loads),
+      suggestion.reason == .increaseLoad || suggestion.reason == .decreaseLoad,
+      suggestion.goal != original
+    else { return nil }
+    return ExerciseLoadGoalDecision(
+      workoutID: workoutID, exerciseID: exerciseID,
+      feelingTenths: feelingTenths, original: original, suggestion: suggestion)
+  }
+  public func resolveExerciseLoadGoal(_ decision: ExerciseLoadGoalDecision, update: Bool, now: Int)
+    throws
+  {
+    try WorkoutClock.validate(now)
+    try database.transaction {
+      guard
+        try readExerciseLoadGoalDecision(
+          workoutID: decision.workoutID, exerciseID: decision.exerciseID,
+          feelingTenths: decision.feelingTenths, now: now) == decision
+      else {
+        throw TrainingError.invalid("The goal or result has changed. Review the choice again.")
+      }
+      if update { try writeGoal(decision.suggestion.goal, original: decision.original) }
+      try database.execute(
+        "INSERT INTO workout_goal_decisions VALUES(?)", [.text(decision.exerciseID)])
+      try saveFeelingInTransaction(
+        workoutID: decision.workoutID, exerciseID: decision.exerciseID,
+        tenths: decision.feelingTenths, now: now)
     }
   }
   private func writeGoal(_ goal: ExerciseGoal, original: ExerciseGoal?) throws {

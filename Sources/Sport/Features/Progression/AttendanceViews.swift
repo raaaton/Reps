@@ -10,45 +10,63 @@ struct AttendanceGrid: View {
   private var target: Double { max(28, cell) }
   private var weeks: Int { (days.count + 6) / 7 }
   var body: some View {
-    ScrollView(.horizontal) {
-      HStack(alignment: .top, spacing: 3) {
-        ForEach(0..<weeks, id: \.self) { week in
-          VStack(spacing: 3) {
-            ForEach(0..<7, id: \.self) { weekday in
-              let index = week * 7 + weekday
-              if days.indices.contains(index) {
-                let day = days[index]
-                Button {
-                  choose(day)
-                } label: {
-                  ZStack {
-                    RoundedRectangle(cornerRadius: 3).fill(
-                      day.state == .completed
-                        ? SportAccentColors(accentChoice).fill : Color.secondary.opacity(0.15))
-                    if day.state == .partial { Circle().fill(Color.primary).padding(5) }
-                    if day.state == .completed {
-                      Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(SportAccentColors(accentChoice).ink).accessibilityHidden(
-                          true)
-                    }
-                  }
+    GeometryReader { geometry in
+      let fittingWeeks = max(1, Int((geometry.size.width + 3) / (target + 3)))
+      let emptyWeeks = max(0, fittingWeeks - weeks)
+      ScrollView(.horizontal) {
+        HStack(alignment: .top, spacing: 3) {
+          ForEach(0..<emptyWeeks, id: \.self) { _ in
+            VStack(spacing: 3) {
+              ForEach(0..<7, id: \.self) { _ in
+                RoundedRectangle(cornerRadius: 3)
+                  .fill(Color.secondary.opacity(0.15))
                   .frame(width: cell, height: cell)
                   .frame(width: target, height: target)
-                  .contentShape(Rectangle())
+              }
+            }
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+          }
+          ForEach(0..<weeks, id: \.self) { week in
+            VStack(spacing: 3) {
+              ForEach(0..<7, id: \.self) { weekday in
+                let index = week * 7 + weekday
+                if days.indices.contains(index) {
+                  let day = days[index]
+                  Button {
+                    choose(day)
+                  } label: {
+                    ZStack {
+                      RoundedRectangle(cornerRadius: 3).fill(
+                        day.state == .completed
+                          ? SportAccentColors(accentChoice).fill : Color.secondary.opacity(0.15))
+                      if day.state == .missed { Circle().fill(Color.primary).padding(5) }
+                      if day.state == .completed {
+                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
+                          .foregroundStyle(SportAccentColors(accentChoice).ink).accessibilityHidden(
+                            true)
+                      }
+                    }
+                    .frame(width: cell, height: cell)
+                    .frame(width: target, height: target)
+                    .contentShape(Rectangle())
+                  }
+                  .buttonStyle(.plain)
+                  .accessibilityLabel("\(WorkoutLabels.day(day.key)), \(stateLabel(day.state))")
+                } else {
+                  Color.clear.frame(width: target, height: target).accessibilityHidden(true)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(WorkoutLabels.day(day.key)), \(stateLabel(day.state))")
-              } else {
-                Color.clear.frame(width: target, height: target).accessibilityHidden(true)
               }
             }
           }
         }
+        .frame(minWidth: geometry.size.width, alignment: .trailing)
       }
+      .defaultScrollAnchor(.trailing)
     }
-    .defaultScrollAnchor(.trailing)
-    Text("13 weeks · Filled: completed · Dot: partial").font(.caption).foregroundStyle(
-      .secondary)
+    .frame(height: 7 * target + 6 * 3)
+    Text("Filled: completed · Dot: missed · \(weeks) \(weeks == 1 ? "week" : "weeks")")
+      .font(.caption).foregroundStyle(.secondary)
   }
   private func choose(_ day: AttendanceDay) {
     SportHaptics.shared.play(.selection)
@@ -57,7 +75,7 @@ struct AttendanceGrid: View {
   private func stateLabel(_ state: AttendanceState) -> String {
     switch state {
     case .completed: "workout completed"
-    case .partial: "sets recorded, workout incomplete"
+    case .missed: "scheduled workout missed"
     case .neutral: "no completed workout"
     }
   }
@@ -68,8 +86,11 @@ struct AttendanceDayView: View {
   var body: some View {
     List {
       if day.workouts.isEmpty {
-        Text("No recorded workout on this day. Rest days stay neutral.")
-          .foregroundStyle(.secondary)
+        Text(
+          day.state == .missed
+            ? "Scheduled workout not completed." : "No recorded workout on this day."
+        )
+        .foregroundStyle(.secondary)
       }
       ForEach(day.workouts) { workout in
         if workout.status == .active {
@@ -108,7 +129,7 @@ struct AttendanceListView: View {
             Text(
               day.state == .completed
                 ? "Workout Complete"
-                : "Partial Workout"
+                : "Missed Workout"
             ).font(.subheadline).foregroundStyle(.secondary)
           }
         }

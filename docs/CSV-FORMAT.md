@@ -53,3 +53,8 @@ Depuis0.11.2 : Import and Export contient seulement Import from Files et Export 
 ## Échauffements et étirements — CSV v2 (0.12.0)
 
 Les exports ajoutent la colonne finale `support_json` (version de ligne 2). Elle contient l’instantané borné des étapes d’accompagnement, leurs cibles, départs et résultats réellement enregistrés ; les photos privées restent exclues. Ce JSON est identique sur les lignes d’une même séance et validé avant import. Les séries de travail restent les seules lignes `set` et les seules données de progression. La lecture de CSV v1 à 31 colonnes reste supportée, sans créer d’échauffements ou d’étirements rétroactifs. Les anciennes versions de Sport ne savent pas importer CSV v2. Les archives internes de récupération conservent aussi l’accompagnement et continuent d’exclure le coffre.
+
+
+## Export direct — 18 octobre 2026
+
+Choix utilisateur : Export to Files enregistre directement une archive JSON de toutes les données actuelles d’entraînement et de configuration, sans choix de format ni choix Before Last Import. Les photos privées restent exclues et cette exclusion est affichée. Import CSV et JSON reste compatible avec aperçu/confirmation et transactions. La copie avant import reste stockée en interne mais n’est plus sélectionnable dans l’export ; les textes ne promettent plus son export via un menu supprimé. Les paragraphes précédents décrivent l’historique des versions. Finir/annuler la séance active avant export reste requis par le format existant.

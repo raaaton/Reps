@@ -28,11 +28,65 @@ final class TrainingAnalyticsTests: XCTestCase, @unchecked Sendable {
     let days = TrainingAnalytics.attendance(
       history: records, ending: date("2026-10-12T12:00:00Z"), calendar: calendar)
     XCTAssertEqual(days.first { $0.key == "2026-10-11" }?.state, .completed)
-    XCTAssertEqual(days.first { $0.key == "2026-10-10" }?.state, .partial)
+    XCTAssertEqual(days.first { $0.key == "2026-10-10" }?.state, .neutral)
     XCTAssertEqual(days.first { $0.key == "2026-10-09" }?.state, .neutral)
     XCTAssertEqual(days.first { $0.key == "2026-10-12" }?.state, .neutral)
     XCTAssertEqual(days.first { $0.key == "2026-10-11" }?.workouts.count, 2)
     XCTAssertTrue(days.allSatisfy { $0.date <= date("2026-10-12T12:00:00Z") })
+  }
+  func testMissedDaysStartAtFirstCompletedWorkoutAndExcludeTodayAndRestDays() {
+    func workout(_ key: String, _ status: WorkoutStatus) -> WorkoutSummary {
+      WorkoutSummary(
+        id: key, scheduleID: "s", name: "Workout", dayKey: key,
+        startedAt: 0, endedAt: 1, status: status, setCount: 1)
+    }
+    let records = [
+      workout("2026-10-12", .completed), workout("2026-10-15", .completed),
+      workout("2026-10-16", .cancelled), workout("2026-10-09", .cancelled),
+    ]
+    let days = TrainingAnalytics.attendance(
+      history: records, scheduledWeekdays: [1, 3, 5, 7],
+      ending: date("2026-10-18T12:00:00Z"), weeks: 2, calendar: calendar)
+    XCTAssertEqual(days.filter { $0.state == .missed }.map(\.key), ["2026-10-14", "2026-10-16"])
+    XCTAssertEqual(days.filter { $0.state == .completed }.map(\.key), ["2026-10-12", "2026-10-15"])
+    XCTAssertEqual(days.last?.state, .neutral)
+    XCTAssertEqual(days.first { $0.key == "2026-10-09" }?.state, .neutral)
+    XCTAssertEqual(days.first { $0.key == "2026-10-17" }?.state, .neutral)
+    XCTAssertEqual(days.first { $0.key == "2026-10-16" }?.workouts.first?.status, .cancelled)
+  }
+  func testNoCompletedWorkoutMeansNoMissedDays() {
+    let cancelled = WorkoutSummary(
+      id: "c", scheduleID: "s", name: "Cancelled",
+      dayKey: "2026-10-12", startedAt: 0, endedAt: 1, status: .cancelled, setCount: 4)
+    let days = TrainingAnalytics.attendance(
+      history: [cancelled], scheduledWeekdays: [1, 2, 3, 4, 5, 6, 7],
+      ending: date("2026-10-18T12:00:00Z"), calendar: calendar)
+    XCTAssertTrue(days.allSatisfy { $0.state == .neutral })
+  }
+  func testFirstWorkoutOutsideVisiblePeriodStillEnablesMissedDaysAcrossDST() {
+    var paris = calendar
+    paris.timeZone = TimeZone(identifier: "Europe/Paris")!
+    let first = WorkoutSummary(
+      id: "old", scheduleID: "removed", name: "Old",
+      dayKey: "2026-09-01", startedAt: 0, endedAt: 1, status: .completed, setCount: 4)
+    let days = TrainingAnalytics.attendance(
+      history: [first], scheduledWeekdays: [7],
+      ending: date("2026-10-26T12:00:00Z"), weeks: 2, calendar: paris)
+    XCTAssertEqual(days.filter { $0.state == .missed }.map(\.key), ["2026-10-25"])
+    XCTAssertEqual(Set(days.map(\.key)).count, days.count)
+  }
+  func testDefaultAttendanceStartsInWeekOfFirstCompletedWorkout() {
+    let first = WorkoutSummary(
+      id: "first", scheduleID: "s", name: "First",
+      dayKey: "2026-10-11", startedAt: 0, endedAt: 1, status: .completed, setCount: 4)
+    let days = TrainingAnalytics.attendance(
+      history: [first], ending: date("2026-10-18T12:00:00Z"), calendar: calendar)
+    XCTAssertEqual(days.first?.key, "2026-10-05")
+    XCTAssertEqual(days.count, 14)
+    let empty = TrainingAnalytics.attendance(
+      history: [], ending: date("2026-10-18T12:00:00Z"), calendar: calendar)
+    XCTAssertEqual(empty.first?.key, "2026-10-12")
+    XCTAssertEqual(empty.count, 7)
   }
   func testElapsedDurationIsWallClockAndManualDurationIsUnknown() {
     let real = WorkoutSession(

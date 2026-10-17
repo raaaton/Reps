@@ -191,6 +191,9 @@ struct FeelingForm: View {
   @State private var saving = false
   @State private var error: String?
 
+  @State private var decision: ExerciseLoadGoalDecision?
+  @State private var showDecision = false
+
   var body: some View {
     Group {
       Section {
@@ -221,8 +224,15 @@ struct FeelingForm: View {
           Task {
             defer { saving = false }
             do {
-              try await store.saveFeeling(
-                workout: workout, exercise: exercise, tenths: Int((feeling * 10).rounded()))
+              let tenths = Int((feeling * 10).rounded())
+              if let proposal = try await store.exerciseLoadGoalDecision(
+                workout: workout, exercise: exercise, tenths: tenths)
+              {
+                decision = proposal
+                showDecision = true
+              } else {
+                try await store.saveFeeling(workout: workout, exercise: exercise, tenths: tenths)
+              }
             } catch { self.error = error.localizedDescription }
           }
         } label: {
@@ -230,7 +240,8 @@ struct FeelingForm: View {
             title: saving
               ? "Saving…"
               : workout.exercises.last?.id == exercise.id
-                ? "Finish Workout" : "Next Exercise",
+                ? (workout.support == nil ? "Finish Workout" : "Continue to Stretching")
+                : "Next Exercise",
             systemImage: "checkmark", isWorking: saving
           )
         }
@@ -241,6 +252,21 @@ struct FeelingForm: View {
         Text("0: no effort · 10: maximum effort.")
       }
       .disabled(saving)
+      .sportConfirmation(
+        "Update Next Workout Goal?", isPresented: $showDecision, presenting: decision
+      ) { captured in
+        Button("Update Goal") { resolve(captured, update: true) }
+        Button("Keep Current Goal", role: .cancel) { resolve(captured, update: false) }
+      } message: { captured in
+        let goal = captured.suggestion.goal
+        let target =
+          goal.repetitions.map { RepetitionNotation.compact($0) }
+          ?? goal.definition.durationSeconds.map { "\(goal.definition.setCount)×\($0) s" }
+          ?? "\(goal.definition.setCount) sets · untimed"
+        Text(
+          "\(goal.definition.name)\n\(target) · \(WorkoutLabels.weight(goal.load.grams)) kg added\n\nUpdate this goal for your next workout, or keep your current goal."
+        )
+      }
       .alert(
         "Feeling Not Saved",
         isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })
@@ -251,6 +277,18 @@ struct FeelingForm: View {
       }
     }
   }
+  private func resolve(_ captured: ExerciseLoadGoalDecision, update: Bool) {
+    guard !saving else { return }
+    saving = true
+    Task {
+      defer { saving = false }
+      do {
+        try await store.resolveExerciseLoadGoal(captured, update: update)
+        decision = nil
+      } catch { self.error = error.localizedDescription }
+    }
+  }
+
 }
 
 struct PreviousPerformanceRow: View {

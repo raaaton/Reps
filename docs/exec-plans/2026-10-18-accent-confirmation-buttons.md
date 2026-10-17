@@ -1,0 +1,13 @@
+# Accent confirmation background, black glyph — 1.0.3 (59)
+
+User reports confirmation checkmark background lost its Accent fill after requested black SF Symbol change. Restore circular native prominent Liquid Glass action with Accent background and only black symbol; keep this shared across all checkmark toolbar confirmations. Scope excludes unfilled selection ticks, destructive controls, Cancel or business behavior.
+
+Investigation: before1.0.1 native Button(title,systemImage:checkmark) was used. Later replacement supplies custom SportConfirmationLabel Image with both foregroundStyle black and tint black, but outer Button has no explicit prominent style. Remove that conflation and use one shared SportConfirmationButton: native Button + glassProminent + circular button border + Accent tint on control; only image foregroundStyle black. All8 usages retain exact action closures, disabled gates, accessibility titles and toolbar placements. No synthetic circle/background overlay, dimensions or navigation redesign. Apple HIG Buttons and official GlassProminentButtonStyle documentation reviewed; prototype is actual SDK compile of this component. Vault action/lease guards untouched, no security boundary change.
+
+Verify strict lint, real xtool build, generated metadata/packaging/6tests and bundle inspection, pre/postflight and authorized USB install59 on same identities/certificate. Pure visual/control style change: no source-mirroring tests; latest191host suite remains from57,10PlanningTests additionally ran58. Device checks: rest Save2:30 enabled vs0:00 disabled, history/exercise/schedule/goal Save, exercise-choice Done, photo metadata Save and disabled busy/session conditions. Accent fill + black checkmark and circular dimensions require iPhone review. No GitHub publication before feedback.
+
+Implementation complete, verification pending. No cert/profile/toolchain/cache/data changes.
+
+Prototype59 compiled successfully14.08s/lintclean. User then requested direct load-goal popup;59was not separately installed. Shared button fix merges into60, whose domain196tests pass. Actual Accent fill/black glyph still requires physical review; no claim inferred from compilation.
+
+Delivery complete in60: final metadata embedded2.09s,6metadata tests and unsigned60 inspection pass; device-run.sh0 with installation/verification100%; direct postflight confirms1.0.3(60), exact existing certificate, same effective app/widget identities and valid profiles/unchanged capabilities. No certificate repair, no real user workout or adoption performed by agent. Physical popup and Accent/black button rendering are pending user test; no commit/push/tag/Release.

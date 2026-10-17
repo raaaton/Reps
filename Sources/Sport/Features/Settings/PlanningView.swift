@@ -194,10 +194,8 @@ struct ScheduleEditor: View {
         ).disabled(saving)
       }
       ToolbarItem(placement: .confirmationAction) {
-        Button {
+        SportConfirmationButton(title: "Save") {
           save()
-        } label: {
-          SportConfirmationLabel(title: "Save")
         }.labelStyle(.iconOnly).disabled(saving)
       }
     }
@@ -229,10 +227,8 @@ struct ScheduleEditor: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
-            Button {
+            SportConfirmationButton(title: "Done") {
               selecting = false
-            } label: {
-              SportConfirmationLabel(title: "Done")
             }.labelStyle(.iconOnly)
           }
         }

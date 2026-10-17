@@ -304,3 +304,23 @@ La previewcard est maintenant dans chartOverlay et non dans l'annotation du Poin
 
 
 17 October — local 1.0.1: between-exercise rest shares the existing persisted deadline and native controls/Live Activity, targeting the next exercise while Feeling remains editable. Stretch has a remaining-time display and automatic stop rather than an open-ended finish button. Customization navigation uses a native NavigationStack path: parent Close hidden while pushed and no duplicate Cancel. Confirmation toolbar glyphs use a shared black symbol label, and filled workout action labels override inherited tint with accent ink. Timed chart load selection removed without clearing the previous chart projection during updates. Physical appearance, sound and navigation still require iPhone review.
+
+18 October — 1.0.2 local Lock Screen-only presentation: explicit `.activityBackgroundTint(.clear)` replaces the default opaque-looking system tint. Content and layout unchanged; no synthetic glass background or changes to Dynamic Island. Native translucency, wallpaper contrast and accessibility settings remain subject to iPhone review.
+
+18 October — Export to Files is a direct native Button, not a format Menu. It saves the complete current training/settings JSON through the standard Files destination picker. Footer names the included data and excluded private photos; no new exporter format or private-media access. Import compatibility and confirmations retained.
+
+1.0.3: attendance dots now mean missed scheduled past days, starting at the first completed workout. Current enabled nonempty schedule is used; today stays neutral until completed or past. No partial state. Confirmation tint is scoped declaratively to a clear native SwiftUI alert presenter, replacing late UIKit controller inspection; underlying controls retain Icy Cyan. Neutral primary text means white dark/black light, destructive roles remain red. Actual alert appearance and accessibility require iPhone review.
+
+Follow-up54: remove the explanatory missed-days sentence per user request. Consistency grid defaults to full completed-workout history through today, aligned to Mondays. Week count is computed from displayed columns (singular/plural), not a fixed13. With no completion, show current week.
+
+Follow-up55: prepend decorative neutral week columns when real history is narrower than the row. Measure available width synchronously with GeometryReader, preserve existing Dynamic Type cell sizing and seven-row height, keep current week trailing. Fillers have no dates or interactions and are hidden from accessibility; real week count and all attendance analytics remain unchanged.
+
+Follow-up56: legend order is Filled:completed, Dot:missed, then actual week count; training semantics unchanged.
+
+Follow-up57: add Other to photo pose selectors for import, editing and comparison. Reuse native CaseIterable pickers; preserve Front Relaxed/Front Flexed/Back and optional Not Assigned. Sort assigned categories in enum order with unassigned last.
+
+1.0.3(58): Rest Duration uses native SwiftUI minutes/seconds wheel Pickers, seconds00/30 plus any saved off-step legacy value. Preserve saved durations on opening; Cancel discards draft, Save disabled at0:00. Same editor from Today and Settings, changes future workouts only. No keyboard needed.
+
+Build60: native load-goal update confirmation appears directly in the live completion summary, one batch of applicable increased/decreased loads with explicit Update Goals/Cancel. Existing goal rows refresh after adoption; historic summaries do not prompt. Shared toolbar confirmation buttons now explicitly use native glassProminent/circular border shape/Accent tint and black Image foreground only; remove the black tint on the label.
+
+Correction61: load-goal popup moves to the transition button click in FeelingForm; no completion-summary prompt. Native buttons Update Goal and Keep Current Goal, the latter cancel role/neutral ink. Choice commits together with Feeling before next exercise/stretch. Explicit choice is preserved on later completion; active goal snapshots unchanged. Last action with support is labelled Continue to Stretching.

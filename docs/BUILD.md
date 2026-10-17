@@ -78,3 +78,13 @@ After upload, download the release asset and compare its SHA-256 with the local 
 ## Reproducibility limits
 
 The source and packaging steps are versioned. The SDK and configured Linux Apple tooling are external prerequisites. This is a documented local build, not a claim that a clean generic Linux host can compile iOS apps without those tools, nor a claim of byte-for-byte reproducible builds.
+
+## Device registration conflict
+
+If profile creation fails with Apple409 ENTITY_ERROR, “There are no current IOS devices on this team matching the provided device IDs,” first inspect authentication/team selection and `xtool ds devices list`. The installed xtool revision ignores any409 during its preliminary device registration, so a later provisioning error can mask that earlier failure. Do not infer a certificate problem or reset authentication. In the18October incident, two read-only device queries returned no devices; an isolated registration of the physically connected iPhone returned201 Created, after which normal device-run.sh provisioning/install succeeded with the existing certificate. The original reason for Apple's empty device inventory was not established. Preserve certificates and stop if the isolated request returns a new error requiring a different account operation.
+
+October18 local1.0.3(60): full196host tests,6metadata tests, strict lint and unsigned app/widget inspection pass. xtool21.94s plus metadata packaging2.09s. Standard USB delivery, same configured/effective identities and certificate; publication pending device review.
+
+Correction61: training schema9 additive goal-decision markers; full199host tests,6metadata tests, strict lint and unsigned61inspection succeed. xtool21.05s then metadata packaging2.05s. Same-identity USB delivery underway; no publication.
+
+Release1.0.3(61) prepared locally: scripts/release-local.sh exits0 with199host tests,6metadata, strictlint, optimized build61.96s and unsigned IPA inspection passed. No personal profiles/signatures/data and no checksum attachment. Publication authorized by user after installed61.

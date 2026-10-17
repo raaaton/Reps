@@ -16,7 +16,7 @@ final class GoalMigrationTests: XCTestCase, @unchecked Sendable {
     try db.execute("INSERT INTO workout_sets VALUES('old',2375,'snapshot')")
     try db.execute("PRAGMA user_version=5")
     _ = try SportRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 8)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 9)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM exercise_goals").first?.integer("n"), 0)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM workout_goals").first?.integer("n"), 0)
     XCTAssertEqual(

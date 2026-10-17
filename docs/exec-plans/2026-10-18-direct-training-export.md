@@ -1,0 +1,13 @@
+# Direct full-training export — local 1.0.2
+
+User explicitly chose all training and settings, excluding private photos, with no choices under Export. Replace the export Menu with one native Button exporting the current TrainingArchive JSON directly through Files. Include existing history/support results, exercise catalogue, schedule, inventory, goals, rest and notification settings. Retain the visible private-photo exclusion and import CSV/JSON compatibility and confirmations. No format/domain/security change, no personal exports executed by the agent.
+
+Remove CSV/archive/recovery selection and passive recovery-availability loading from this screen. Existing transactional recovery remains stored internally, but Before Last Import is no longer a selectable export. Correct messages promising a recovery export in a removed menu. Export describes current data, not a merge with the former pre-import state. A running workout must still finish/cancel before the existing archive operation accepts export; no incomplete-session format is introduced.
+
+The pending Lock Screen background retouch remains in the same unpublished local1.0.2(51). No GitHub push/tag/Release without user feedback. Current Apple409 device-registration block from the preceding installation remains unresolved; do not retry signing or change certificate/profiles/device registration silently. Build/test locally, report actual delivery status.
+
+Checks: strict Swift lint, existing training transfer tests, real xtool build, current intent metadata generation/embedding, bundle inspection and metadata tests. No artificial source-text UI assertions for a native-button simplification. Full suite not required for unchanged domain. Work in progress.
+
+Verification complete locally: strict Swift lint and diff check clean, all14 TrainingTransferTests pass, real xtool build succeeds (8.56 s), current app/widget intent metadata regenerated and embedded, unsigned1.0.2(51) inspection succeeds and all6 metadata tests pass. No domain/schema/security change; no real user export/import performed, Files UI still requires device confirmation. No signature/deployment retry after the earlier Apple409 block, and no commit/push/tag/Release.
+
+Delivery unblocked: user authorized registration repair, same connected iPhone registered with Apple201; standard USB installation then succeeded. Postflight confirmsSport1.0.2(51), same identity/exact certificate, valid app/widget profiles/capabilities. Previous409 is resolved. Await user device review before any GitHub publication. See [registration repair](2026-10-18-device-registration-repair.md).

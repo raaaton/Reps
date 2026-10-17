@@ -3,7 +3,6 @@ import SportCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-private enum TransferFile: Sendable { case csv, archive, recovery }
 private enum ParsedTrainingFile: Sendable {
   case csv([WorkoutSession])
   case archive(TrainingArchive)
@@ -14,10 +13,8 @@ struct TrainingTransferView: View {
   @State private var importing = false
   @State private var exporting = false
   @State private var document = TrainingFileDocument(data: Data())
-  @State private var contentType = UTType.json
   @State private var filename = "Sport"
   @State private var preview: TrainingImportPreview?
-  @State private var recoveryAvailable = false
   @State private var busy = false
   @State private var error: String?
   @State private var message: String?
@@ -28,18 +25,14 @@ struct TrainingTransferView: View {
         Button("Import from Files", systemImage: "square.and.arrow.down") {
           importing = true
         }
-        Menu("Export to Files", systemImage: "square.and.arrow.up") {
-          Button("Workout History (CSV)", systemImage: "tablecells") { prepare(.csv) }
-          Button("Training Backup (JSON)", systemImage: "doc") { prepare(.archive) }
-          if recoveryAvailable {
-            Button("Before Last Import (JSON)", systemImage: "clock.arrow.circlepath") {
-              prepare(.recovery)
-            }
-          }
+        Button("Export to Files", systemImage: "square.and.arrow.up") {
+          prepareExport()
         }
       } footer: {
         VStack(alignment: .leading, spacing: 8) {
-          Text("Private photos are excluded from exports.")
+          Text(
+            "Exports include all workout history, exercises, schedule, inventory, goals and training settings. Private photos are excluded."
+          )
           if let message { Text(message) }
         }
       }
@@ -58,7 +51,7 @@ struct TrainingTransferView: View {
       }
     }
     .fileExporter(
-      isPresented: $exporting, document: document, contentType: contentType,
+      isPresented: $exporting, document: document, contentType: .json,
       defaultFilename: filename
     ) { result in
       switch result {
@@ -70,7 +63,7 @@ struct TrainingTransferView: View {
       }
       document = TrainingFileDocument(data: Data())
     }
-    .sheet(item: $preview, onDismiss: { Task { await refreshRecovery() } }) { value in
+    .sheet(item: $preview) { value in
       TrainingImportPreviewView(preview: value) { message = $0 }
     }
     .alert(
@@ -81,38 +74,23 @@ struct TrainingTransferView: View {
     } message: {
       Text(error ?? "")
     }
-    .task(id: store.historyRevision) { await refreshRecovery() }
   }
   private func isCancellation(_ error: Error) -> Bool {
     (error as NSError).code == NSUserCancelledError
   }
-  private func refreshRecovery() async {
-    do { recoveryAvailable = try await store.recoveryArchive() != nil } catch {
-      self.error = error.localizedDescription
-    }
-  }
-  private func prepare(_ type: TransferFile) {
+  private func prepareExport() {
     guard !busy else { return }
     busy = true
     message = nil
     Task {
       defer { busy = false }
       do {
-        let data: Data
-        switch type {
-        case .archive, .csv:
-          let archive = try await store.exportTraining()
-          data = try await Task.detached(priority: .userInitiated) {
-            try type == .csv ? TrainingCSV.encode(archive.contents.workouts) : archive.encoded()
-          }.value
-        case .recovery:
-          guard let archive = try await store.recoveryArchive() else { throw TrainingError.storage }
-          data = try await Task.detached(priority: .userInitiated) { try archive.encoded() }.value
-        }
+        let archive = try await store.exportTraining()
+        let data = try await Task.detached(priority: .userInitiated) {
+          try archive.encoded()
+        }.value
         document = TrainingFileDocument(data: data)
-        contentType = type == .csv ? .commaSeparatedText : .json
-        filename =
-          "Sport-\(type == .recovery ? "before-import-" : "")\(WorkoutClock.dayKey(WorkoutClock.now))"
+        filename = "Sport-\(WorkoutClock.dayKey(WorkoutClock.now))"
         exporting = true
       } catch { self.error = error.localizedDescription }
     }
@@ -182,11 +160,11 @@ private struct TrainingImportPreviewView: View {
             LabeledContent(
               "Scheduled Workouts", value: String(preview.incoming.configuration.schedules.count))
             Text(
-              "This restoration replaces your history, schedule, inventory, goals and training settings. An exportable copy of the previous state will be kept. Private photos and iOS permissions are unaffected."
+              "This restoration replaces your history, schedule, inventory, goals and training settings. A recovery copy of the previous state will be kept in Sport. Private photos and iOS permissions are unaffected."
             ).foregroundStyle(.secondary)
           } else {
             Text(
-              "This CSV will replace all workout history. Schedule, catalogue, inventory, goals and settings will be kept. A recovery copy will be available. Private photos are excluded."
+              "This CSV will replace all workout history. Schedule, catalogue, inventory, goals and settings will be kept. A recovery copy will be kept in Sport. Private photos are excluded."
             ).foregroundStyle(.secondary)
           }
         }
@@ -245,8 +223,8 @@ private struct TrainingImportPreviewView: View {
       } message: {
         Text(
           preview.isRestoration
-            ? "Current training data will be replaced. A recovery copy will be kept in Sport and can be exported. Private photos are excluded."
-            : "The \(preview.replacedCount) current workouts will be replaced by \(preview.workoutCount) workouts from the CSV. Settings stay unchanged. An exportable recovery copy will be kept in Sport. Private photos are excluded."
+            ? "Current training data will be replaced. A recovery copy will be kept in Sport. Private photos are excluded."
+            : "The \(preview.replacedCount) current workouts will be replaced by \(preview.workoutCount) workouts from the CSV. Settings stay unchanged. A recovery copy will be kept in Sport. Private photos are excluded."
         )
       }
       .alert(
@@ -268,8 +246,8 @@ private struct TrainingImportPreviewView: View {
         try await store.applyTrainingImport(preview)
         completed(
           preview.isRestoration
-            ? "Training data restored. The recovery copy is available in Export to Files."
-            : "History replaced by \(preview.workoutCount) workouts from the CSV. Settings kept; recovery copy available in Export to Files."
+            ? "Training data restored. A recovery copy is kept in Sport."
+            : "History replaced by \(preview.workoutCount) workouts from the CSV. Settings kept; a recovery copy is kept in Sport."
         )
         dismiss()
       } catch { self.error = error.localizedDescription }

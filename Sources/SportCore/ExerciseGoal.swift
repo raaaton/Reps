@@ -138,3 +138,11 @@ public enum GoalEngine {
     return result(load, reps, .keep)
   }
 }
+
+public struct ExerciseLoadGoalDecision: Equatable, Sendable {
+  public let workoutID: String
+  public let exerciseID: String
+  public let feelingTenths: Int
+  public let original: ExerciseGoal?
+  public let suggestion: GoalSuggestion
+}

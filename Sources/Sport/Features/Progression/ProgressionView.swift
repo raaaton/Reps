@@ -13,7 +13,12 @@ struct ProgressionView: View {
     TrainingContent { snapshot in
       let old = archived.filter { item in !snapshot.exercises.contains { $0.id == item.id } }
       TimelineView(.periodic(from: .now, by: 60)) { context in
-        let days = TrainingAnalytics.attendance(history: summaries, ending: context.date)
+        let scheduledWeekdays = Set(
+          snapshot.schedules.filter {
+            $0.isEnabled && !snapshot.exercises(for: $0).isEmpty
+          }.map(\.weekday))
+        let days = TrainingAnalytics.attendance(
+          history: summaries, scheduledWeekdays: scheduledWeekdays, ending: context.date)
         List {
           Section("Consistency") {
             LabeledContent(

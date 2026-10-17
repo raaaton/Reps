@@ -146,3 +146,43 @@ Publication 1.0.0 terminée : [Release publique](https://github.com/raaaton/Spor
 Retour utilisateur « cb push » : correctif installé 1.0.1 accepté et publication GitHub autorisée. Construction locale de l’IPA Release et vérifications avant publication ; seule l’IPA sera jointe, sans fichier checksum. Ce retour global ne constitue pas un relevé individuel de chaque recette d’accessibilité ou d’exécution en arrière-plan.
 
 1.0.1 publiée après accord utilisateur : [Release](https://github.com/raaaton/Sport/releases/tag/v1.0.1), IPA construite localement, seul asset téléchargeable. Téléchargement distant identique au fichier local et inspection réussie.
+
+18 octobre — 1.0.2 (51), retouche Lock Screen : teinte de fond explicitement transparente via API ActivityKit/SwiftUI native. Lint, build xtool réel, génération/intégration metadata, inspection et 6 tests metadata réussis ; contrôles appareil et retour visuel à consigner dans [ExecPlan](exec-plans/2026-10-18-lockscreen-transparency.md). Pas de publication GitHub avant retour.
+
+Installation1.0.2 bloquée au provisioning Apple :409 ENTITY_ERROR, « There are no current IOS devices on this team matching the provided device IDs. » Arrêt avant toute réparation de signature/enregistrement ; build locale prête mais non installée, retour visuel impossible à ce stade.
+
+18 octobre — export direct ajouté à la build locale1.0.2 : un fichier JSON avec entraînement/réglages actuels, sans choix CSV/JSON/ancienne copie. Photos exclues explicitement, import CSV/JSON inchangé. 14 tests de transfert, lint et build xtool réussis ; contrôle metadata/bundle en cours. Installation toujours bloquée par le refus de provisioning Apple409 signalé précédemment ; aucune réparation ni nouvelle tentative de signature. [ExecPlan](exec-plans/2026-10-18-direct-training-export.md).
+
+Export direct : intégration metadata, inspection du bundle1.0.2(51) et 6 tests metadata finaux réussis. Prêt localement ; non installé après le précédent blocage de provisioning, aucun push.
+
+Blocage409 résolu après autorisation explicite : enregistrement du seul iPhone connecté rétabli auprès d’Apple (201). Déploiement USB standard1.0.2(51) réussi, postflight même identité/certificat exact/profils app-widget valides et capacités inchangées. Les deux retouches (Live Activity transparente et export JSON direct) sont installées ; attente du retour utilisateur avant GitHub. [Diagnostic](exec-plans/2026-10-18-device-registration-repair.md).
+
+18 octobre — 1.0.3(52) : première proposition de lest après travail complet à vide avec Feeling<8, objectif aux reps minimales ; points des jours programmés manqués après première séance terminée, suppression Partial (planning courant, aujourd’hui exclu) ; confirmation native avec teinte neutre isolée. 188 tests métier et6 metadata passent, lint/build/inspection réels réussis. Déploiement USB en cours, validation iPhone requise avant GitHub. [ExecPlan](exec-plans/2026-10-18-attendance-confirmations.md).
+
+Livraison1.0.3(52) : installation/vérification100%, postflight identité et certificat exact inchangés/profils valides. Retour iPhone attendu ; aucun push/release.
+
+Retouche1.0.3(53) : emojis🏋️‍♂️/📸 dans les titres des rappels entraînement/photo, aucun changement des horaires ou permissions. 9 tests de rappels,6 metadata, lint/build/inspection réussis ; installation USB en cours, pas de push.
+
+Retouche1.0.3(54) : grille depuis la semaine de première séance terminée, compteur de semaines correspondant, texte explicatif supprimé. Emojis53 conservés.189tests métier et6metadata passent ; lint, build xtool et inspection réels réussis. Installation USB en cours.
+
+Livraison54 terminée : script code0, installation/vérification100%, postflight confirme version/identités/certificat exact/profils valides. En attente du retour iPhone ; aucun push.
+
+Retouches55–56 : cases neutres décoratives à gauche pour remplir la largeur, compteur réel conservé puis déplacé en troisième position de la légende. Lint/build xtool/inspection/6testsmetadata réussis,55installée et56en cours. Aucun changement métier, dernier full run189tests en54 ; aucun push.
+
+Déploiement56 bloqué par usbmuxd en échec (iPhone USB visible, inventaire apps indisponible). sudo-n requiert mot de passe local ; redémarrage manuel demandé.55confirmée installée ;56ne peut pas encore être déclarée installée. Aucun certificat modifié pour contourner ce problème.
+
+Après redémarrage usbmuxd confirmé,56installée et postflight valide. Retouche57 ajoute Other aux poses photo (ajout/édition/comparaison), conserve anciennes métadonnées et place Not Assigned en dernier ;191tests métier/6metadata/lint/build/inspection réussis. Aucun changement chiffrement/clé/permissions ; installation57en cours, aucun push.
+
+Livraison57 : script0, installation/vérification100%, postflight direct version57/mêmes identités et certificat exact/profils valides. Review iPhone attendue ; aucune publication GitHub.
+
+18octobre — build58 : repos réglable par roulettes SwiftUI natives minutes/secondes, pas30s et valeurs historiques exactes conservées. Save0:00 désactivé, même éditeur Today/Settings, séances en cours inchangées.10tests Planning,6metadata, lint/build/inspection réussis ; installationUSB en cours. [ExecPlan](exec-plans/2026-10-18-rest-duration-picker.md). Aucun push.
+
+Build58livrée : script0, installation/vérification100%, postflight confirme version58, mêmes identités/certificat exact/profils valides. Interaction native à confirmer sur iPhone. Aucun push/release.
+
+Build60 : validation directe des hausses/baisses de lest en une popup à la fin de séance, adoption transactionnelle explicite pour prochaine séance ; fond Accent natif restauré aux8boutons checkmark, symbole noir.196tests métier/6metadata/lint/build/inspection réussis, revue ciblée sans P1/P2 ; installationUSB en cours, aucun push. [Objectifs](exec-plans/2026-10-18-direct-load-goal-confirmation.md), [boutons](exec-plans/2026-10-18-accent-confirmation-buttons.md).
+
+Livraison60confirmée : script0, installation/vérification100%, postflight version60/mêmes identités/certificat exact/profils valides. Review iPhone requise sur popup/adoption/Cancel et noir-sur-Accent. Aucun push/release.
+
+Correction61 : popup dès Next Exercise/Continue to Stretching, Update Goal/Keep Current Goal avant transition ; aucun popup final. Marqueur transactionnel schema9 conserve les deux choix à la fin, après reprise ou stretching.199tests/strictlint/xtool21.05s réussis, revue ciblée sans P1/P2 ; contrôles finaux/install en cours. [ExecPlan](exec-plans/2026-10-18-exercise-goal-decision.md). Aucun push.
+
+Livraison61confirmée : script0, installation/vérification100%, postflight61/mêmes identités et certificat exact/profils valides.199tests et6metadata réussis ; validation iPhone requise avant tout push.

@@ -7,6 +7,7 @@ extension VaultPhotoPose {
     case .frontRelaxed: "Front Relaxed"
     case .frontFlexed: "Front Flexed"
     case .back: "Back"
+    case .other: "Other"
     }
   }
 }

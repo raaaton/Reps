@@ -238,6 +238,19 @@ final class TrainingStore: ObservableObject {
   func adoptGoal(_ suggestion: GoalSuggestion, original: ExerciseGoal?) async throws {
     try await commit { try await $0.adoptGoal(suggestion, original: original) }
   }
+  func exerciseLoadGoalDecision(workout: WorkoutSession, exercise: WorkoutExercise, tenths: Int)
+    async throws -> ExerciseLoadGoalDecision?
+  {
+    guard let repository else { throw TrainingError.storage }
+    return try await repository.exerciseLoadGoalDecision(
+      workoutID: workout.id, exerciseID: exercise.id,
+      feelingTenths: tenths, now: WorkoutClock.now)
+  }
+  func resolveExerciseLoadGoal(_ decision: ExerciseLoadGoalDecision, update: Bool) async throws {
+    try await commit {
+      try await $0.resolveExerciseLoadGoal(decision, update: update, now: WorkoutClock.now)
+    }
+  }
   func correctSet(
     workoutID: String, exerciseID: String, original: WorkoutSet, repetitions: Int?,
     durationMS: Int?, weightGrams: Int

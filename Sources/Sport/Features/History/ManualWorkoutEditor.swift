@@ -174,10 +174,8 @@ struct ManualWorkoutEditor: View {
             saving)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button {
+          SportConfirmationButton(title: saving ? "Saving…" : "Save") {
             save()
-          } label: {
-            SportConfirmationLabel(title: saving ? "Saving…" : "Save")
           }
           .labelStyle(.iconOnly)
           .disabled(

@@ -298,24 +298,29 @@ extension SportRepository {
   public func saveFeeling(workoutID: String, exerciseID: String, tenths: Int, now: Int) throws {
     try WorkoutClock.validate(now)
     try database.transaction {
-      let workout = try readWorkout(id: workoutID)
-      if workout.exercises.first(where: { $0.id == exerciseID })?.feelingTenths != nil { return }
-      let exercise = try expectedExercise(workout, exerciseID)
-      guard workout.phase(at: now) == .feeling, (0...100).contains(tenths) else {
-        throw TrainingError.invalid("Complete the sets, then choose a Feeling from 0 to 10.")
-      }
-      guard now >= (exercise.sets.last?.completedAt ?? workout.startedAt) else {
-        throw invalidClock
-      }
+      try saveFeelingInTransaction(
+        workoutID: workoutID, exerciseID: exerciseID, tenths: tenths, now: now)
+    }
+  }
+  func saveFeelingInTransaction(workoutID: String, exerciseID: String, tenths: Int, now: Int) throws
+  {
+    let workout = try readWorkout(id: workoutID)
+    if workout.exercises.first(where: { $0.id == exerciseID })?.feelingTenths != nil { return }
+    let exercise = try expectedExercise(workout, exerciseID)
+    guard workout.phase(at: now) == .feeling, (0...100).contains(tenths) else {
+      throw TrainingError.invalid("Complete the sets, then choose a Feeling from 0 to 10.")
+    }
+    guard now >= (exercise.sets.last?.completedAt ?? workout.startedAt) else {
+      throw invalidClock
+    }
+    try database.execute(
+      "UPDATE workout_exercises SET feeling_tenths=? WHERE id=?",
+      [.integer(tenths), .text(exerciseID)])
+    if workout.exercises.last?.id == exerciseID, workout.support == nil {
       try database.execute(
-        "UPDATE workout_exercises SET feeling_tenths=? WHERE id=?",
-        [.integer(tenths), .text(exerciseID)])
-      if workout.exercises.last?.id == exerciseID, workout.support == nil {
-        try database.execute(
-          "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
-          [.integer(now), .text(workoutID)])
-        try matchGoalsToCompletedWorkout(id: workoutID)
-      }
+        "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
+        [.integer(now), .text(workoutID)])
+      try matchGoalsToCompletedWorkout(id: workoutID)
     }
   }
 

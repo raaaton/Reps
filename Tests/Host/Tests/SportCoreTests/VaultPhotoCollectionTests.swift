@@ -21,6 +21,27 @@ final class VaultPhotoCollectionTests: XCTestCase {
     XCTAssertEqual(restored, edited)
     XCTAssertEqual(restored.type, old.type)
   }
+  func testOtherPoseDecodesAndRoundTripsWithoutChangingLegacyMetadata() throws {
+    let bytes = Data(#"{"dayKey":"2026-10-01","type":"public.heic","pose":"other"}"#.utf8)
+    let metadata = try JSONDecoder().decode(VaultPhotoMetadata.self, from: bytes)
+    XCTAssertEqual(metadata.pose?.rawValue, "other")
+    XCTAssertEqual(
+      try JSONDecoder().decode(VaultPhotoMetadata.self, from: JSONEncoder().encode(metadata)),
+      metadata)
+  }
+  func testOtherPoseSortsBeforeUnassignedAndComparesOnlySameTypeAcrossDates() {
+    let other = photo("z", "2026-10-01", .other)
+    let oldOther = photo("old", "2026-09-01", .other)
+    let unassigned = photo("a", "2026-10-01", nil)
+    let front = photo("f", "2026-10-01", .frontRelaxed)
+    let entries = [unassigned, other, oldOther, front]
+    XCTAssertEqual(VaultPhotoCollection.days(entries).first?.photos.map(\.id), ["f", "z", "a"])
+    XCTAssertEqual(VaultPhotoCollection.candidates(entries, pose: .other).map(\.id), ["old", "z"])
+    XCTAssertTrue(VaultPhotoCollection.canCompare(oldOther, other))
+    XCTAssertFalse(VaultPhotoCollection.canCompare(front, other))
+    XCTAssertFalse(VaultPhotoCollection.canCompare(unassigned, other))
+    XCTAssertFalse(VaultPhotoCollection.canCompare(other, photo("copy", "2026-10-01", .other)))
+  }
   func testDaysGroupWithoutDiscardingDuplicatesOrUnclassifiedPhotos() {
     let photos = [
       photo("a", "2026-09-01", .back), photo("b", "2026-10-01", .frontRelaxed),
