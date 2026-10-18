@@ -196,3 +196,5 @@ Livraison62confirmée : script0, installation/vérification100%, postflight mêm
 Build63 : Send Test Notification dans Settings/Notifications, notification locale unique après10s ; permissions standard, aucun changement des préférences, notification isolée de la synchronisation et du compteur de rappels.204tests métier passent ; lint propre. Build xtool initial12.26s réussi ; contrôles finaux et installation en cours.
 
 Livraison63confirmée : device-run.sh code0, installation/vérification100%, postflight version1.0.4(63), identité unique attendue et certificat inchangé.204tests métier/6metadata/lint/build/inspection réussis. Réception réelle du test, refus de permission et visibilité écran verrouillé à confirmer sur iPhone. Aucun push.
+
+Publication1.0.4(63) autorisée par push : commitc58b94a/tagv1.0.4 publiés, uniqueassetSport-1.0.4.ipa.204tests/6metadata/lint/Release xtool/inspection réussis ; asset GitHub retéléchargé identique et inspecté. Modifications distantes README préservées. Aucun checksum, profil, certificat ou donnée privée publié.
