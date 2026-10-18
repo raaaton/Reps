@@ -100,3 +100,5 @@ Publication1.0.4vérifiée : asset uniqueSport-1.0.4.ipa retéléchargé, identi
 Local1.0.5(64) : migration SQLite10 normalise workout_sets.duration_ms au100ms le plus proche ; triggers insert/update couvrent tous les chemins. Minimum positif100ms, aucun changement de timestamp, repos, capacités ou signature.
 
 Release1.0.5(65) : scripts/release-local.sh code0 avec208tests métier/6metadata/strictlint, compilation xtool optimisée et métadonnées intégrées, IPA unsigned inspectée sans profil/signature/donnée utilisateur. Publication autorisée par ok push après65.
+
+Publication1.0.5vérifiée : tagv1.0.5sur2061397, uniqueassetIPA retéléchargé identique et inspecté unsigned. Le compte rendu documentaire ne change pas le binaire.

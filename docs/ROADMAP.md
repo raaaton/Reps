@@ -204,3 +204,5 @@ Local1.0.5(64) : isométriques arrondis au dixième à l’affichage et en stock
 Correction65 : temps total isométrique de la période au lieu de la seule dernière séance ; courbe/bulles par séance conservées, arrondi au dixième maintenu.17tests de graphiques passent. Compilation et livraison en cours, aucun push.
 
 Livraison65 :17tests graphiques/6metadata/lint/xtool13.07s/inspection unsigned réussis ; scriptUSB0 et installation/vérification100%. Le chiffre principal est la somme de période et les points restent par séance. Review iPhone requise, aucun push.
+
+Publication1.0.5(65) autorisée par ok push : commit2061397/tagv1.0.5 publiés, Release avec uniqueSport-1.0.5.ipa.208tests/6metadata/lint/Release xtool/inspection réussis ; asset retéléchargé identique et inspecté unsigned. Aucun checksum ni donnée privée publié.
