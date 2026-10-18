@@ -324,3 +324,7 @@ Follow-up57: add Other to photo pose selectors for import, editing and compariso
 Build60: native load-goal update confirmation appears directly in the live completion summary, one batch of applicable increased/decreased loads with explicit Update Goals/Cancel. Existing goal rows refresh after adoption; historic summaries do not prompt. Shared toolbar confirmation buttons now explicitly use native glassProminent/circular border shape/Accent tint and black Image foreground only; remove the black tint on the label.
 
 Correction61: load-goal popup moves to the transition button click in FeelingForm; no completion-summary prompt. Native buttons Update Goal and Keep Current Goal, the latter cancel role/neutral ink. Choice commits together with Feeling before next exercise/stretch. Explicit choice is preserved on later completion; active goal snapshots unchanged. Last action with support is labelled Continue to Stretching.
+
+1.0.4 : Customize Goal permet aussi de saisir les secondes (vide=Untimed) depuis les objectifs chronométrés, avec clavier numérique natif. Les changements concernent les futures séances. Notifications offre un lien natif vers les réglages iOS, qui contrôlent les emplacements et la visibilité. Aucun épinglage permanent promis.
+
+Notification test : bouton explicite, autorisation native si nécessaire, notification standard unique après10s, retour indiquant la programmation (pas la livraison), erreurs actionnables. Aucune modification des rappels enregistrés.

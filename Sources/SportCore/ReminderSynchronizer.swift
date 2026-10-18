@@ -9,6 +9,8 @@ public enum ReminderDestination: Int, Sendable {
   case progression = 2
 }
 public enum ReminderPolicy {
+  public static let testIdentifier = "sport.test.notification"
+  public static func presents(_ id: String) -> Bool { managed(id) || id == testIdentifier }
   public static func managed(_ id: String) -> Bool { id.hasPrefix("sport.local.") }
   public static func destination(identifier: String, kind: String) -> ReminderDestination? {
     if identifier == "sport.local.photos.monthly", kind == "photos" { return .progression }

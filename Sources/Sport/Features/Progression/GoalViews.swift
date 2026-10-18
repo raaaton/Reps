@@ -84,7 +84,7 @@ struct GoalEditor: View {
       List {
         if let goal = context.adopted {
           Section("Current Goal") {
-            GoalDescription(goal: goal).font(.headline)
+            goalValue(goal)
             if !context.isAvailable {
               Text("The exercise or load has changed. Customize the goal before using it.")
                 .font(.subheadline).foregroundStyle(.secondary)
@@ -93,7 +93,7 @@ struct GoalEditor: View {
         }
         if let suggestion = context.suggestion, suggestion.goal != context.adopted {
           Section(context.adopted == nil ? "Starting Point" : "Suggestion") {
-            GoalDescription(goal: suggestion.goal).font(.headline)
+            goalValue(suggestion.goal)
             Text(reason(suggestion.reason)).font(.subheadline).foregroundStyle(.secondary)
             Button(
               context.adopted == nil ? "Use This Goal" : "Use Suggestion",
@@ -137,6 +137,16 @@ struct GoalEditor: View {
       }
     }
   }
+  @ViewBuilder
+  private func goalValue(_ goal: ExerciseGoal) -> some View {
+    if context.exercise.tracking == .duration {
+      NavigationLink(value: GoalRoute.customize) {
+        GoalDescription(goal: goal).font(.headline).foregroundStyle(.primary)
+      }.accessibilityHint("Edit duration and added weight")
+    } else {
+      GoalDescription(goal: goal).font(.headline)
+    }
+  }
   private func reason(_ reason: GoalReason) -> String {
     switch reason {
     case .initial: "A starting target to adapt to your preferred load."
@@ -169,11 +179,14 @@ private struct GoalCustomizationView: View {
   let onSaved: () -> Void
   @State private var load: AvailableLoad
   @State private var reps: [Int]
+  @State private var duration: String
+  @FocusState private var durationFocused: Bool
   @State private var saving = false
   @State private var error: String?
   init(context: GoalContext, onSaved: @escaping () -> Void) {
     self.context = context
     self.onSaved = onSaved
+    _duration = State(initialValue: context.exercise.durationSeconds.map(String.init) ?? "")
     _load = State(
       initialValue: context.adopted?.load ?? context.suggestion?.goal.load ?? .bodyweight)
     let count = min(1000, context.exercise.setCount)
@@ -196,16 +209,20 @@ private struct GoalCustomizationView: View {
             )
           }
         } else {
-          LabeledContent(
-            "Duration per Set",
-            value: context.exercise.durationSeconds.map { "\($0) s" } ?? "Untimed")
+          LabeledContent("Seconds per Set") {
+            TextField("Untimed", text: $duration)
+              .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+              .focused($durationFocused)
+              .accessibilityLabel("Seconds per set, optional")
+          }
         }
       } header: {
         Text("Customize Goal")
       } footer: {
-        Text(
-          "Change duration in Settings → Exercises."
-        )
+        if context.exercise.tracking == .duration {
+          Text(
+            "Enter seconds, or leave blank for an untimed set. Changes apply to future workouts.")
+        }
       }
       if !store.availableLoads.contains(load) {
         Section {
@@ -216,9 +233,19 @@ private struct GoalCustomizationView: View {
       }
     }
     .disabled(saving)
+    .scrollDismissesKeyboard(.interactively)
     .navigationTitle("Customize").navigationBarTitleDisplayMode(.inline)
     .interactiveDismissDisabled(saving)
     .toolbar {
+      if context.exercise.tracking == .duration {
+        ToolbarItemGroup(placement: .keyboard) {
+          Spacer()
+          Button("Dismiss keyboard", systemImage: "keyboard.chevron.compact.down") {
+            durationFocused = false
+          }
+          .tint(.white).labelStyle(.iconOnly)
+        }
+      }
       ToolbarItem(placement: .confirmationAction) {
         SportConfirmationButton(title: "Save") {
           save()
@@ -241,11 +268,22 @@ private struct GoalCustomizationView: View {
     Task {
       defer { saving = false }
       do {
-        try await store.saveGoal(
-          ExerciseGoal(
-            definition: context.exercise, load: load,
-            repetitions: context.exercise.tracking == .repetitions ? reps : nil),
-          original: context.adopted)
+        if context.exercise.tracking == .duration {
+          let text = duration.trimmingCharacters(in: .whitespacesAndNewlines)
+          let seconds = text.isEmpty ? nil : Int(text)
+          guard text.isEmpty || seconds.map({ $0 > 0 }) == true else {
+            throw TrainingError.invalid("Enter a positive duration in seconds, or leave it blank.")
+          }
+          var definition = context.exercise
+          definition.durationSeconds = seconds
+          try await store.saveTimedGoal(
+            ExerciseGoal(definition: definition, load: load, repetitions: nil),
+            original: context.adopted, originalExercise: context.exercise)
+        } else {
+          try await store.saveGoal(
+            ExerciseGoal(definition: context.exercise, load: load, repetitions: reps),
+            original: context.adopted)
+        }
         onSaved()
       } catch { self.error = error.localizedDescription }
     }

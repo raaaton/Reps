@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.0.3.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+Download **Sport-1.0.4.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -37,6 +37,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Create and edit workouts, choose their day, and order exercises.
 - Track repetitions or timed holds, including free-duration exercises.
 - Set precise repetition and added-weight goals.
+- Edit timed goals directly, including switching between a duration and untimed holds.
 - Manage a weighted backpack and its available load combinations.
 - Review your goals and the actual items needed before starting.
 
@@ -58,7 +59,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Live Activities on the Lock Screen and Dynamic Island.
 - Pause and resume directly from the activity.
 - Native minutes/seconds rest picker with 30-second increments.
-- Optional 🏋️‍♂️ workout and 📸 monthly photo reminders.
+- Optional 🏋️‍♂️ workout and 📸 monthly photo reminders, with a test notification in Settings.
 
 ### Understand your progress
 

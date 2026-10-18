@@ -23,7 +23,7 @@ Checking `restored == original` after all those operations is useful: it verifie
 
 ## Validation layers
 
-- **199 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
+- **204 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
 - **6 metadata tests:** compatibility and strictness of the App Intents metadata adapter, using recorded compiler fixtures.
 - **Swift lint:** formatting and source consistency, not functional correctness.
 - **xtool builds:** the app and extension compile against the configured iOS SDK.

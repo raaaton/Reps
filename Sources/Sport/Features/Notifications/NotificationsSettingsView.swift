@@ -7,21 +7,22 @@ struct NotificationsSettingsView: View {
   @ObservedObject private var reminders = LocalReminderCoordinator.shared
   @State private var saving = false
   @State private var error: String?
+  @State private var testScheduled = false
   var body: some View {
     TrainingContent { snapshot in
       Form {
-        if reminders.authorization == .denied {
-          Section {
-            Button("Open iOS Settings", systemImage: "arrow.up.forward.app") {
-              if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-              }
+        Section {
+          Button("iOS Notification Settings", systemImage: "arrow.up.forward.app") {
+            if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+              UIApplication.shared.open(url)
             }
-          } footer: {
-            Text(
-              "Notifications are denied. Allow them in iOS to receive the reminders enabled here."
-            )
           }
+        } footer: {
+          Text(
+            reminders.authorization == .denied
+              ? "Allow notifications in iOS, then choose Lock Screen under Alerts. iOS controls how long they stay visible."
+              : "Choose Lock Screen under Alerts in iOS. iOS controls how long notifications stay visible."
+          )
         }
         Section {
           Toggle("Workout Reminders", isOn: preferenceBinding(photos: false))
@@ -62,6 +63,25 @@ struct NotificationsSettingsView: View {
           )
         }
         Section {
+          Button("Send Test Notification", systemImage: "bell.badge") {
+            saving = true
+            testScheduled = false
+            Task {
+              defer { saving = false }
+              do {
+                try await reminders.sendTestNotification()
+                testScheduled = true
+              } catch { self.error = error.localizedDescription }
+            }
+          }
+          if testScheduled {
+            Text("Test scheduled. Lock your iPhone now.")
+              .foregroundStyle(.secondary)
+          }
+        } footer: {
+          Text("Sends one notification after 10 seconds, using your iOS notification settings.")
+        }
+        Section {
           LabeledContent("Scheduled Reminders", value: String(reminders.count))
           if let message = reminders.error { Text(message).foregroundStyle(.secondary) }
           Button("Sync Again", systemImage: "arrow.clockwise") {
@@ -78,7 +98,7 @@ struct NotificationsSettingsView: View {
     .navigationTitle("Notifications")
     .task { await reminders.refresh() }
     .alert(
-      "Setting Not Saved",
+      "Notification Error",
       isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })
     ) {
       Button("OK", role: .cancel) { error = nil }

@@ -80,6 +80,21 @@ final class LocalReminderCoordinator: ObservableObject {
       authorization = await transport.authorization()
     }
   }
+  func sendTestNotification() async throws {
+    try await requestPermissionIfNeeded()
+    guard authorization == .allowed else {
+      throw TrainingError.invalid(
+        "Allow notifications in iOS Notification Settings, then try again.")
+    }
+    let content = UNMutableNotificationContent()
+    content.title = "Test Notification"
+    content.body = "Your notification test has arrived."
+    content.sound = .default
+    try await UNUserNotificationCenter.current().add(
+      UNNotificationRequest(
+        identifier: ReminderPolicy.testIdentifier, content: content,
+        trigger: UNTimeIntervalNotificationTrigger(timeInterval: 10, repeats: false)))
+  }
   func route(_ destination: ReminderDestination) { self.destination = destination }
   func consumeDestination() { destination = nil }
 }
@@ -90,7 +105,7 @@ private final class SportReminderDelegate: NSObject, UNUserNotificationCenterDel
   nonisolated func userNotificationCenter(
     _ center: UNUserNotificationCenter, willPresent notification: UNNotification
   ) async -> UNNotificationPresentationOptions {
-    ReminderPolicy.managed(notification.request.identifier) ? [.banner, .list] : []
+    ReminderPolicy.presents(notification.request.identifier) ? [.banner, .list] : []
   }
   nonisolated func userNotificationCenter(
     _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse

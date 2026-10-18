@@ -235,6 +235,13 @@ final class TrainingStore: ObservableObject {
   func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?) async throws {
     try await commit { try await $0.saveGoal(goal, original: original) }
   }
+  func saveTimedGoal(
+    _ goal: ExerciseGoal, original: ExerciseGoal?, originalExercise: TrainingExercise
+  ) async throws {
+    try await commit {
+      try await $0.saveTimedGoal(goal, original: original, originalExercise: originalExercise)
+    }
+  }
   func adoptGoal(_ suggestion: GoalSuggestion, original: ExerciseGoal?) async throws {
     try await commit { try await $0.adoptGoal(suggestion, original: original) }
   }

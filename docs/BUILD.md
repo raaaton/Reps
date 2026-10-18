@@ -90,3 +90,7 @@ Correction61: training schema9 additive goal-decision markers; full199host tests
 Release1.0.3(61) prepared locally: scripts/release-local.sh exits0 with199host tests,6metadata, strictlint, optimized build61.96s and unsigned IPA inspection passed. No personal profiles/signatures/data and no checksum attachment. Publication authorized by user after installed61.
 
 Publication1.0.3 verified: public Release has onlySport-1.0.3.ipa. Downloaded asset matches local Release build byte-for-byte and passes unsigned app/widget inspection again. Tagv1.0.3 points to sourcea685dbb; later verification documentation does not change the executable.
+
+Local1.0.4(62) :203tests métier,6metadata, strictlint, compilation xtool et inspection unsigned réussis. Time Sensitive Notifications nécessite la capacité Apple réservée ADP/ADEP (colonne gratuite vide dans https://developer.apple.com/help/account/reference/supported-capabilities-ios/ vérifiée18octobre). Aucun changement entitlement/provisioning pour cette demande ; ne pas simplement ajouter le flag en prétendant que cela fonctionne.
+
+Release1.0.4(63) : scripts/release-local.sh code0 avec204tests métier/6metadata/strictlint, build Release local optimisé, métadonnées compilateur intégrées et IPA unsigned inspectée. Publication autorisée après réception réelle de la notification de test sur iPhone. Aucune signature/installation ni modification de certificat pour produire cet asset.

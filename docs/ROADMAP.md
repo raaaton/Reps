@@ -188,3 +188,11 @@ Correction61 : popup dès Next Exercise/Continue to Stretching, Update Goal/Keep
 Livraison61confirmée : script0, installation/vérification100%, postflight61/mêmes identités et certificat exact/profils valides.199tests et6metadata réussis ; validation iPhone requise avant tout push.
 
 Publication autorisée par « push » après61 : commit sourcea685dbb et tagv1.0.3 poussés normalement, Release https://github.com/raaaton/Sport/releases/tag/v1.0.3 publiée avec uniqueSport-1.0.3.ipa. BuildRelease locale/199tests/6metadata/lint/inspection réussis ; téléchargement GitHub identique octet pour octet et nouvelle inspection unsigned réussie. Aucun fichier checksum, aucun certificat/profil privé/donnée personnelle publié.
+
+18octobre — local1.0.4(62) : objectifs chronométrés éditables depuis Progress/Today, durée positive ou Untimed, durée+lest atomiques et instantanés existants conservés. Accès natif aux réglages iOS des notifications. Time Sensitive demandé mais bloqué par signature gratuite selon le tableau Apple ; aucun entitlement ajouté.203tests métier/6metadata/strictlint/build xtool/inspection unsigned réussis. InstallationUSB en cours ; aucun push.
+
+Livraison62confirmée : script0, installation/vérification100%, postflight même identité unique/version1.0.4(62)/certificat inchangé. Review iPhone attendue ; Time Sensitive reste bloqué par signature gratuite, aucune publication.
+
+Build63 : Send Test Notification dans Settings/Notifications, notification locale unique après10s ; permissions standard, aucun changement des préférences, notification isolée de la synchronisation et du compteur de rappels.204tests métier passent ; lint propre. Build xtool initial12.26s réussi ; contrôles finaux et installation en cours.
+
+Livraison63confirmée : device-run.sh code0, installation/vérification100%, postflight version1.0.4(63), identité unique attendue et certificat inchangé.204tests métier/6metadata/lint/build/inspection réussis. Réception réelle du test, refus de permission et visibilité écran verrouillé à confirmer sur iPhone. Aucun push.

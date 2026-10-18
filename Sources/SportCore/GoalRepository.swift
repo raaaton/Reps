@@ -62,6 +62,30 @@ extension SportRepository {
   public func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?) throws {
     try database.transaction { try writeGoal(goal, original: original) }
   }
+  public func saveTimedGoal(
+    _ goal: ExerciseGoal, original: ExerciseGoal?, originalExercise: TrainingExercise
+  ) throws {
+    _ = try goal.validated()
+    var expected = originalExercise
+    expected.durationSeconds = goal.definition.durationSeconds
+    guard originalExercise.tracking == .duration, goal.definition == expected else {
+      throw TrainingError.invalid("Only the duration can be changed here.")
+    }
+    try database.transaction {
+      let snapshot = try readSnapshot()
+      guard snapshot.exercises.first(where: { $0.id == originalExercise.id }) == originalExercise
+      else {
+        throw TrainingError.invalid("The exercise has changed. Open its goal again.")
+      }
+      try database.execute(
+        "UPDATE exercises SET duration_seconds=? WHERE id=?",
+        [
+          goal.definition.durationSeconds.map(SQLValue.integer) ?? .null,
+          .text(originalExercise.id),
+        ])
+      try writeGoal(goal, original: original)
+    }
+  }
   public func adoptGoal(_ suggestion: GoalSuggestion, original: ExerciseGoal?) throws {
     try database.transaction {
       let context = try readGoalContext(exerciseID: suggestion.goal.definition.id)

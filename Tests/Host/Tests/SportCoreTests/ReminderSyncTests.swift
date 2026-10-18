@@ -91,6 +91,27 @@ final class ReminderSyncTests: XCTestCase, @unchecked Sendable {
     let pending = await transport.pending()
     XCTAssertTrue(pending.isEmpty)
   }
+  func testTestNotificationSurvivesReminderSyncAndIsNotCountedOrRouted() async throws {
+    let repository = try SportRepository(path: ":memory:")
+    try await repository.saveNotificationPreferences(NotificationPreferences(photosEnabled: true))
+    let context = try await repository.reminderContext()
+    let transport = ReminderTestTransport()
+    try await transport.add(
+      ReminderOccurrence(
+        id: ReminderPolicy.testIdentifier, kind: .photos, title: "Test", body: "Test",
+        components: DateComponents(second: 10), repeats: false, date: nil))
+    let sync = ReminderSynchronizer(transport: transport, source: { context })
+    let result = await sync.refresh()
+    let requests = await transport.pending()
+    XCTAssertEqual(result.count, 1)
+    XCTAssertEqual(requests.count, 2)
+    XCTAssertTrue(requests.contains { $0.id == ReminderPolicy.testIdentifier })
+    XCTAssertFalse(ReminderPolicy.managed(ReminderPolicy.testIdentifier))
+    XCTAssertTrue(ReminderPolicy.presents(ReminderPolicy.testIdentifier))
+    XCTAssertFalse(ReminderPolicy.presents("foreign"))
+    XCTAssertNil(
+      ReminderPolicy.destination(identifier: ReminderPolicy.testIdentifier, kind: "photos"))
+  }
   func testRoutesRejectMismatchedPayloadAndPermissionNeverRepromptsDenial() {
     XCTAssertEqual(
       ReminderPolicy.destination(identifier: "sport.local.photos.monthly", kind: "photos"),
