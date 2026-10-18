@@ -8,7 +8,7 @@ struct ProgressFactLabel: View {
     case .repetitionsAdded(let delta, let grams):
       Text("\(delta) more repetition(s) at \(WorkoutLabels.weight(grams)) kg")
     case .durationAdded(let delta, let grams):
-      Text("\(WorkoutLabels.weight(delta)) more seconds at \(WorkoutLabels.weight(grams)) kg")
+      Text("\(WorkoutLabels.seconds(delta)) more seconds at \(WorkoutLabels.weight(grams)) kg")
     case .effortLower(let previous, let current):
       Text(
         "Reported effort: \(WorkoutLabels.feeling(previous)) → \(WorkoutLabels.feeling(current))")

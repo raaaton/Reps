@@ -8,11 +8,13 @@ final class ReminderMigrationTests: XCTestCase, @unchecked Sendable {
     let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
     defer { try? FileManager.default.removeItem(atPath: path) }
     let db = try SQLiteDatabase(path: path)
-    try db.execute("CREATE TABLE workout_sets(id TEXT,weight_grams INTEGER,load_components TEXT)")
-    try db.execute("INSERT INTO workout_sets VALUES('saved',2375,'captured')")
+    try db.execute(
+      "CREATE TABLE workout_sets(id TEXT,weight_grams INTEGER,load_components TEXT,duration_ms INTEGER)"
+    )
+    try db.execute("INSERT INTO workout_sets VALUES('saved',2375,'captured',NULL)")
     try db.execute("PRAGMA user_version=4")
     _ = try SportRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 9)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 10)
     let row = try db.query("SELECT * FROM notification_preferences").first
     XCTAssertEqual(try row?.integer("workouts_enabled"), 0)
     XCTAssertEqual(try row?.integer("photos_enabled"), 0)

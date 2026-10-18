@@ -4,7 +4,7 @@ enum TrainingSchema {
   static func migrate(_ database: SQLiteDatabase) throws {
     try database.transaction {
       let version = try database.query("PRAGMA user_version").first?.integer("user_version") ?? 0
-      guard version <= 9 else { throw TrainingError.newerSchema }
+      guard version <= 10 else { throw TrainingError.newerSchema }
       if version == 0 {
         for statement in statements { try database.execute(statement) }
         try seed(database)
@@ -71,6 +71,25 @@ enum TrainingSchema {
           "CREATE TABLE workout_goal_decisions(exercise_id TEXT PRIMARY KEY REFERENCES workout_exercises(id) ON DELETE CASCADE)"
         )
         try database.execute("PRAGMA user_version=9")
+      }
+      if version < 10 {
+        // Keep elapsed timestamps precise; only recorded working-set results use tenths.
+        let rounded = "MAX(100, (duration_ms / 100 + (duration_ms % 100 >= 50)) * 100)"
+        try database.execute(
+          "UPDATE workout_sets SET duration_ms=\(rounded) WHERE duration_ms IS NOT NULL")
+        for event in ["INSERT", "UPDATE OF duration_ms"] {
+          let suffix = event == "INSERT" ? "insert" : "update"
+          try database.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS round_duration_\(suffix)
+            AFTER \(event) ON workout_sets
+            WHEN NEW.duration_ms IS NOT NULL AND NEW.duration_ms % 100 != 0
+            BEGIN
+              UPDATE workout_sets SET duration_ms=\(rounded) WHERE id=NEW.id;
+            END
+            """)
+        }
+        try database.execute("PRAGMA user_version=10")
       }
 
     }

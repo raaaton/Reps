@@ -14,6 +14,7 @@ enum TrendPresentation {
     switch metric {
     case .volume: "Total Added-Weight Volume"
     case .repetitions: "Total Repetitions"
+    case .duration: "Total Work Time"
     default: title(metric)
     }
   }
@@ -21,7 +22,7 @@ enum TrendPresentation {
     switch metric {
     case .volume: "\(WorkoutLabels.weight(total)) kg"
     case .repetitions: "\(total) reps"
-    case .duration: "\(WorkoutLabels.weight(total)) s"
+    case .duration: "\(WorkoutLabels.seconds(total)) s"
     case .load: "\(WorkoutLabels.weight(total)) kg"
     }
   }
@@ -32,7 +33,7 @@ enum TrendPresentation {
     case .repetitions:
       "The total adds all workouts shown in this period. Each point shows repetitions in one workout, including all recorded loads."
     case .duration:
-      "Time recorded across all sets of the workout. Rest is not included."
+      "The total adds work time across all workouts in this period. Each point shows one workout. Rest is not included."
     case .load:
       "Heaviest added weight used in the workout. This number alone does not measure strength gains."
     }

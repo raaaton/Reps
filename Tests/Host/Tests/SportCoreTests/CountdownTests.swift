@@ -53,7 +53,7 @@ final class CountdownTests: XCTestCase, @unchecked Sendable {
       workoutID: session.id, exerciseID: exercise.id, number: 1,
       repetitions: nil, weightGrams: 0, now: now + 13_250)
     let saved = try await repository.workout(id: session.id)
-    XCTAssertEqual(saved.currentExercise?.sets.first?.durationMS, 10_250)
+    XCTAssertEqual(saved.currentExercise?.sets.first?.durationMS, 10_300)
     XCTAssertEqual(saved.rest?.deadline, now + 13_250 + session.restSeconds * 1000)
   }
   func testCountdownBoundaryAndCancelCanOnlyAffectPendingSet() async throws {

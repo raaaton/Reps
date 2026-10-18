@@ -328,3 +328,7 @@ Correction61: load-goal popup moves to the transition button click in FeelingFor
 1.0.4 : Customize Goal permet aussi de saisir les secondes (vide=Untimed) depuis les objectifs chronométrés, avec clavier numérique natif. Les changements concernent les futures séances. Notifications offre un lien natif vers les réglages iOS, qui contrôlent les emplacements et la visibilité. Aucun épinglage permanent promis.
 
 Notification test : bouton explicite, autorisation native si nécessaire, notification standard unique après10s, retour indiquant la programmation (pas la livraison), erreurs actionnables. Aucune modification des rappels enregistrés.
+
+1.0.5 : durées des séries isométriques arrondies au dixième de seconde à l’enregistrement, correction et import ; anciennes durées converties transactionnellement. Totaux/bulles/écarts de progression affichent au plus une décimale. Les totaux additionnent les résultats arrondis ; horodatages et échéances de repos restent exacts.
+
+Correction65 : Total Work Time affiche le cumul des séries isométriques des séances de la période choisie, avec libellé de période. Graphique, bulle et séance sélectionnée restent des mesures par séance. Même publication atomique des données pour éviter le flash des filtres.

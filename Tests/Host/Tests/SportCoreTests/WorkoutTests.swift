@@ -273,7 +273,7 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(snapshot.restSeconds, 137)
     let session = try await upgraded.startWorkout(scheduleID: "mine", now: now, calendar: calendar)
     XCTAssertEqual(session.exercises.first?.definition.name, "Personnel")
-    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 9)
+    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 10)
   }
   func testTimedSetSurvivesReopenAndRejectsClockReversal() async throws {
     let file = path()
@@ -319,7 +319,7 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
     try await reopened.saveFeeling(
       workoutID: session.id, exerciseID: timed.id, tenths: 90, now: now + 56_000)
     let finished = try await reopened.workout(id: session.id)
-    XCTAssertEqual(finished.exercises.last?.sets.first?.durationMS, 37_125)
+    XCTAssertEqual(finished.exercises.last?.sets.first?.durationMS, 37_100)
     XCTAssertEqual(finished.exercises.last?.feelingTenths, 85)
   }
 

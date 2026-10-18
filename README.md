@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.0.4.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+Download **Sport-1.0.5.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -47,7 +47,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - A full-target bodyweight warm-up for weighted goals, or two half-target sets for bodyweight goals.
 - Half rest between warm-up sets, followed by full rest before working sets.
 - A cancellable 3–2–1 countdown for timed holds.
-- Record completed repetitions, duration, added weight, and exercise effort (Feeling).
+- Record completed repetitions, duration to the nearest tenth of a second, added weight, and exercise effort (Feeling).
 - Correct a recorded set without restarting the rest timer.
 - Resume a workout after leaving the app.
 - Finish with one timed stretch movement, selected in preparation; each hold stops automatically at its target duration.
@@ -66,7 +66,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Workout and exercise history, with manual entry and corrections.
 - Connected charts for workout volume, repetitions, added weight, and timed work.
 - Drag on charts to inspect individual sessions.
-- Period totals and a GitHub-style training activity grid, from the first completed workout.
+- Period totals, including total isometric work time, and a GitHub-style training activity grid from the first completed workout.
 - Neutral filler cells and missed scheduled-day dots; missed days use the current enabled schedule and exclude today.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
 - Review added-weight increases or decreases directly when moving to the next exercise or stretching.

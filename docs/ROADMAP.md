@@ -198,3 +198,9 @@ Build63 : Send Test Notification dans Settings/Notifications, notification local
 Livraison63confirmée : device-run.sh code0, installation/vérification100%, postflight version1.0.4(63), identité unique attendue et certificat inchangé.204tests métier/6metadata/lint/build/inspection réussis. Réception réelle du test, refus de permission et visibilité écran verrouillé à confirmer sur iPhone. Aucun push.
 
 Publication1.0.4(63) autorisée par push : commitc58b94a/tagv1.0.4 publiés, uniqueassetSport-1.0.4.ipa.204tests/6metadata/lint/Release xtool/inspection réussis ; asset GitHub retéléchargé identique et inspecté. Modifications distantes README préservées. Aucun checksum, profil, certificat ou donnée privée publié.
+
+Local1.0.5(64) : isométriques arrondis au dixième à l’affichage et en stockage, anciennes séries migrées avec transaction SQLite10 ; nouveaux résultats/corrections/imports normalisés par triggers. Horodatages et échéances restent précis.208tests métier/6metadata/lint/xtool/inspection réussis ; scriptUSB0, installation/vérification100%. Review iPhone attendue, aucun push.
+
+Correction65 : temps total isométrique de la période au lieu de la seule dernière séance ; courbe/bulles par séance conservées, arrondi au dixième maintenu.17tests de graphiques passent. Compilation et livraison en cours, aucun push.
+
+Livraison65 :17tests graphiques/6metadata/lint/xtool13.07s/inspection unsigned réussis ; scriptUSB0 et installation/vérification100%. Le chiffre principal est la somme de période et les points restent par séance. Review iPhone requise, aucun push.

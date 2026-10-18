@@ -96,3 +96,7 @@ Local1.0.4(62) :203tests métier,6metadata, strictlint, compilation xtool et ins
 Release1.0.4(63) : scripts/release-local.sh code0 avec204tests métier/6metadata/strictlint, build Release local optimisé, métadonnées compilateur intégrées et IPA unsigned inspectée. Publication autorisée après réception réelle de la notification de test sur iPhone. Aucune signature/installation ni modification de certificat pour produire cet asset.
 
 Publication1.0.4vérifiée : asset uniqueSport-1.0.4.ipa retéléchargé, identique octet pour octet et inspection unsigned réussie ; tag pointec58b94a. Le commit de compte rendu ne change pas le binaire.
+
+Local1.0.5(64) : migration SQLite10 normalise workout_sets.duration_ms au100ms le plus proche ; triggers insert/update couvrent tous les chemins. Minimum positif100ms, aucun changement de timestamp, repos, capacités ou signature.
+
+Release1.0.5(65) : scripts/release-local.sh code0 avec208tests métier/6metadata/strictlint, compilation xtool optimisée et métadonnées intégrées, IPA unsigned inspectée sans profil/signature/donnée utilisateur. Publication autorisée par ok push après65.

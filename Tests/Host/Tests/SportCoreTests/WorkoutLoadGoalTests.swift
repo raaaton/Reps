@@ -150,7 +150,7 @@ final class WorkoutLoadGoalTests: XCTestCase, @unchecked Sendable {
     let restored = try await reopened.workout(id: workout.id)
     XCTAssertEqual(before, after)
     XCTAssertEqual(restored, workout)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 9)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 10)
     XCTAssertEqual(
       try db.query("SELECT COUNT(*) AS n FROM workout_goal_decisions").first?.integer("n"), 0)
   }

@@ -176,7 +176,7 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
         tracking: .duration, weight: nil, since: since
       ).isEmpty)
   }
-  func testTimedSessionTotalIncludesAllLoadsAndCanStillFilterUniformLoad() {
+  func testTimedSessionTotalIncludesAllLoadsAndCanStillFilterUniformLoad() throws {
     let mixed = record(
       "mixed", reps: [12125, 10000, 11000, 10000], grams: [0, 3900, 4500, 0], mode: .duration)
     let uniform = record("uniform", reps: [10000, 10000, 10000, 10000], mode: .duration)
@@ -184,6 +184,7 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
       records: [mixed, uniform], metric: .duration, tracking: .duration, weight: nil, since: since)
     XCTAssertEqual(all.map(\.total), [40000, 43125])
     XCTAssertEqual(all.last?.value(for: .duration), 43.125)
+    XCTAssertEqual(try SessionTrends.total(points: all), 83125)
     let filtered = SessionTrends.points(
       records: [mixed, uniform], metric: .duration, tracking: .duration, weight: 3900, since: since)
     XCTAssertEqual(filtered.map(\.workoutID), ["uniform"])

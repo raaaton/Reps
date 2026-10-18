@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key><string>Sport</string>
-    <key>CFBundleShortVersionString</key><string>1.0.4</string>
-    <key>CFBundleVersion</key><string>63</string>
+    <key>CFBundleShortVersionString</key><string>1.0.5</string>
+    <key>CFBundleVersion</key><string>65</string>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>NSExtension</key>
     <dict>

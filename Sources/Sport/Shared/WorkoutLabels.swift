@@ -38,6 +38,10 @@ enum WorkoutLabels {
     let remainder = seconds % 60
     return hours > 0 ? "\(hours) h \(minutes) min \(remainder) s" : "\(minutes) min \(remainder) s"
   }
+  static func seconds(_ milliseconds: Int) -> String {
+    (Double(milliseconds) / 1000).formatted(.number.precision(.fractionLength(0...1)))
+  }
+
   static func weight(_ grams: Int) -> String {
     let whole = grams / 1000
     let remainder = grams % 1000

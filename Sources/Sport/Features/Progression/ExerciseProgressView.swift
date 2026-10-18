@@ -12,7 +12,7 @@ private struct TrendRequest: Hashable, Sendable {
 private struct TrendProjection: Sendable {
   let request: TrendRequest
   let points: [SessionTrendPoint]
-  let repetitionTotal: Int?
+  let periodTotal: Int?
 }
 struct ExerciseProgressView: View {
   @EnvironmentObject private var store: TrainingStore
@@ -49,7 +49,9 @@ struct ExerciseProgressView: View {
   private var summaryTotal: Int? {
     guard let projection else { return nil }
     if displayedMetric == .volume { return projection.points.last?.cumulativeTotal }
-    if displayedMetric == .repetitions { return projection.repetitionTotal }
+    if displayedMetric == .repetitions || displayedMetric == .duration {
+      return projection.periodTotal
+    }
     return points.last?.total
   }
   var body: some View {
@@ -84,7 +86,7 @@ struct ExerciseProgressView: View {
               Text(TrendPresentation.value(summaryTotal, metric: displayedMetric)).font(.largeTitle)
                 .fontWeight(.semibold)
               Text(
-                displayedMetric == .volume || displayedMetric == .repetitions
+                displayedMetric != .load
                   ? (displayedMonths == 12
                     ? "Past Year"
                     : displayedMonths == 1 ? "Past Month" : "Past 3 Months")
@@ -95,7 +97,7 @@ struct ExerciseProgressView: View {
               if displayedMetric != .volume, let first = points.first, points.count > 1 {
                 let delta = last.total - first.total
                 Text(
-                  "\(displayedMetric == .repetitions ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.value(abs(delta), metric: displayedMetric)) since the first workout shown"
+                  "\(displayedMetric != .load ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.value(abs(delta), metric: displayedMetric)) since the first workout shown"
                 ).font(.subheadline).foregroundStyle(.secondary)
               }
               Text("\(points.count) \(points.count == 1 ? "workout" : "workouts") in this period")
@@ -207,12 +209,12 @@ struct ExerciseProgressView: View {
             records: records, metric: metric, tracking: tracking, weight: nil, since: since,
             calendar: calendar)
         }
-        let repetitionTotal: Int? =
-          metric == .repetitions
+        let periodTotal: Int? =
+          metric == .repetitions || metric == .duration
           ? try SessionTrends.total(points: points) : nil
         return TrendProjection(
           request: request, points: points,
-          repetitionTotal: repetitionTotal)
+          periodTotal: periodTotal)
       }.value
       guard !Task.isCancelled, self.request == request else { return }
       // Publish matching labels, filters, points and selection together; never empty the list.
