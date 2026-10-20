@@ -62,10 +62,13 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
   public var isEnabled: Bool
   public var reminderMinutes: Int?
   public var exerciseIDs: [String]
+  public var setCounts: [String: Int]
+  public var goals: [String: ExerciseGoal]
 
   public init(
     id: String, name: String, weekday: Int, isEnabled: Bool,
-    reminderMinutes: Int?, exerciseIDs: [String]
+    reminderMinutes: Int?, exerciseIDs: [String], setCounts: [String: Int] = [:],
+    goals: [String: ExerciseGoal] = [:]
   ) {
     self.id = id
     self.name = name
@@ -73,7 +76,26 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
     self.isEnabled = isEnabled
     self.reminderMinutes = reminderMinutes
     self.exerciseIDs = exerciseIDs
+    self.setCounts = setCounts
+    self.goals = goals
   }
+
+  enum CodingKeys: String, CodingKey {
+    case id, name, weekday, isEnabled, reminderMinutes, exerciseIDs, setCounts, goals
+  }
+
+  public init(from decoder: Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    id = try c.decode(String.self, forKey: .id)
+    name = try c.decode(String.self, forKey: .name)
+    weekday = try c.decode(Int.self, forKey: .weekday)
+    isEnabled = try c.decode(Bool.self, forKey: .isEnabled)
+    reminderMinutes = try c.decodeIfPresent(Int.self, forKey: .reminderMinutes)
+    exerciseIDs = try c.decode([String].self, forKey: .exerciseIDs)
+    setCounts = try c.decodeIfPresent([String: Int].self, forKey: .setCounts) ?? [:]
+    goals = try c.decodeIfPresent([String: ExerciseGoal].self, forKey: .goals) ?? [:]
+  }
+
 }
 
 public struct TrainingSnapshot: Codable, Equatable, Sendable {
@@ -84,7 +106,13 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public var goals: [ExerciseGoal] = []
 
   public func exercises(for schedule: TrainingSchedule) -> [TrainingExercise] {
-    schedule.exerciseIDs.compactMap { id in exercises.first { $0.id == id && $0.isEnabled } }
+    schedule.exerciseIDs.compactMap { id in
+      guard var exercise = exercises.first(where: { $0.id == id && $0.isEnabled }) else {
+        return nil
+      }
+      exercise.setCount = schedule.setCounts[id] ?? exercise.setCount
+      return exercise
+    }
   }
 
   public func schedule(on date: Date, calendar: Calendar = .current) -> TrainingSchedule? {

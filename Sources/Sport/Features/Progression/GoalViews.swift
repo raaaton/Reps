@@ -6,16 +6,12 @@ struct GoalDescription: View {
   var body: some View {
     Text(summary)
       .accessibilityLabel(
-        (goal.repetitions.map { WorkoutLabels.repetitionDescription($0) } ?? target)
+        WorkoutLabels.goalTargetDescription(goal)
           + ", "
           + (goal.load.grams == 0
             ? "Bodyweight" : "\(WorkoutLabels.weight(goal.load.grams)) kilograms added"))
   }
-  private var target: String {
-    if let reps = goal.repetitions { return RepetitionNotation.compact(reps) }
-    return goal.definition.durationSeconds.map { "\(goal.definition.setCount)×\($0) s" }
-      ?? "\(goal.definition.setCount) sets · untimed"
-  }
+  private var target: String { WorkoutLabels.goalTarget(goal) }
   private var summary: String {
     target + " · "
       + (goal.load.grams == 0 ? "Bodyweight" : "+\(WorkoutLabels.weight(goal.load.grams)) kg")
@@ -25,6 +21,7 @@ struct GoalDescription: View {
 struct ExerciseGoalRow: View {
   @EnvironmentObject private var store: TrainingStore
   let exercise: TrainingExercise
+  var scheduleID: String? = nil
   @State private var context: GoalContext?
   @State private var editing = false
   @State private var error: String?
@@ -40,7 +37,7 @@ struct ExerciseGoalRow: View {
                 Text("Goal").font(.caption).foregroundStyle(.secondary)
                 GoalDescription(goal: goal).font(.subheadline).foregroundStyle(.primary)
                 if !context.isAvailable {
-                  Text("Review needed: exercise or load changed.").font(.caption).foregroundStyle(
+                  Text("Review needed: load unavailable.").font(.caption).foregroundStyle(
                     .secondary)
                 }
               } else {
@@ -58,9 +55,13 @@ struct ExerciseGoalRow: View {
       }
     }
     .sportAnimation(value: context?.adopted)
-    .task(id: store.historyRevision) {
+    .task(id: [scheduleID ?? "", exercise.id, String(store.historyRevision)]) {
+      if let context, context.scheduleID != scheduleID || context.exercise.id != exercise.id {
+        self.context = nil
+        editing = false
+      }
       do {
-        let result = try await store.goalContext(exerciseID: exercise.id)
+        let result = try await store.goalContext(exerciseID: exercise.id, scheduleID: scheduleID)
         guard !Task.isCancelled else { return }
         context = result
         error = nil
@@ -86,8 +87,10 @@ struct GoalEditor: View {
           Section("Current Goal") {
             goalValue(goal)
             if !context.isAvailable {
-              Text("The exercise or load has changed. Customize the goal before using it.")
-                .font(.subheadline).foregroundStyle(.secondary)
+              Text(
+                "The saved load composition is unavailable. Choose the load again before using it."
+              )
+              .font(.subheadline).foregroundStyle(.secondary)
             }
           }
         }
@@ -156,7 +159,7 @@ struct GoalEditor: View {
       "Feeling above 9: try the next lighter available load with the same targets."
     case .addRepetition: "Keep the same load and add one repetition to a weaker set."
     case .keep: "Keep the target from the last comparable workout."
-    case .duration: "Keep the configured duration. Added weight is your choice."
+    case .duration: "Match the last recorded durations. Added weight is your choice."
     }
   }
   private func adopt(_ suggestion: GoalSuggestion) {
@@ -165,7 +168,8 @@ struct GoalEditor: View {
     Task {
       defer { saving = false }
       do {
-        try await store.adoptGoal(suggestion, original: context.adopted)
+        try await store.adoptGoal(
+          suggestion, original: context.adopted, scheduleID: context.scheduleID)
         dismiss()
       } catch { self.error = error.localizedDescription }
     }
@@ -180,12 +184,15 @@ private struct GoalCustomizationView: View {
   @State private var load: AvailableLoad
   @State private var reps: [Int]
   @State private var duration: String
-  @FocusState private var durationFocused: Bool
+  @State private var setDurations: [String]
+  @FocusState private var durationFocused: Int?
   @State private var saving = false
   @State private var error: String?
   init(context: GoalContext, onSaved: @escaping () -> Void) {
     self.context = context
     self.onSaved = onSaved
+    _setDurations = State(
+      initialValue: context.adopted?.durationsMS?.map(WorkoutLabels.seconds) ?? [])
     _duration = State(initialValue: context.exercise.durationSeconds.map(String.init) ?? "")
     _load = State(
       initialValue: context.adopted?.load ?? context.suggestion?.goal.load ?? .bodyweight)
@@ -208,11 +215,20 @@ private struct GoalCustomizationView: View {
                 1...max(context.exercise.maximumReps ?? 1, context.adopted?.repetitions?.max() ?? 1)
             )
           }
+        } else if !setDurations.isEmpty {
+          ForEach(setDurations.indices, id: \.self) { index in
+            LabeledContent("Set \(index + 1) (s)") {
+              TextField("Seconds", text: $setDurations[index])
+                .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                .focused($durationFocused, equals: index + 1)
+                .accessibilityLabel("Seconds for set \(index + 1)")
+            }
+          }
         } else {
           LabeledContent("Seconds per Set") {
             TextField("Untimed", text: $duration)
               .keyboardType(.numberPad).multilineTextAlignment(.trailing)
-              .focused($durationFocused)
+              .focused($durationFocused, equals: 0)
               .accessibilityLabel("Seconds per set, optional")
           }
         }
@@ -221,7 +237,10 @@ private struct GoalCustomizationView: View {
       } footer: {
         if context.exercise.tracking == .duration {
           Text(
-            "Enter seconds, or leave blank for an untimed set. Changes apply to future workouts.")
+            setDurations.isEmpty
+              ? "Enter seconds, or leave blank for an untimed set. Changes apply to future workouts."
+              : "Enter seconds for each set, or clear all fields for untimed sets. Changes apply to future workouts."
+          )
         }
       }
       if !store.availableLoads.contains(load) {
@@ -241,7 +260,7 @@ private struct GoalCustomizationView: View {
         ToolbarItemGroup(placement: .keyboard) {
           Spacer()
           Button("Dismiss keyboard", systemImage: "keyboard.chevron.compact.down") {
-            durationFocused = false
+            durationFocused = nil
           }
           .tint(.white).labelStyle(.iconOnly)
         }
@@ -268,7 +287,30 @@ private struct GoalCustomizationView: View {
     Task {
       defer { saving = false }
       do {
-        if context.exercise.tracking == .duration {
+        if context.exercise.tracking == .duration, !setDurations.isEmpty {
+          if setDurations.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+          {
+            var definition = context.exercise
+            definition.durationSeconds = nil
+            try await store.saveTimedGoal(
+              ExerciseGoal(definition: definition, load: load, repetitions: nil),
+              original: context.adopted, originalExercise: context.exercise,
+              scheduleID: context.scheduleID)
+          } else {
+            let values = try setDurations.map { value in
+              let ms = try WorkoutWeight.grams(value)
+              guard ms > 0, ms % 100 == 0 else {
+                throw TrainingError.invalid(
+                  "Enter a positive duration with at most one decimal place.")
+              }
+              return ms
+            }
+            try await store.saveGoal(
+              ExerciseGoal(
+                definition: context.exercise, load: load, repetitions: nil,
+                durationsMS: values), original: context.adopted, scheduleID: context.scheduleID)
+          }
+        } else if context.exercise.tracking == .duration {
           let text = duration.trimmingCharacters(in: .whitespacesAndNewlines)
           let seconds = text.isEmpty ? nil : Int(text)
           guard text.isEmpty || seconds.map({ $0 > 0 }) == true else {
@@ -278,11 +320,12 @@ private struct GoalCustomizationView: View {
           definition.durationSeconds = seconds
           try await store.saveTimedGoal(
             ExerciseGoal(definition: definition, load: load, repetitions: nil),
-            original: context.adopted, originalExercise: context.exercise)
+            original: context.adopted, originalExercise: context.exercise,
+            scheduleID: context.scheduleID)
         } else {
           try await store.saveGoal(
             ExerciseGoal(definition: context.exercise, load: load, repetitions: reps),
-            original: context.adopted)
+            original: context.adopted, scheduleID: context.scheduleID)
         }
         onSaved()
       } catch { self.error = error.localizedDescription }
@@ -294,5 +337,33 @@ struct WorkoutGoalLabel: View {
   let exercise: WorkoutExercise
   var body: some View {
     if let goal = exercise.goal { GoalDescription(goal: goal).font(.subheadline) }
+  }
+}
+
+// Exercise history remains unified; future goals are shown in their workout context.
+struct ExerciseWorkoutGoals: View {
+  @EnvironmentObject private var store: TrainingStore
+  let exercise: TrainingExercise
+
+  var body: some View {
+    if case .ready(let snapshot) = store.phase {
+      let schedules = snapshot.schedules.filter { $0.exerciseIDs.contains(exercise.id) }
+      if schedules.isEmpty {
+        Text("Add this exercise to a workout to configure its sets and goals.")
+          .font(.subheadline).foregroundStyle(.secondary)
+      } else {
+        ForEach(schedules) { schedule in
+          VStack(alignment: .leading, spacing: 4) {
+            Text("\(schedule.name) · \(TrainingLabels.weekday(schedule.weekday))")
+              .font(.subheadline).foregroundStyle(.secondary)
+            if let definition = snapshot.exercises(for: schedule).first(where: {
+              $0.id == exercise.id
+            }) {
+              ExerciseGoalRow(exercise: definition, scheduleID: schedule.id)
+            }
+          }
+        }
+      }
+    }
   }
 }

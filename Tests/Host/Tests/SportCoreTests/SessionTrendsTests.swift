@@ -144,7 +144,7 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
     let points = SessionTrends.points(
       records: records, metric: .volume, tracking: .repetitions, weight: nil, since: since)
     XCTAssertEqual(points.map(\.total), [180000, 288000])
-    XCTAssertEqual(points.map { $0.value(for: .volume) }, [180, 288])
+    XCTAssertEqual(points.map { $0.value(for: .volume) }, [45, 72])
     XCTAssertEqual(points.map(\.workoutID), ["earlier", "latest"])
   }
   func testVolumeIncludesMixedLoadsWithGramPrecisionAndBodyweightRemainsZero() {
@@ -183,7 +183,7 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
     let all = SessionTrends.points(
       records: [mixed, uniform], metric: .duration, tracking: .duration, weight: nil, since: since)
     XCTAssertEqual(all.map(\.total), [40000, 43125])
-    XCTAssertEqual(all.last?.value(for: .duration), 43.125)
+    XCTAssertEqual(all.last?.value(for: .duration), 10.78125)
     XCTAssertEqual(try SessionTrends.total(points: all), 83125)
     let filtered = SessionTrends.points(
       records: [mixed, uniform], metric: .duration, tracking: .duration, weight: 3900, since: since)
@@ -206,7 +206,7 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(points.map(\.workoutID), ["first", "middle", "last"])
     XCTAssertEqual(points.map(\.total), [90000, 30000, 288000])
     XCTAssertEqual(points.map(\.cumulativeTotal), [90000, 120000, 408000])
-    XCTAssertEqual(points.map { $0.value(for: .volume) }, [90, 30, 288])
+    XCTAssertEqual(points.map { $0.value(for: .volume) }, [45, 30, 72])
     XCTAssertEqual(Set(points.map(\.context)).count, 3)
     // A narrower viewport must not reset a historical cumulative balance.
     let visible = points.filter { $0.performance.dayKey >= "2026-10-01" }
@@ -258,8 +258,8 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
     let shortContext = try XCTUnwrap(points.first { $0.workoutID == "different-rest" }?.context)
     XCTAssertEqual(totals[normalContext], 88)
     XCTAssertEqual(totals[shortContext], 32)
-    XCTAssertEqual(points.first { $0.workoutID == "latest" }?.value(for: .repetitions), 48)
-    XCTAssertEqual(points.first { $0.workoutID == "earlier" }?.value(for: .repetitions), 40)
+    XCTAssertEqual(points.first { $0.workoutID == "latest" }?.value(for: .repetitions), 12)
+    XCTAssertEqual(points.first { $0.workoutID == "earlier" }?.value(for: .repetitions), 10)
   }
   func testPeriodTotalEmptySingleAndOverflowAreExplicit() throws {
     XCTAssertEqual(try SessionTrends.total(points: []), 0)
@@ -275,4 +275,37 @@ final class SessionTrendsTests: XCTestCase, @unchecked Sendable {
     XCTAssertThrowsError(try SessionTrends.totalsByContext(points: overflow))
   }
 
+}
+
+extension SessionTrendsTests {
+  func testPerSetCurveRanksTwoHeavierSetsAboveFourLighterSetsWithoutChangingTotals() throws {
+    let records = [
+      record("two", reps: [10, 10], grams: [75000, 75000]),
+      record(
+        "four", day: "2026-10-10", reps: [10, 10, 10, 10],
+        grams: [72000, 72000, 72000, 72000]),
+    ]
+    let points = SessionTrends.points(
+      records: records, metric: .volume, tracking: .repetitions, weight: nil, since: since)
+    XCTAssertEqual(points.map { $0.value(for: .volume) }, [720, 750])
+    XCTAssertEqual(points.map(\.total), [2_880_000, 1_500_000])
+    XCTAssertEqual(try SessionTrends.total(points: points), 4_380_000)
+  }
+
+  func testPerSetRepetitionsAndDurationPreserveFractionalMeansAndWholeSessionDetails() {
+    let reps = SessionTrends.points(
+      records: [record("two", reps: [10, 9], grams: [0, 0])], metric: .repetitions,
+      tracking: .repetitions, weight: nil, since: since)
+    XCTAssertEqual(reps.first?.value(for: .repetitions), 9.5)
+    XCTAssertEqual(reps.first?.total, 19)
+    let duration = SessionTrends.points(
+      records: [record("timed", reps: [12100, 10000], grams: [0, 3000], mode: .duration)],
+      metric: .duration, tracking: .duration, weight: nil, since: since)
+    XCTAssertEqual(duration.first?.value(for: .duration), 11.05)
+    XCTAssertEqual(duration.first?.total, 22100)
+    let load = SessionTrends.points(
+      records: [record("load", reps: [10, 9], grams: [3000, 4500])], metric: .load,
+      tracking: .repetitions, weight: nil, since: since)
+    XCTAssertEqual(load.first?.value(for: .load), 4.5)
+  }
 }

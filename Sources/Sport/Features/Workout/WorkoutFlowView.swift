@@ -57,7 +57,7 @@ private struct WorkoutPreparationView: View {
         List {
           if let first = snapshot.exercises(for: schedule).first {
             WorkoutSupportPreview(
-              first: first, goal: snapshot.goals.first { $0.definition.id == first.id },
+              first: first, goal: schedule.goals[first.id],
               override: overrides[first.id], restSeconds: snapshot.restSeconds,
               stretch: $stretch, stretchSeconds: $stretchSeconds)
           }
@@ -65,12 +65,12 @@ private struct WorkoutPreparationView: View {
             ForEach(snapshot.exercises(for: schedule)) { exercise in
               VStack(alignment: .leading, spacing: 4) {
                 Text(exercise.name)
-                ExerciseGoalRow(exercise: exercise)
+                ExerciseGoalRow(exercise: exercise, scheduleID: schedule.id)
               }
             }
           }
           BackpackPreparation(
-            exercises: snapshot.exercises(for: schedule), goals: snapshot.goals,
+            exercises: snapshot.exercises(for: schedule), goals: Array(schedule.goals.values),
             overrides: $overrides)
           Section {
             LabeledContent(

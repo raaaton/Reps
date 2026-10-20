@@ -18,10 +18,9 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
 
   func start(_ repository: SportRepository, sets: Int = 2) async throws -> WorkoutSession {
     let snapshot = try await repository.snapshot()
-    for var exercise in snapshot.exercises where ["chin-ups", "l-sit"].contains(exercise.id) {
-      exercise.setCount = sets
-      try await repository.saveExercise(exercise)
-    }
+    var schedule = try XCTUnwrap(snapshot.schedules.first { $0.id == "pull-abs" })
+    schedule.setCounts = ["chin-ups": sets, "l-sit": sets]
+    try await repository.saveSchedule(schedule)
     return try await repository.startWorkout(scheduleID: "pull-abs", now: now, calendar: calendar)
   }
 
@@ -273,7 +272,7 @@ final class WorkoutTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(snapshot.restSeconds, 137)
     let session = try await upgraded.startWorkout(scheduleID: "mine", now: now, calendar: calendar)
     XCTAssertEqual(session.exercises.first?.definition.name, "Personnel")
-    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 10)
+    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 15)
   }
   func testTimedSetSurvivesReopenAndRejectsClockReversal() async throws {
     let file = path()

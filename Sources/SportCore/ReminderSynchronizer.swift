@@ -4,9 +4,14 @@ public enum ReminderAuthorization: Sendable, Equatable {
   case notDetermined, denied, allowed
   public var mayRequest: Bool { self == .notDetermined }
 }
-public enum ReminderDestination: Int, Sendable {
-  case today = 0
-  case progression = 2
+public enum ReminderDestination: Sendable {
+  case today, progression, bodyWeight
+  public var tabIndex: Int {
+    switch self {
+    case .today: 0
+    case .progression, .bodyWeight: 2
+    }
+  }
 }
 public enum ReminderPolicy {
   public static let testIdentifier = "sport.test.notification"
@@ -14,6 +19,7 @@ public enum ReminderPolicy {
   public static func managed(_ id: String) -> Bool { id.hasPrefix("sport.local.") }
   public static func destination(identifier: String, kind: String) -> ReminderDestination? {
     if identifier == "sport.local.photos.monthly", kind == "photos" { return .progression }
+    if identifier.hasPrefix("sport.local.bodyweight."), kind == "bodyWeight" { return .bodyWeight }
     if identifier.hasPrefix("sport.local.workout."), kind == "workout" { return .today }
     return nil
   }

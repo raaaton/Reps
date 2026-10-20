@@ -30,7 +30,9 @@ public struct SessionTrendPoint: Identifiable, Sendable {
     self.cumulativeTotal = cumulativeTotal
   }
   public func value(for metric: SessionTrendMetric) -> Double {
-    metric == .repetitions ? Double(total) : Double(total) / 1000
+    let divisor = metric == .load ? 1 : max(1, context.seriesCount)
+    let units = metric == .repetitions ? Double(total) : Double(total) / 1000
+    return units / Double(divisor)
   }
 }
 public enum SessionTrends {

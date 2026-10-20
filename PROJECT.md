@@ -378,3 +378,30 @@ User replaces partial attendance with missed-day dots: completed days stay fille
 October18 direct load-goal consent: after a live completed workout commits its actual-result baseline, automatically show one centered confirmation listing applicable load increases/decreases from that workout. Explicit Update Goals writes the entire reviewed batch atomically for the next workout; Cancel keeps baseline. Existing management views remain available, but are not required for this adoption. No historical-browsing/cancelled popup, no new threshold or automatic timed-duration increase. Reject changed history, catalogue, inventory or original goals.
 
 October18 correction61 supersedes end-summary placement: show load-goal confirmation immediately on tapping Next Exercise/Continue to Stretching, before committing the transition. Update Goal or Keep Current Goal resolves the exact reviewed choice and Feeling atomically. Keep retains existing goal including absence; persistent operational decision markers prevent final completion or stretching from overriding either explicit choice, also after restart. No end popup. Active workout snapshot goals stay fixed, explicit goal updates affect future workouts only.
+
+
+## 23. Workout-specific set counts — 19 October 2026
+
+The number of working sets belongs to each exercise assignment in a planned workout, not to the shared exercise catalogue. The same exercise can have two sets on Tuesday and four on Saturday. Workouts exposes a per-exercise Sets control; exercise settings retain shared repetition ranges and duration targets. Existing assignments inherit their current counts and goals. Per-set adopted goals are scoped to the workout; changing a count preserves retained targets and initializes added targets with the configured minimum. Active and historical workout snapshots remain unchanged, and exercise history stays unified.
+
+
+## 24. Body weight and shared chart periods — 19 October 2026
+
+Progress includes Body Weight between Consistency and Exercises, displaying the latest weight/date and opening a dedicated chart and editable measurement list. One measurement per calendar date, positive kilograms with up to three decimals, integer grams in SQLite, no future dates. Existing dates open their measurement for editing; cancellation writes nothing. Chart periods across exercises and body weight are3/6/12months, default3. Body weight shows real chronological spacing, latest period measurement and first-to-last change; no sum of body weights. Weekly opt-in reminder requires explicit weekday/time, is omitted if already recorded for its date, schedules28days and refreshes on app activity/configuration/measurement changes. Notification taps open measurement entry and never expose a numeric value. JSONv3 includes measurements/preferences; v1/v2/CSV preserve these when absent from their format.
+
+
+### Accepted exercise changes and load review
+
+An accepted exercise edit also updates its saved future goals across workouts; no repeated exercise-change confirmation. Preserve each workout's set count and exact load, adapting target repetitions/duration to the new definition. Saved and active workout snapshots remain unchanged. Unavailable load compositions continue to require explicit review; Progress shows Review needed when any assigned goal needs it.
+
+
+## 20 October — Per-set charts and latest-exercise targets
+
+User requests average working-set values for the volume/repetition/duration curves, while period sums and selected-session totals remain unchanged. Callouts add `• N sets`. Maximum actual added load remains factual and is not divided by set count.
+
+Future goals refresh from the latest completed session containing the exercise, across all workouts (explicit correction: never restrict source to the same workout). Each assignment retains its count; preserve ordered targets, truncate or repeat the last known target. User explicitly confirms timed goals follow actual per-set durations at 100ms precision too, superseding the old fixed-duration carry-forward rule. Keep configured exercise definitions, active snapshots and recorded history intact. An explicit chosen different load retains its associated targets; same-load decisions do not freeze old repetitions/durations. Apply this baseline once to existing history on upgrade.
+
+
+## 20 October — Ceiling-average goals and mixed loads, superseding ordered carry-forward
+
+Device feedback72: replace learned ordered targets with one mean rounded upward to a whole repetition or second, repeated for each planned working set. Pike12,12,10,12 ->4×12; L-sit17.4,16.1,18.9,17.3 ->4×18s. User clarifies outdated target concerns Bulgarians, not Push-ups. For mixed loads, choose the highest actual load within the latest completed exercise session, averaging only sets at that load:12at6.6kg plus10,12,11at7.5kg ->11reps at7.5kg. Never merge sessions or mix repetition values across loads. Preserve recorded data, charts and explicit different-load decisions.

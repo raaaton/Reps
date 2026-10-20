@@ -16,6 +16,8 @@ final class TrainingStore: ObservableObject {
   @Published private(set) var availableLoads: [AvailableLoad] = [.bodyweight]
   @Published private(set) var historyRevision = 0
   @Published private(set) var notificationPreferences = NotificationPreferences()
+  @Published private(set) var bodyWeights: [BodyWeightMeasurement] = []
+  @Published private(set) var bodyWeightEntryRequest: UUID?
   @Published private(set) var workouts: WorkoutOverview = .empty
   @Published private(set) var workoutError: String?
   @Published private(set) var liveActivityMessage: String?
@@ -50,6 +52,7 @@ final class TrainingStore: ObservableObject {
       let overview = try await repository.workoutOverview(now: WorkoutClock.now)
       let snapshot = try await repository.snapshot()
       let preferences = try await repository.reminderContext().preferences
+      let weights = try await repository.bodyWeightMeasurements()
       consumeFeedback(overview)
       if workoutGeneration == workoutRequest {
         workouts = overview
@@ -57,6 +60,7 @@ final class TrainingStore: ObservableObject {
       }
       if generation == request {
         availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+        bodyWeights = weights
         phase = .ready(snapshot)
         notificationPreferences = preferences
         if !overview.expiredStretchIDs.isEmpty { historyRevision += 1 }
@@ -94,6 +98,22 @@ final class TrainingStore: ObservableObject {
   func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws {
     try await commit { try await $0.saveNotificationPreferences(preferences) }
   }
+
+  func saveBodyWeight(_ proposed: BodyWeightMeasurement, original: BodyWeightMeasurement?)
+    async throws
+  {
+    try await commit {
+      try await $0.saveBodyWeight(proposed, original: original, now: WorkoutClock.now)
+    }
+    await LocalReminderCoordinator.shared.clearBodyWeightReminder(dayKey: proposed.dayKey)
+  }
+
+  func deleteBodyWeight(_ original: BodyWeightMeasurement) async throws {
+    try await commit { try await $0.deleteBodyWeight(original) }
+  }
+
+  func requestBodyWeightEntry() { bodyWeightEntryRequest = UUID() }
+  func consumeBodyWeightEntryRequest() { bodyWeightEntryRequest = nil }
 
   func startWorkout(
     scheduleID: String, restart: Bool, loadOverrides: [String: AvailableLoad] = [:],
@@ -228,22 +248,30 @@ final class TrainingStore: ObservableObject {
       exerciseID: exerciseID, excludingWorkoutID: excludingWorkoutID)
   }
 
-  func goalContext(exerciseID: String) async throws -> GoalContext {
+  func goalContext(exerciseID: String, scheduleID: String? = nil) async throws -> GoalContext {
     guard let repository else { throw TrainingError.storage }
-    return try await repository.goalContext(exerciseID: exerciseID)
+    return try await repository.goalContext(exerciseID: exerciseID, scheduleID: scheduleID)
   }
-  func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?) async throws {
-    try await commit { try await $0.saveGoal(goal, original: original) }
+  func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?, scheduleID: String? = nil)
+    async throws
+  {
+    try await commit { try await $0.saveGoal(goal, original: original, scheduleID: scheduleID) }
   }
   func saveTimedGoal(
-    _ goal: ExerciseGoal, original: ExerciseGoal?, originalExercise: TrainingExercise
+    _ goal: ExerciseGoal, original: ExerciseGoal?, originalExercise: TrainingExercise,
+    scheduleID: String? = nil
   ) async throws {
     try await commit {
-      try await $0.saveTimedGoal(goal, original: original, originalExercise: originalExercise)
+      try await $0.saveTimedGoal(
+        goal, original: original, originalExercise: originalExercise, scheduleID: scheduleID)
     }
   }
-  func adoptGoal(_ suggestion: GoalSuggestion, original: ExerciseGoal?) async throws {
-    try await commit { try await $0.adoptGoal(suggestion, original: original) }
+  func adoptGoal(_ suggestion: GoalSuggestion, original: ExerciseGoal?, scheduleID: String? = nil)
+    async throws
+  {
+    try await commit {
+      try await $0.adoptGoal(suggestion, original: original, scheduleID: scheduleID)
+    }
   }
   func exerciseLoadGoalDecision(workout: WorkoutSession, exercise: WorkoutExercise, tenths: Int)
     async throws -> ExerciseLoadGoalDecision?
@@ -336,6 +364,7 @@ final class TrainingStore: ObservableObject {
     let overview = try await repository.workoutOverview(now: WorkoutClock.now)
     let snapshot = try await repository.snapshot()
     let preferences = try await repository.reminderContext().preferences
+    let weights = try await repository.bodyWeightMeasurements()
     consumeFeedback(overview)
     var event = workoutFeedback.event(from: feedbackBaseline, to: overview)
     if workoutGeneration == workoutRequest {
@@ -343,10 +372,14 @@ final class TrainingStore: ObservableObject {
       workoutError = nil
     }
     if generation == request {
-      if case .ready(let previous) = phase, previous.goals != snapshot.goals {
+      if case .ready(let previous) = phase,
+        previous.goals != snapshot.goals
+          || previous.schedules.map(\.goals) != snapshot.schedules.map(\.goals)
+      {
         event = .success
       }
       availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+      bodyWeights = weights
       phase = .ready(snapshot)
       notificationPreferences = preferences
       historyRevision += 1

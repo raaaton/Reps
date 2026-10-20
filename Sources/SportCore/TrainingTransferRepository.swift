@@ -7,17 +7,11 @@ extension SportRepository {
         "Finish or cancel the active workout before importing or exporting. Recorded sets will be kept."
       )
     }
-    guard let row = try database.query("SELECT * FROM notification_preferences WHERE id=1").first
-    else { throw TrainingError.storage }
     return TrainingDataSet(
-      configuration: try readSnapshot(),
-      notifications: NotificationPreferences(
-        workoutsEnabled: try row.integer("workouts_enabled") == 1,
-        photosEnabled: try row.integer("photos_enabled") == 1,
-        photoMinutes: try row.integer("photo_minutes")),
+      configuration: try readSnapshot(), notifications: try readNotificationPreferences(),
       workouts: try database.query("SELECT id FROM workouts ORDER BY rowid").map {
         try readWorkout(id: $0.text("id"))
-      })
+      }, bodyWeights: try bodyWeightMeasurements())
   }
   public func exportTraining(now: Int) throws -> TrainingArchive {
     try database.transaction {
@@ -41,7 +35,7 @@ extension SportRepository {
       let identical = records.filter { existing[$0.id] == $0 }.count
       let incoming = TrainingDataSet(
         configuration: current.configuration, notifications: current.notifications,
-        workouts: records)
+        workouts: records, bodyWeights: current.bodyWeights)
       _ = try TrainingArchive(createdAt: now, contents: incoming).encoded()
       return TrainingImportPreview(
         isRestoration: false, identicalCount: identical,
@@ -56,9 +50,18 @@ extension SportRepository {
       _ = try archive.encoded()
       try TrainingTransfer.workouts(archive.contents.workouts, now: now)
       let current = try readTransferData()
+      var incoming = archive.contents
+      incoming.configuration = try incoming.configuration.reconcilingGoals()
+      if archive.preservesBodyWeight {
+        incoming.bodyWeights = current.bodyWeights
+        incoming.notifications.weightEnabled = current.notifications.weightEnabled
+        incoming.notifications.weightWeekday = current.notifications.weightWeekday
+        incoming.notifications.weightMinutes = current.notifications.weightMinutes
+      }
+      for measurement in incoming.bodyWeights { _ = try measurement.validated(now: now) }
       return TrainingImportPreview(
-        isRestoration: true, identicalCount: 0,
-        incoming: archive.contents, expected: current)
+        isRestoration: true, preservesBodyWeight: archive.preservesBodyWeight, identicalCount: 0,
+        incoming: incoming, expected: current)
     }
   }
   public func applyTrainingImport(_ preview: TrainingImportPreview, now: Int) throws {
@@ -87,13 +90,13 @@ extension SportRepository {
           try database.execute("DELETE FROM \(table)")
         }
         try insertConfiguration(preview.incoming.configuration)
-        let prefs = preview.incoming.notifications
-        try database.execute(
-          "UPDATE notification_preferences SET workouts_enabled=?,photos_enabled=?,photo_minutes=? WHERE id=1",
-          [
-            .integer(prefs.workoutsEnabled ? 1 : 0), .integer(prefs.photosEnabled ? 1 : 0),
-            .integer(prefs.photoMinutes),
-          ])
+        try writeNotificationPreferences(preview.incoming.notifications)
+        try database.execute("DELETE FROM body_weight_measurements")
+        for weight in final.bodyWeights {
+          try database.execute(
+            "INSERT INTO body_weight_measurements VALUES(?,?,?)",
+            [.text(weight.id), .text(weight.dayKey), .integer(weight.grams)])
+        }
       }
       for workout in preview.incoming.workouts { try insertTransferredWorkout(workout) }
     }
@@ -120,8 +123,11 @@ extension SportRepository {
         ])
       for (index, id) in schedule.exerciseIDs.enumerated() {
         try database.execute(
-          "INSERT INTO schedule_exercises VALUES(?,?,?)",
-          [.text(schedule.id), .text(id), .integer(index)])
+          "INSERT INTO schedule_exercises(schedule_id,exercise_id,position,set_count,goal_payload) VALUES(?,?,?,?,?)",
+          [
+            .text(schedule.id), .text(id), .integer(index), .integer(schedule.setCounts[id] ?? 4),
+            try schedule.goals[id].map(ExerciseGoal.encode) ?? .null,
+          ])
       }
     }
     for item in c.weightItems {

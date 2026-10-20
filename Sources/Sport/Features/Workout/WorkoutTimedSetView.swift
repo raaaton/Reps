@@ -63,6 +63,10 @@ struct WorkoutTimedSetView: View {
               SportHaptics.shared.play(.success)
               AccessibilityNotification.Announcement("Timer Started").post()
             }
+            if let target = exercise.goal?.durationTargetMS(forSet: exercise.sets.count + 1) {
+              LabeledContent("Target for This Set", value: "\(WorkoutLabels.seconds(target)) s")
+                .foregroundStyle(.secondary)
+            }
             if showsWeight, let grams = exercise.setWeightGrams {
               LabeledContent("Added Weight", value: "\(WorkoutLabels.weight(grams)) kg")
             }

@@ -21,7 +21,7 @@ struct ExercisesView: View {
             } label: {
               TrainingListRow(
                 title: exercise.name,
-                subtitle: exercise.isEnabled ? TrainingLabels.target(exercise) : "Disabled")
+                subtitle: exercise.isEnabled ? TrainingLabels.metric(exercise) : "Disabled")
             }
             .buttonStyle(.plain)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -40,7 +40,7 @@ struct ExercisesView: View {
           }
         } footer: {
           Text(
-            "Goals apply to future workouts. After adding an exercise, select it in Workouts."
+            "Set the number of sets in each workout. After adding an exercise, select it in Workouts."
           )
         }
         if !old.isEmpty {
@@ -149,7 +149,6 @@ struct ExerciseEditor: View {
   @Environment(\.dismiss) private var dismiss
   @EnvironmentObject private var store: TrainingStore
   @State private var draft: TrainingExercise
-  @State private var sets: String
   @State private var minimum: String
   @State private var maximum: String
   @State private var duration: String
@@ -159,7 +158,6 @@ struct ExerciseEditor: View {
 
   init(exercise: TrainingExercise, isNew: Bool) {
     _draft = State(initialValue: exercise)
-    _sets = State(initialValue: String(exercise.setCount))
     _minimum = State(initialValue: String(exercise.minimumReps ?? 8))
     _maximum = State(initialValue: String(exercise.maximumReps ?? 12))
     _duration = State(initialValue: exercise.durationSeconds.map(String.init) ?? "")
@@ -176,10 +174,6 @@ struct ExerciseEditor: View {
         Picker("Metric", selection: $draft.tracking) {
           Text("Repetitions").tag(TrackingMode.repetitions)
           Text("Duration").tag(TrackingMode.duration)
-        }
-        LabeledContent("Sets") {
-          TextField("4", text: $sets).keyboardType(.numberPad).multilineTextAlignment(.trailing)
-            .accessibilityLabel("Number of sets")
         }
         if draft.tracking == .repetitions {
           LabeledContent("Minimum Repetitions") {
@@ -236,11 +230,7 @@ struct ExerciseEditor: View {
 
   private func save() {
     do {
-      guard let count = Int(sets), count > 0 else {
-        throw TrainingError.invalid("Enter a positive number of sets.")
-      }
       var exercise = draft
-      exercise.setCount = count
       switch exercise.tracking {
       case .repetitions:
         exercise.minimumReps = Int(minimum)

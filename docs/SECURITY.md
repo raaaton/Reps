@@ -215,3 +215,18 @@ Les bindings/actions/instantanésUUID/leases des confirmations sont inchangés. 
 1.0.3(57): Other extends the existing encrypted optional pose enum. Storage/encryption/key/lease/lifecycle/permissions and export exclusions are unchanged. Existing nil classifications stay nil; no metadata rewritten automatically. Tests use synthetic metadata only. This is classification scope, not a change of security boundary.
 
 Build61: training schema9 adds only operational workout_goal_decisions(exercise_id FK cascade), preserving explicit goal choices at completion. No vault, crypto, permissions or profile capability changes. Training exports still omit photos/keys; active exports remain blocked, and current goals plus results represent completed/cancelled user data without operational markers.
+
+
+19 octobre — séries par workout : migration11 additive et transactionnelle des affectations, initialisée avec les nombres/objectifs existants. Aucun changement du coffre, de la clé, des permissions, capacités ou intégrations réseau. JSONv2 conserve ces réglages et continue d'exclure photos/clés ; anciens JSONv1 validés contre les doublons avant conversion. Historique et séances actives restent indépendants des affectations.
+
+
+19octobre — Body Weight : mesures stockées en clair dans la base d'entraînement privée de l'app, comme l'historique sportif, distinctes du coffre. Migration12 additive/transactionnelle, aucune modification des clés/biométries/chiffrement. ArchiveJSONv3 inclut pesées/préférences, exclut toujours photos/clés ; anciens formats conservent les données absentes. Les notifications poids contiennent du texte générique, aucune valeur. PermissionUserNotifications existante, opt-in explicite ; aucune nouvelle capacité/dépendance/requête réseau. Annuler les formulaires ne modifie rien ; corrections/suppressions/imports utilisent transactions et gardes périmées.
+
+
+Build70: future-goal reconciliation is a transactional training-database change (schema13), including upgrade of previously accepted exercise changes. It retains load compositions, active/history snapshots and transfer recovery data. No vault, biometric, cryptographic, notification payload or app-capability change.
+
+
+Build71: schema14 transactionally refreshes future training goals from existing completed exercise history and captures explicit goal decisions as training payloads. Historical/active snapshots are untouched; forced propagation and migration failures roll back. Per-set duration targets are non-vault training data and travel only in the versioned training JSON. No vault media/key, permission, capability or logging change. Device checks read only Sport app/profile metadata, never personal training or photos.
+
+
+Build72: schema15updates future training goal payloads only, using existing history inside the migration transaction. No schema columns, backup-format, personal-device data export, vault, permission, identity or capability changes. Historical/active snapshots stay intact.

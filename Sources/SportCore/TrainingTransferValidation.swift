@@ -96,6 +96,12 @@ extension TrainingTransfer {
     }
   }
   static func validate(_ data: TrainingDataSet) throws {
+    guard data.bodyWeights.count <= 100000 else { throw invalid }
+    try unique(data.bodyWeights.map(\.id))
+    try unique(data.bodyWeights.map(\.dayKey))
+    for weight in data.bodyWeights {
+      _ = try weight.validated(now: WorkoutClock.now)
+    }
     let c = data.configuration
     guard c.exercises.count <= 1000, c.weightItems.count <= 1000, c.schedules.count <= 7,
       c.restSeconds > 0
@@ -114,6 +120,16 @@ extension TrainingTransfer {
     for schedule in c.schedules {
       try text(schedule.name)
       try unique(schedule.exerciseIDs)
+      guard Set(schedule.setCounts.keys) == Set(schedule.exerciseIDs),
+        schedule.setCounts.values.allSatisfy({ (1...1000).contains($0) }),
+        Set(schedule.goals.keys).isSubset(of: Set(schedule.exerciseIDs))
+      else { throw invalid }
+      for (id, goal) in schedule.goals {
+        try self.goal(goal)
+        guard goal.definition.id == id else {
+          throw invalid
+        }
+      }
       guard (1...7).contains(schedule.weekday),
         schedule.reminderMinutes.map({ (0..<1440).contains($0) }) ?? true,
         schedule.exerciseIDs.allSatisfy({ id in c.exercises.contains { $0.id == id } }),

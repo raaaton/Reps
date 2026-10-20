@@ -42,7 +42,8 @@ struct SportTabView: View {
 
   private func consumeReminder() {
     guard let destination = reminders.destination else { return }
-    selection = destination.rawValue
+    selection = destination.tabIndex
+    if destination == .bodyWeight { store.requestBodyWeightEntry() }
     reminders.consumeDestination()
   }
 }

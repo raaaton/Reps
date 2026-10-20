@@ -133,10 +133,12 @@ final class TimedWeightTests: XCTestCase, @unchecked Sendable {
       "INSERT INTO workouts VALUES('past','custom','Ancienne','2026-10-10',\(now - 50_000),\(now - 40_000),'completed',137)",
       "INSERT INTO workout_exercises VALUES('past-ex','past','chin-ups','Ancien nom','repetitions',1,8,12,NULL,0,67,NULL)",
       "INSERT INTO workout_sets VALUES('past-set','past-ex',1,9,NULL,2750,\(now - 40_000))",
+      "CREATE TABLE exercises(id TEXT PRIMARY KEY,set_count INTEGER)",
+      "CREATE TABLE schedule_exercises(schedule_id TEXT,exercise_id TEXT,position INTEGER)",
       "PRAGMA user_version=2",
     ] { try old.execute(sql) }
     let repository = try SportRepository(path: path)
-    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 10)
+    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 15)
     var current = try await repository.workout(id: "active")
     XCTAssertEqual(current.currentExercise?.setStartedAt, now + 7000)
     XCTAssertNil(current.currentExercise?.setWeightGrams)

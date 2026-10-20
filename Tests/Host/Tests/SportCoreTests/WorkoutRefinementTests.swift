@@ -17,10 +17,8 @@ final class WorkoutRefinementTests: XCTestCase, @unchecked Sendable {
       plan.exerciseIDs = ["chin-ups"]
       try await r.saveSchedule(plan)
     }
-    for var e in s.exercises where plan.exerciseIDs.contains(e.id) {
-      e.setCount = 1
-      try await r.saveExercise(e)
-    }
+    plan.setCounts = Dictionary(uniqueKeysWithValues: plan.exerciseIDs.map { ($0, 1) })
+    try await r.saveSchedule(plan)
     return try await r.startWorkout(scheduleID: plan.id, now: now, calendar: calendar)
   }
   func testTransitionRestStartsAtLastSetAndFeelingDoesNotRestartIt() async throws {

@@ -9,6 +9,26 @@ enum WorkoutLabels {
     }.joined(separator: ", ")
   }
 
+  static func goalTarget(_ goal: ExerciseGoal) -> String {
+    if let reps = goal.repetitions { return RepetitionNotation.compact(reps) }
+    if let durations = goal.durationsMS {
+      return RepetitionNotation.groups(durations).map {
+        "\($0.count)×\(seconds($0.repetitions)) s"
+      }.joined(separator: " ")
+    }
+    return goal.definition.durationSeconds.map { "\(goal.definition.setCount)×\($0) s" }
+      ?? "\(goal.definition.setCount) sets · untimed"
+  }
+  static func goalTargetDescription(_ goal: ExerciseGoal) -> String {
+    if let reps = goal.repetitions { return repetitionDescription(reps) }
+    if let durations = goal.durationsMS {
+      return RepetitionNotation.groups(durations).map {
+        "\($0.count) \($0.count == 1 ? "set" : "sets") of \(seconds($0.repetitions)) seconds"
+      }.joined(separator: ", ")
+    }
+    return goalTarget(goal)
+  }
+
   static func day(_ key: String) -> String {
     let parts = key.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3 else { return key }

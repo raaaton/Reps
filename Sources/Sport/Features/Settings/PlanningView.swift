@@ -140,15 +140,18 @@ struct ScheduleEditor: View {
       Section {
         ForEach(draft.exerciseIDs, id: \.self) { id in
           if let exercise = snapshot.exercises.first(where: { $0.id == id }) {
-            VStack(alignment: .leading, spacing: 4) {
-              Text(exercise.name)
-              Text(exercise.isEnabled ? TrainingLabels.target(exercise) : "Exercise disabled")
-                .font(.subheadline).foregroundStyle(.secondary)
-            }
+            WorkoutExerciseRow(
+              exercise: exercise,
+              setCount: Binding(
+                get: { draft.setCounts[id] ?? 4 },
+                set: { draft.setCounts[id] = $0 }))
           }
         }
         .onMove { draft.exerciseIDs.move(fromOffsets: $0, toOffset: $1) }
-        .onDelete { draft.exerciseIDs.remove(atOffsets: $0) }
+        .onDelete { offsets in
+          for index in offsets { draft.setCounts.removeValue(forKey: draft.exerciseIDs[index]) }
+          draft.exerciseIDs.remove(atOffsets: offsets)
+        }
         Button("Choose Exercises", systemImage: "plus") { selecting = true }
           .moveDisabled(true).deleteDisabled(true)
       } header: {
@@ -157,10 +160,6 @@ struct ScheduleEditor: View {
           Spacer()
           EditButton().textCase(nil)
         }
-      } footer: {
-        Text(
-          "Exercises follow this order during the workout. Use Edit to reorder or remove an exercise."
-        )
       }
       Section {
         Toggle("Add a Reminder", isOn: $reminderRequested)
@@ -216,8 +215,10 @@ struct ScheduleEditor: View {
                 set: { selected in
                   if selected {
                     draft.exerciseIDs.append(exercise.id)
+                    draft.setCounts[exercise.id] = 4
                   } else {
                     draft.exerciseIDs.removeAll { $0 == exercise.id }
+                    draft.setCounts.removeValue(forKey: exercise.id)
                   }
                 }
               ))

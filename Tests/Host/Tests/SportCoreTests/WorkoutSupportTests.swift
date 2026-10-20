@@ -59,10 +59,10 @@ extension WorkoutSupportTests {
     let snapshot = try await r.snapshot()
     var schedule = try XCTUnwrap(snapshot.schedules.first { $0.id == "pull-abs" })
     var d = try XCTUnwrap(snapshot.exercises.first { $0.id == (timed ? "l-sit" : "chin-ups") })
-    d.setCount = 1
     if timed { d.durationSeconds = duration }
     try await r.saveExercise(d)
     schedule.exerciseIDs = [d.id]
+    schedule.setCounts = [d.id: 1]
     try await r.saveSchedule(schedule)
     return try await r.startWorkout(
       scheduleID: schedule.id, now: now, calendar: calendar,
@@ -331,7 +331,12 @@ extension WorkoutSupportTests {
       let finished = try await r.workout(id: w.id)
       let context = try await r.goalContext(exerciseID: "chin-ups")
       XCTAssertEqual(finished.status, .completed)
-      XCTAssertEqual(context.adopted, update ? decision.suggestion.goal : nil)
+      if update {
+        XCTAssertEqual(context.adopted, decision.suggestion.goal)
+      } else {
+        XCTAssertEqual(context.adopted?.repetitions, [12])
+        XCTAssertEqual(context.adopted?.load.grams, 3900)
+      }
     }
   }
 }

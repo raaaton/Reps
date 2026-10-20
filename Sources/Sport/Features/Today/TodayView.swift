@@ -43,7 +43,7 @@ struct TodayView: View {
               ForEach(snapshot.exercises(for: schedule)) { exercise in
                 VStack(alignment: .leading, spacing: 4) {
                   Text(exercise.name)
-                  ExerciseGoalRow(exercise: exercise)
+                  ExerciseGoalRow(exercise: exercise, scheduleID: schedule.id)
                 }
                 .padding(.vertical, 2)
               }

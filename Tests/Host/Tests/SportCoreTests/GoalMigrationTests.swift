@@ -16,9 +16,12 @@ final class GoalMigrationTests: XCTestCase, @unchecked Sendable {
       "CREATE TABLE workout_sets(id TEXT,weight_grams INTEGER,load_components TEXT,duration_ms INTEGER)"
     )
     try db.execute("INSERT INTO workout_sets VALUES('old',2375,'snapshot',NULL)")
+    try db.execute("CREATE TABLE exercises(id TEXT PRIMARY KEY,set_count INTEGER)")
+    try db.execute(
+      "CREATE TABLE schedule_exercises(schedule_id TEXT,exercise_id TEXT,position INTEGER)")
     try db.execute("PRAGMA user_version=5")
     _ = try SportRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 10)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 15)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM exercise_goals").first?.integer("n"), 0)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM workout_goals").first?.integer("n"), 0)
     XCTAssertEqual(

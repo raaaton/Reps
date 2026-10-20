@@ -8,9 +8,9 @@ final class RestActivityTests: XCTestCase, @unchecked Sendable {
 
   private func start(_ repository: SportRepository) async throws -> WorkoutSession {
     let snapshot = try await repository.snapshot()
-    var exercise = try XCTUnwrap(snapshot.exercises.first { $0.id == "chin-ups" })
-    exercise.setCount = 2
-    try await repository.saveExercise(exercise)
+    var schedule = try XCTUnwrap(snapshot.schedules.first { $0.id == "pull-abs" })
+    schedule.setCounts["chin-ups"] = 2
+    try await repository.saveSchedule(schedule)
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!
     return try await repository.startWorkout(scheduleID: "pull-abs", now: now, calendar: calendar)

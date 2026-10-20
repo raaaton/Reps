@@ -17,7 +17,8 @@ struct WorkoutSupportPreview: View {
         definition: first, load: override,
         repetitions: goal?.repetitions
           ?? (first.tracking == .repetitions
-            ? Array(repeating: first.minimumReps ?? 1, count: first.setCount) : nil))
+            ? Array(repeating: first.minimumReps ?? 1, count: first.setCount) : nil),
+        durationsMS: goal?.durationsMS)
     }
     return try? WorkoutSupport.make(
       first: exercise, restSeconds: restSeconds,

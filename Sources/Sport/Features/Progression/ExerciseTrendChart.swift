@@ -41,7 +41,9 @@ struct ExerciseTrendChart: View {
         )
         .zIndex(selectedIndex == index ? 2 : 1)
         .accessibilityLabel("Workout \(index + 1), \(WorkoutLabels.day(point.performance.dayKey))")
-        .accessibilityValue(TrendPresentation.value(point.total, metric: metric))
+        .accessibilityValue(
+          "\(TrendPresentation.chartValue(point.value(for: metric), metric: metric)), \(TrendPresentation.setCount(point.context.seriesCount)); workout total \(TrendPresentation.value(point.total, metric: metric))"
+        )
       }
     }
     .chartXSelection(
@@ -67,8 +69,10 @@ struct ExerciseTrendChart: View {
             VStack(alignment: .leading, spacing: 3) {
               Text(point.date, format: .dateTime.day().month(.abbreviated).year())
                 .font(.caption).foregroundStyle(.secondary)
-              Text(TrendPresentation.value(point.total, metric: metric))
-                .font(.subheadline.weight(.semibold)).monospacedDigit()
+              Text(
+                "\(TrendPresentation.value(point.total, metric: metric)) • \(TrendPresentation.setCount(point.context.seriesCount))"
+              )
+              .font(.subheadline.weight(.semibold)).monospacedDigit()
             }
             .padding(10)
             .background(.background, in: RoundedRectangle(cornerRadius: 10))

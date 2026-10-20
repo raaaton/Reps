@@ -332,3 +332,50 @@ Notification test : bouton explicite, autorisation native si nécessaire, notifi
 1.0.5 : durées des séries isométriques arrondies au dixième de seconde à l’enregistrement, correction et import ; anciennes durées converties transactionnellement. Totaux/bulles/écarts de progression affichent au plus une décimale. Les totaux additionnent les résultats arrondis ; horodatages et échéances de repos restent exacts.
 
 Correction65 : Total Work Time affiche le cumul des séries isométriques des séances de la période choisie, avec libellé de période. Graphique, bulle et séance sélectionnée restent des mesures par séance. Même publication atomique des données pour éviter le flash des filtres.
+
+
+## Séries par workout — 1.0.6 (66)
+
+Sets se règle dans Settings → Workouts, sous chaque exercice affecté, avec un Stepper natif et un libellé VoiceOver nommant l'exercice. Le catalogue conserve les répétitions/durée par série, sans champ ni résumé d'un nombre global de séries. Today et préparation présentent les objectifs propres au workout ; Progress et l'historique donnent accès aux objectifs par workout, en gardant l'historique de l'exercice unifié. Un changement de workout à minuit recharge son contexte. Les séries conservées gardent leurs cibles ; les séries ajoutées reprennent le minimum configuré. Les séances déjà commencées et les instantanés historiques ne changent pas. Cette organisation est un choix Sport ; composants natifs, lisibilité et accessibilité suivent les références HIG. Rendu et interactions à confirmer sur iPhone.
+
+
+## Sélection compacte des séries — 1.0.6 (67)
+
+Après capture et accord utilisateur, le Stepper de66 est remplacé par un menu natif affichant 4 sets, avec nom d'exercice et métrique brève. Picker intégré au menu :1...8 en ordre, sélection cochée et valeur personnalisée conservée ; Custom… ouvre la saisie numérique1...1000 avec Cancel/Apply. Le brouillon ne change qu'après sélection/application. Le footer et la ligne Sets redondants sont retirés. ViewThatFits replie la ligne pour largeur insuffisante ; les tailles d'accessibilité empilent d'emblée nom/métrique/commande, avec libellés VoiceOver et contrôle44pt.
+
+Références : [Pop-up buttons](https://developer.apple.com/design/human-interface-guidelines/pop-up-buttons) (« If necessary, offer Custom » dans le guide local), [Menus](https://developer.apple.com/design/human-interface-guidelines/menus) pour sélection/ellipse, [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) pour adaptation. Presets et composition sont des choix Sport. Aucun fond décoratif ou faux verre. Revue statique sans défaut concret ; rendu menu/alerte/tailles/édition à confirmer physiquement.
+
+
+## Body Weight — 1.1.0 (68)
+
+Chaque surface a été confrontée aux références Apple : [Lists and tables](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables) pour l'entrée Progress et l'historique ; [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) et [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) pour hiérarchie/actions ; [Charts](https://developer.apple.com/design/human-interface-guidelines/charts) pour dates réelles, points accessibles, inspection facultative et axeY dynamique ; [Segmented controls](https://developer.apple.com/design/human-interface-guidelines/segmented-controls)/[Pickers](https://developer.apple.com/design/human-interface-guidelines/pickers) pour3périodes et menu adaptatif ; [Entering data](https://developer.apple.com/design/human-interface-guidelines/entering-data)/[Text fields](https://developer.apple.com/design/human-interface-guidelines/text-fields) pour saisie étiquetée/validation ; [Settings](https://developer.apple.com/design/human-interface-guidelines/settings)/[Notifications](https://developer.apple.com/design/human-interface-guidelines/notifications) pour le rappel opt-in avec choix explicites.
+
+Ligne Body Weight après Consistency, dernier poids/date, NavigationStack et+ natifs ; détail période/dernière mesure/delta/graphe/historique. Formulaire date+kg, clavier décimal, virgule/point, Cancel/Save, date occupée→édition explicite. Graphique linéaire sans interpolation lissée, vraies dates surX, bornesY adaptées pour voir les variations ; marge minimale0.5kg/15% de l'étendue et fenêtres3/6/12 sont des choix Sport, pas des valeurs imposées Apple. Courbe absente avec un seul point, état vide explicite. Texte système/DynamicType, points VoiceOver, pas de verre ou cartes décoratives.
+
+Rappel : section Body Weight dans Notifications, toggle et configuration native ; jour à choisir, heure confirmée dans DatePicker. Permission uniquement au Save explicite, erreur actionnable si refus, aucune mesure dans la notification. Le rendu, le scrub, les feuilles, le grand texte et VoiceOver restent à valider physiquement.
+
+
+## Main workout subtitle — build 69
+
+Progress retains its native navigation row and existing compact GoalDescription (Dynamic Type subheadline, accessible full repetition/load description). It now chooses the workout goal with the highest total target: sum of repetitions × added grams for weighted repetition goals, sum of repetitions for bodyweight goals, sets × seconds for isometrics. Weighted repetition goals take priority over bodyweight ones by explicit user choice. This identifies the main workout; the subtitle shows its original goal, not the score. Equal totals or untimed goals retain workout order; missing/incompatible goals are skipped. Configured workouts, including disabled workouts, remain in the same candidate scope as before. No goal is adopted or changed.
+
+HIG Lists and tables: “Keep item text succinct.” Typography: “Consider using the built-in text styles.” Existing native row, text style and accessibility are preserved. Ranking and tie rules are Sport product choices, not Apple recommendations. Physical rendering remains to be checked.
+
+
+## Accepted exercise changes and review status — build70
+
+Saving an exercise accepts its new definition for all saved future goals. Each workout keeps its own set count and exact load composition. Repetition targets are clamped only when the configured range changes; otherwise retained, with the minimum for newly required targets. Duration/type changes use the new definition without a second confirmation. Existing mismatches are reconciled during migration13 and restore preview. Saved/active workouts remain unchanged. An unavailable load is never silently replaced by another composition.
+
+Progress prioritizes the concise Review needed subtitle when any assigned goal needs review. Details say Review needed: load unavailable and explain that the saved composition must be selected again. Existing native list text, subheadline/caption styles, semantic secondary color and VoiceOver text remain. This applies the HIG Lists and tables preference for succinct item text and built-in text styles from Typography; automatic goal reconciliation is the user's Sport product rule. Device verification remains required.
+
+
+## Per-set curves and latest exercise goals — build71
+
+A point still represents one completed workout, positioned using its average per actual working set for volume, repetitions and duration. Maximum added weight is unchanged. Titles, axes/context and VoiceOver distinguish averages from exact workout totals; drag callout retains the latter with `• N sets`. Details include the set count and individual recorded results. Period totals retain exact integer sums and stay stable during selection. Delta text compares per-set values. This normalization is a Sport product rule; HIG Charts guidance supports clear descriptions, units and accessible exact details.
+
+Goals follow the latest completed exercise across all workouts. Actual ordered repetitions and hold durations refresh on completion; assignment counts remain independent and extra sets repeat the last target. Timed goals render compact adjacent groups at tenth-second precision, including per-set target before/during a hold and first-set warm-up derivation. Learned timed goals can be edited per set or cleared together to untimed. Explicit changes to a different load retain associated targets. At unchanged load, refusing an increase still refreshes the actual performance baseline. New assignments seed from the same latest reference. Physical drag/layout/VoiceOver checks remain required after installation.
+
+
+## Ceiling-average learned targets — build72
+
+Learned goals show one repeated whole-number ceiling-average target instead of ordered per-set values. Compute from actual sets at the highest load in the latest completed exercise session, across workouts; repeat for each assignment's count. Rep ceiling and second ceiling are calculated once after averaging, never per input set. This is the user's Sport rule; no new visual control. Preserve tenth-second historical results, chart projections, manual per-set customization, exact saved load composition and explicit different-load decisions. Schema15 refreshes existing future goals once; no changes to active/historical snapshots.

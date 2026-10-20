@@ -80,6 +80,12 @@ final class LocalReminderCoordinator: ObservableObject {
       authorization = await transport.authorization()
     }
   }
+  func clearBodyWeightReminder(dayKey: String) async {
+    let identifiers = [ReminderPlanner.bodyWeightIdentifier(dayKey: dayKey)]
+    let center = UNUserNotificationCenter.current()
+    center.removePendingNotificationRequests(withIdentifiers: identifiers)
+    center.removeDeliveredNotifications(withIdentifiers: identifiers)
+  }
   func sendTestNotification() async throws {
     try await requestPermissionIfNeeded()
     guard authorization == .allowed else {

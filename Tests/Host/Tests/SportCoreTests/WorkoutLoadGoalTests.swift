@@ -12,10 +12,8 @@ final class WorkoutLoadGoalTests: XCTestCase, @unchecked Sendable {
       plan.exerciseIDs = ["chin-ups"]
       try await r.saveSchedule(plan)
     }
-    for var exercise in snapshot.exercises where plan.exerciseIDs.contains(exercise.id) {
-      exercise.setCount = 1
-      try await r.saveExercise(exercise)
-    }
+    plan.setCounts = Dictionary(uniqueKeysWithValues: plan.exerciseIDs.map { ($0, 1) })
+    try await r.saveSchedule(plan)
     let workout = try await r.startWorkout(scheduleID: plan.id, now: now)
     let exercise = try XCTUnwrap(workout.currentExercise)
     try await r.beginSet(workoutID: workout.id, exerciseID: exercise.id, number: 1, now: now)
@@ -150,7 +148,7 @@ final class WorkoutLoadGoalTests: XCTestCase, @unchecked Sendable {
     let restored = try await reopened.workout(id: workout.id)
     XCTAssertEqual(before, after)
     XCTAssertEqual(restored, workout)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 10)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 15)
     XCTAssertEqual(
       try db.query("SELECT COUNT(*) AS n FROM workout_goal_decisions").first?.integer("n"), 0)
   }

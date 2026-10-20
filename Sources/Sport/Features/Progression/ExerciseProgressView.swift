@@ -17,7 +17,7 @@ private struct TrendProjection: Sendable {
 struct ExerciseProgressView: View {
   @EnvironmentObject private var store: TrainingStore
   let exercise: TrainingExercise
-  @State private var months = 3
+  @State private var period: ChartPeriod = .threeMonths
   @State private var metric: SessionTrendMetric
   @State private var projection: TrendProjection?
   @State private var selectedIndex: Int?
@@ -30,7 +30,7 @@ struct ExerciseProgressView: View {
   }
   private var request: TrendRequest {
     TrendRequest(
-      months: months, metric: metric, revision: store.historyRevision,
+      months: period.rawValue, metric: metric, revision: store.historyRevision,
       tracking: exercise.tracking, retry: retry)
   }
   private var definition: TrainingExercise? {
@@ -40,7 +40,9 @@ struct ExerciseProgressView: View {
     return nil
   }
   private var displayedMetric: SessionTrendMetric { projection?.request.metric ?? metric }
-  private var displayedMonths: Int { projection?.request.months ?? months }
+  private var displayedPeriod: ChartPeriod {
+    projection.flatMap { ChartPeriod(rawValue: $0.request.months) } ?? period
+  }
   private var points: [SessionTrendPoint] { projection?.points ?? [] }
   private var selected: SessionTrendPoint? {
     if let selectedIndex, points.indices.contains(selectedIndex) { return points[selectedIndex] }
@@ -57,11 +59,7 @@ struct ExerciseProgressView: View {
   var body: some View {
     List {
       Section {
-        Picker("Period", selection: $months) {
-          Text("1 Month").tag(1)
-          Text("3 Months").tag(3)
-          Text("1 Year").tag(12)
-        }.pickerStyle(.segmented)
+        ChartPeriodPicker(selection: $period)
         Picker("Metric", selection: $metric) {
           if exercise.tracking == .repetitions {
             Text("Volume").tag(SessionTrendMetric.volume)
@@ -87,17 +85,15 @@ struct ExerciseProgressView: View {
                 .fontWeight(.semibold)
               Text(
                 displayedMetric != .load
-                  ? (displayedMonths == 12
-                    ? "Past Year"
-                    : displayedMonths == 1 ? "Past Month" : "Past 3 Months")
+                  ? displayedPeriod.caption
                   : "Last Workout · \(WorkoutLabels.day(last.performance.dayKey))"
               ).font(
                 .subheadline
               ).foregroundStyle(.secondary)
               if displayedMetric != .volume, let first = points.first, points.count > 1 {
-                let delta = last.total - first.total
+                let delta = last.value(for: displayedMetric) - first.value(for: displayedMetric)
                 Text(
-                  "\(displayedMetric != .load ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.value(abs(delta), metric: displayedMetric)) since the first workout shown"
+                  "\(displayedMetric != .load ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.chartValue(abs(delta), metric: displayedMetric)) since the first workout shown"
                 ).font(.subheadline).foregroundStyle(.secondary)
               }
               Text("\(points.count) \(points.count == 1 ? "workout" : "workouts") in this period")
@@ -112,7 +108,7 @@ struct ExerciseProgressView: View {
             }
             Text(
               displayedMetric == .volume
-                ? "The curve shows each workout’s volume, from oldest to newest."
+                ? "The curve shows average volume per set, from oldest to newest."
                 : "Workouts are evenly spaced from oldest to newest."
             ).font(
               .caption
@@ -146,9 +142,9 @@ struct ExerciseProgressView: View {
         if let selected {
           Section(selectedIndex == nil ? "Last Workout — Details" : "Selected Workout") {
             LabeledContent("Date", value: WorkoutLabels.day(selected.performance.dayKey))
+            LabeledContent("Sets", value: String(selected.context.seriesCount))
             LabeledContent(
-              displayedMetric == .volume
-                ? "Volume for This Workout" : TrendPresentation.title(displayedMetric),
+              TrendPresentation.workoutTitle(displayedMetric),
               value: TrendPresentation.value(selected.total, metric: displayedMetric))
             ForEach(selected.performance.exercise.sets) { set in
               LabeledContent("Set \(set.number)", value: WorkoutLabels.performance(set))
@@ -169,7 +165,7 @@ struct ExerciseProgressView: View {
         }
       }
       if let definition {
-        Section("Next Workout") { ExerciseGoalRow(exercise: definition) }
+        Section("Next Workout") { ExerciseWorkoutGoals(exercise: definition) }
       } else {
         Section {
           Text("Archived exercise. Past results remain available.").foregroundStyle(
@@ -198,8 +194,8 @@ struct ExerciseProgressView: View {
       let value = try await Task.detached(priority: .userInitiated) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
-        let since = calendar.startOfDay(
-          for: calendar.date(byAdding: .month, value: -months, to: Date()) ?? Date())
+        let since = (ChartPeriod(rawValue: months) ?? .threeMonths).startDate(
+          ending: Date(), calendar: calendar)
         let points: [SessionTrendPoint]
         if metric == .volume {
           points = try SessionTrends.cumulativeVolume(

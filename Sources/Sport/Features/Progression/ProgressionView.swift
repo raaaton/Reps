@@ -5,6 +5,9 @@ struct ProgressionView: View {
   @EnvironmentObject private var store: TrainingStore
   @EnvironmentObject private var vault: PhotoVaultStore
   @State private var vaultOpen = false
+  @State private var bodyWeightOpen = false
+  @State private var bodyWeightVisible = false
+  @State private var awaitingBodyWeightDismissal = false
   @State private var archived: [TrainingExercise] = []
   @State private var error: String?
   @State private var selectedDay: AttendanceDay?
@@ -27,6 +30,25 @@ struct ProgressionView: View {
             AttendanceGrid(days: days) { selectedDay = $0 }
             NavigationLink("View Days as a List") { AttendanceListView(days: days) }
           }
+          Section {
+            NavigationLink {
+              BodyWeightView()
+                .onAppear { bodyWeightVisible = true }
+                .onDisappear { bodyWeightVisible = false }
+            } label: {
+              VStack(alignment: .leading, spacing: 4) {
+                Text("Body Weight").foregroundStyle(.primary)
+                if let latest = store.bodyWeights.last {
+                  Text(
+                    "\(BodyWeightPresentation.value(latest.grams)) · \(WorkoutLabels.day(latest.dayKey))"
+                  )
+                  .font(.subheadline).foregroundStyle(.secondary)
+                } else {
+                  Text("No measurements yet").font(.subheadline).foregroundStyle(.secondary)
+                }
+              }
+            }
+          }
           Section("Exercises") {
             ForEach(snapshot.exercises + old) { exercise in
               NavigationLink {
@@ -34,7 +56,9 @@ struct ProgressionView: View {
               } label: {
                 VStack(alignment: .leading, spacing: 4) {
                   Text(exercise.name).foregroundStyle(.primary)
-                  if let goal = snapshot.goals.first(where: { $0.definition.id == exercise.id }) {
+                  if snapshot.needsGoalReview(for: exercise, availableLoads: store.availableLoads) {
+                    Text("Review needed").font(.subheadline).foregroundStyle(.secondary)
+                  } else if let goal = snapshot.primaryGoal(for: exercise) {
                     GoalDescription(goal: goal).font(.subheadline)
                   } else {
                     Text(
@@ -75,8 +99,16 @@ struct ProgressionView: View {
       }
     }
     .navigationTitle("Progress")
+    .navigationDestination(isPresented: $bodyWeightOpen) {
+      BodyWeightView()
+        .onAppear { bodyWeightVisible = true }
+        .onDisappear { bodyWeightVisible = false }
+    }
+    .onChange(of: store.bodyWeightEntryRequest) { _, _ in openBodyWeightRequest() }
+    .onChange(of: store.isReady) { _, _ in openBodyWeightRequest() }
+    .task { openBodyWeightRequest() }
     .modifier(ArchivedExerciseDeletion(selection: $deletingArchived))
-    .fullScreenCover(isPresented: $vaultOpen, onDismiss: { vault.lock() }) { PhotoVaultView() }
+    .fullScreenCover(isPresented: $vaultOpen, onDismiss: vaultDismissed) { PhotoVaultView() }
     .task(id: store.historyRevision) {
       do {
         let data = try await store.historyExercises()
@@ -85,7 +117,7 @@ struct ProgressionView: View {
         error = nil
       } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
-    .sheet(item: $selectedDay) { day in
+    .sheet(item: $selectedDay, onDismiss: modalDismissed) { day in
       NavigationStack {
         AttendanceDayView(day: day).toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -95,6 +127,30 @@ struct ProgressionView: View {
         }
       }
     }
+  }
+  private func vaultDismissed() {
+    vault.lock()
+    modalDismissed()
+  }
+  private func modalDismissed() {
+    awaitingBodyWeightDismissal = false
+    openBodyWeightRequest()
+  }
+  private func openBodyWeightRequest() {
+    guard store.isReady, store.bodyWeightEntryRequest != nil else { return }
+    if vaultOpen {
+      awaitingBodyWeightDismissal = true
+      vault.leaveVault()
+      vaultOpen = false
+      return
+    }
+    if selectedDay != nil {
+      awaitingBodyWeightDismissal = true
+      selectedDay = nil
+      return
+    }
+    guard !awaitingBodyWeightDismissal, !bodyWeightVisible else { return }
+    bodyWeightOpen = true
   }
   private var summaries: [WorkoutSummary] { TrainingAnalytics.summaries(in: store.workouts) }
 }

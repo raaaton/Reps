@@ -51,7 +51,7 @@ extension SportRepository {
             exercise.minimumReps.sql, exercise.maximumReps.sql, exercise.durationSeconds.sql,
             .integer(position),
           ])
-        if var goal = snapshot.goals.first(where: { $0.definition.id == exercise.id }) {
+        if var goal = schedule.goals[exercise.id] {
           if let override = loadOverrides[exercise.id] { goal.load = override }
           guard goal.isCompatible(with: exercise) else {
             throw TrainingError.invalid(
@@ -445,33 +445,7 @@ extension SportRepository {
   }
 
   func readExercise(_ row: SQLRow) throws -> WorkoutExercise {
-    let id = try row.text("id")
-    guard let tracking = TrackingMode(rawValue: try row.text("tracking")) else {
-      throw TrainingError.storage
-    }
-    let definition = TrainingExercise(
-      id: try row.text("catalogue_id"), name: try row.text("name"), tracking: tracking,
-      setCount: try row.integer("set_count"), minimumReps: try row.optionalInteger("minimum_reps"),
-      maximumReps: try row.optionalInteger("maximum_reps"),
-      durationSeconds: try row.optionalInteger("duration_seconds"), isEnabled: true)
-    let sets = try database.query(
-      "SELECT * FROM workout_sets WHERE exercise_id=? ORDER BY number", [.text(id)]
-    ).map { row in
-      WorkoutSet(
-        id: try row.text("id"), number: try row.integer("number"),
-        repetitions: try row.optionalInteger("repetitions"),
-        durationMS: try row.optionalInteger("duration_ms"),
-        weightGrams: try row.integer("weight_grams"), completedAt: try row.integer("completed_at"),
-        components: try WeightInventory.decode(row.optionalText("load_components")))
-    }
-    return WorkoutExercise(
-      id: id, definition: definition, sets: sets,
-      feelingTenths: try row.optionalInteger("feeling_tenths"),
-      setStartedAt: try row.optionalInteger("set_started_at"),
-      setWeightGrams: try row.optionalInteger("set_weight_grams"),
-      setEndedAt: try row.optionalInteger("set_ended_at"),
-      setComponents: try WeightInventory.decode(row.optionalText("set_load_components")),
-      goal: try readWorkoutGoal(id: id))
+    try WorkoutExercise.read(row, database: database)
   }
 
   private func readRest(_ row: SQLRow) throws -> WorkoutRest {

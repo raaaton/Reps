@@ -76,16 +76,17 @@ public struct WorkoutSupport: Codable, Equatable, Sendable {
     let count = weighted ? 1 : 2
     let reps = first.goal?.repetitions?.first ?? d.minimumReps ?? 1
     let seconds = d.durationSeconds
-    let (targetMS, targetOverflow) = (seconds ?? 0).multipliedReportingOverflow(by: 1000)
+    let (configuredMS, targetOverflow) = (seconds ?? 0).multipliedReportingOverflow(by: 1000)
     guard !targetOverflow else { throw TrainingError.invalid("The target duration is too long.") }
+    let targetMS = first.goal?.durationTargetMS(forSet: 1) ?? (seconds == nil ? nil : configuredMS)
     var steps = (1...count).map { number in
       WorkoutSupportStep(
         id: UUID().uuidString, kind: .warmUp, name: d.name,
         instructions: "Use bodyweight only. Move smoothly and keep the effort easy.",
         number: number, count: count, tracking: d.tracking,
         targetRepetitions: d.tracking == .repetitions ? (weighted ? reps : max(1, reps / 2)) : nil,
-        targetDurationMS: d.tracking == .duration && seconds != nil
-          ? (weighted ? targetMS : max(1, targetMS / 2)) : nil,
+        targetDurationMS: d.tracking == .duration
+          ? targetMS.map { weighted ? $0 : max(1, $0 / 2) } : nil,
         restAfterMS: number == count ? restMS : restMS / 2)
     }
     for number in 1...stretch.sides {

@@ -24,6 +24,19 @@ enum TrainingLabels {
     }
   }
 
+  static func metric(_ exercise: TrainingExercise, includePerSet: Bool = true) -> String {
+    let suffix = includePerSet ? " per set" : ""
+    switch exercise.tracking {
+    case .repetitions:
+      guard let minimum = exercise.minimumReps, let maximum = exercise.maximumReps else {
+        return "Repetitions"
+      }
+      return minimum == maximum ? "\(minimum) reps\(suffix)" : "\(minimum)–\(maximum) reps\(suffix)"
+    case .duration:
+      return exercise.durationSeconds.map { "\($0) s\(suffix)" } ?? "Untimed"
+    }
+  }
+
   static func rest(_ seconds: Int) -> String {
     let minutes = seconds / 60
     let remainder = seconds % 60

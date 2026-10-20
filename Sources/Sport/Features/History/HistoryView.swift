@@ -219,7 +219,7 @@ struct WorkoutSummaryList: View {
             if case .ready(let snapshot) = store.phase,
               snapshot.exercises.contains(where: { $0.id == exercise.definition.id })
             {
-              ExerciseGoalRow(exercise: exercise.definition)
+              ExerciseWorkoutGoals(exercise: exercise.definition)
             }
           }
           if let feeling = exercise.feelingTenths {

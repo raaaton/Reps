@@ -259,10 +259,7 @@ struct FeelingForm: View {
         Button("Keep Current Goal", role: .cancel) { resolve(captured, update: false) }
       } message: { captured in
         let goal = captured.suggestion.goal
-        let target =
-          goal.repetitions.map { RepetitionNotation.compact($0) }
-          ?? goal.definition.durationSeconds.map { "\(goal.definition.setCount)×\($0) s" }
-          ?? "\(goal.definition.setCount) sets · untimed"
+        let target = WorkoutLabels.goalTarget(goal)
         Text(
           "\(goal.definition.name)\n\(target) · \(WorkoutLabels.weight(goal.load.grams)) kg added\n\nUpdate this goal for your next workout, or keep your current goal."
         )

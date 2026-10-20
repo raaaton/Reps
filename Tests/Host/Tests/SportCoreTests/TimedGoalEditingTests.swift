@@ -24,7 +24,7 @@ final class TimedGoalEditingTests: XCTestCase, @unchecked Sendable {
     let reopened = try SportRepository(path: path)
     let first = try await reopened.snapshot()
     XCTAssertEqual(first.exercises.first { $0.id == "l-sit" }?.durationSeconds, 25)
-    XCTAssertEqual(first.goals.first { $0.definition.id == "l-sit" }, goal)
+    XCTAssertEqual(first.schedules.first { $0.id == "pull-abs" }?.goals["l-sit"], goal)
     let unchanged = try await reopened.workout(id: active.id)
     XCTAssertEqual(unchanged, active)
     var freeDefinition = goal.definition
@@ -33,7 +33,7 @@ final class TimedGoalEditingTests: XCTestCase, @unchecked Sendable {
     try await reopened.saveTimedGoal(freeGoal, original: goal, originalExercise: goal.definition)
     let final = try await reopened.snapshot()
     XCTAssertNil(final.exercises.first { $0.id == "l-sit" }?.durationSeconds)
-    XCTAssertEqual(final.goals.first { $0.definition.id == "l-sit" }, freeGoal)
+    XCTAssertEqual(final.schedules.first { $0.id == "pull-abs" }?.goals["l-sit"], freeGoal)
   }
   func testStaleExerciseAndInvalidDurationNeverOverwriteCurrentConfiguration() async throws {
     let r = try SportRepository(path: ":memory:")
@@ -77,7 +77,7 @@ final class TimedGoalEditingTests: XCTestCase, @unchecked Sendable {
     } catch {}
     let saved = try await r.snapshot()
     XCTAssertEqual(saved.exercises.first { $0.id == "l-sit" }, original)
-    XCTAssertEqual(saved.goals.first { $0.definition.id == "l-sit" }, current)
+    XCTAssertEqual(saved.schedules.first { $0.id == "pull-abs" }?.goals["l-sit"], current)
   }
   func testSQLFailureRollsBackCatalogueAndGoal() async throws {
     let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
@@ -86,7 +86,7 @@ final class TimedGoalEditingTests: XCTestCase, @unchecked Sendable {
     let (original, goal) = try await makeGoal(r, seconds: 25)
     let db = try SQLiteDatabase(path: path)
     try db.execute(
-      "CREATE TRIGGER fail_timed_goal BEFORE INSERT ON exercise_goals BEGIN SELECT RAISE(ABORT,'test failure'); END"
+      "CREATE TRIGGER fail_timed_goal BEFORE UPDATE OF goal_payload ON schedule_exercises BEGIN SELECT RAISE(ABORT,'test failure'); END"
     )
     do {
       try await r.saveTimedGoal(goal, original: nil, originalExercise: original)

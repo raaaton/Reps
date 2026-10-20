@@ -22,6 +22,10 @@ struct TimedSetPreparation: View {
             .subheadline
           ).foregroundStyle(.secondary)
         }
+        if let target = exercise.goal?.durationTargetMS(forSet: exercise.sets.count + 1) {
+          LabeledContent("Target for This Set", value: "\(WorkoutLabels.seconds(target)) s")
+            .foregroundStyle(.secondary)
+        }
         if !store.availableLoads.contains(load) {
           Text("This combination has changed. Choose your added weight.").foregroundStyle(
             .secondary)

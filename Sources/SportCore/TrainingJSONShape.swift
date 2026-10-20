@@ -4,6 +4,7 @@ extension TrainingTransfer {
   // Closed format: unknown fields are rejected, rather than silently discarding future/private data.
   static func checkJSONShape(_ data: Data) throws {
     let root = try JSONSerialization.jsonObject(with: data)
+    let archiveVersion = (root as? [String: Any])?["version"] as? Int
     func object(_ raw: Any, _ allowed: [String]) throws -> [String: Any] {
       guard let value = raw as? [String: Any], Set(value.keys).isSubset(of: Set(allowed)) else {
         throw invalid
@@ -28,7 +29,10 @@ extension TrainingTransfer {
     }
     func goal(_ raw: Any?) throws {
       guard let raw, !(raw is NSNull) else { return }
-      let value = try object(raw, ["definition", "load", "repetitions"])
+      let value = try object(
+        raw,
+        ["definition", "load", "repetitions"]
+          + (archiveVersion == 4 ? ["durationsMS"] : []))
       try definition(value["definition"] ?? NSNull())
       let load = try object(value["load"] ?? NSNull(), ["grams", "components"])
       try components(load["components"])
@@ -36,21 +40,41 @@ extension TrainingTransfer {
     let envelope = try object(
       root, ["format", "version", "includesPrivatePhotos", "createdAt", "contents"])
     let contents = try object(
-      envelope["contents"] ?? NSNull(), ["configuration", "notifications", "workouts"])
+      envelope["contents"] ?? NSNull(),
+      ["configuration", "notifications", "workouts", "bodyWeights"])
     let c = try object(
       contents["configuration"] ?? NSNull(),
       ["exercises", "schedules", "restSeconds", "weightItems", "goals"])
     for ex in try array(c["exercises"]) { try definition(ex) }
     for schedule in try array(c["schedules"]) {
-      _ = try object(
-        schedule, ["id", "name", "weekday", "isEnabled", "reminderMinutes", "exerciseIDs"])
+      let value = try object(
+        schedule,
+        [
+          "id", "name", "weekday", "isEnabled", "reminderMinutes", "exerciseIDs", "setCounts",
+          "goals",
+        ])
+      if let goals = value["goals"] as? [String: Any] {
+        for item in goals.values { try goal(item) }
+      }
     }
     for item in try array(c["weightItems"]) {
       _ = try object(item, ["id", "name", "grams", "isEnabled"])
     }
     for item in try array(c["goals"]) { try goal(item) }
-    _ = try object(
-      contents["notifications"] ?? NSNull(), ["workoutsEnabled", "photosEnabled", "photoMinutes"])
+    let notifications = try object(
+      contents["notifications"] ?? NSNull(),
+      [
+        "workoutsEnabled", "photosEnabled", "photoMinutes", "weightEnabled", "weightWeekday",
+        "weightMinutes",
+      ])
+    if archiveVersion == 3 || archiveVersion == 4 {
+      guard contents["bodyWeights"] is [Any], notifications["weightEnabled"] is Bool else {
+        throw invalid
+      }
+    }
+    if let weights = contents["bodyWeights"] {
+      for weight in try array(weights) { _ = try object(weight, ["id", "dayKey", "grams"]) }
+    }
     for raw in try array(contents["workouts"]) {
       let w = try object(
         raw,

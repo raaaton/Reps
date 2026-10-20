@@ -159,8 +159,12 @@ private struct TrainingImportPreviewView: View {
               "Exercises", value: String(preview.incoming.configuration.exercises.count))
             LabeledContent(
               "Scheduled Workouts", value: String(preview.incoming.configuration.schedules.count))
+            LabeledContent(
+              "Body Weight Measurements", value: String(preview.incoming.bodyWeights.count))
             Text(
-              "This restoration replaces your history, schedule, inventory, goals and training settings. A recovery copy of the previous state will be kept in Sport. Private photos and iOS permissions are unaffected."
+              preview.preservesBodyWeight
+                ? "This older backup replaces training history and settings. Your body weight measurements and weight reminder will be kept. A recovery copy will be kept in Sport. Private photos and iOS permissions are unaffected."
+                : "This restoration replaces training history, settings, body weight measurements and the weight reminder. A recovery copy will be kept in Sport. Private photos and iOS permissions are unaffected."
             ).foregroundStyle(.secondary)
           } else {
             Text(

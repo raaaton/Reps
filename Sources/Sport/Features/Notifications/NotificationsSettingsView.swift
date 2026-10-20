@@ -8,6 +8,7 @@ struct NotificationsSettingsView: View {
   @State private var saving = false
   @State private var error: String?
   @State private var testScheduled = false
+  @State private var showingBodyWeightReminder = false
   var body: some View {
     TrainingContent { snapshot in
       Form {
@@ -63,6 +64,39 @@ struct NotificationsSettingsView: View {
           )
         }
         Section {
+          Toggle(
+            "Weekly Reminder",
+            isOn: Binding(
+              get: { store.notificationPreferences.weightEnabled },
+              set: { enabled in
+                if enabled {
+                  showingBodyWeightReminder = true
+                } else {
+                  disableBodyWeightReminder()
+                }
+              }))
+          if let weekday = store.notificationPreferences.weightWeekday,
+            let minutes = store.notificationPreferences.weightMinutes
+          {
+            Button {
+              showingBodyWeightReminder = true
+            } label: {
+              LabeledContent("Schedule") {
+                Text(
+                  "\(TrainingLabels.weekday(weekday)) · \(TrainingLabels.time(minutes).formatted(date: .omitted, time: .shortened))"
+                )
+              }
+            }
+            .foregroundStyle(.primary)
+          }
+        } header: {
+          Text("Body Weight")
+        } footer: {
+          Text(
+            "Once a week, on your chosen day and time. Recording a measurement removes that day’s reminder. The next 28 days are scheduled; open Sport to refresh them."
+          )
+        }
+        Section {
           Button("Send Test Notification", systemImage: "bell.badge") {
             saving = true
             testScheduled = false
@@ -96,6 +130,9 @@ struct NotificationsSettingsView: View {
       .disabled(saving)
     }
     .navigationTitle("Notifications")
+    .sheet(isPresented: $showingBodyWeightReminder) {
+      BodyWeightReminderSettingsView()
+    }
     .task { await reminders.refresh() }
     .alert(
       "Notification Error",
@@ -104,6 +141,18 @@ struct NotificationsSettingsView: View {
       Button("OK", role: .cancel) { error = nil }
     } message: {
       Text(error ?? "")
+    }
+  }
+  private func disableBodyWeightReminder() {
+    guard !saving else { return }
+    saving = true
+    Task {
+      defer { saving = false }
+      do {
+        var preferences = store.notificationPreferences
+        preferences.weightEnabled = false
+        try await store.saveNotificationPreferences(preferences)
+      } catch { self.error = error.localizedDescription }
     }
   }
   private func preferenceBinding(photos: Bool) -> Binding<Bool> {

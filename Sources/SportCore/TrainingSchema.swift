@@ -4,7 +4,7 @@ enum TrainingSchema {
   static func migrate(_ database: SQLiteDatabase) throws {
     try database.transaction {
       let version = try database.query("PRAGMA user_version").first?.integer("user_version") ?? 0
-      guard version <= 10 else { throw TrainingError.newerSchema }
+      guard version <= 15 else { throw TrainingError.newerSchema }
       if version == 0 {
         for statement in statements { try database.execute(statement) }
         try seed(database)
@@ -90,6 +90,80 @@ enum TrainingSchema {
             """)
         }
         try database.execute("PRAGMA user_version=10")
+      }
+      if version < 11 {
+        // Inspect columns for old test/recovery databases whose later migrations already ran.
+        let columns = try database.query("PRAGMA table_info(schedule_exercises)").map {
+          try $0.text("name")
+        }
+        if !columns.contains("set_count") {
+          try database.execute(
+            "ALTER TABLE schedule_exercises ADD COLUMN set_count INTEGER NOT NULL DEFAULT 4 CHECK(set_count>0)"
+          )
+          try database.execute(
+            "UPDATE schedule_exercises SET set_count=(SELECT set_count FROM exercises WHERE id=exercise_id)"
+          )
+        }
+        if !columns.contains("goal_payload") {
+          try database.execute("ALTER TABLE schedule_exercises ADD COLUMN goal_payload TEXT")
+          try database.execute(
+            "UPDATE schedule_exercises SET goal_payload=(SELECT payload FROM exercise_goals WHERE catalogue_id=exercise_id)"
+          )
+        }
+        try database.execute("PRAGMA user_version=11")
+      }
+      if version < 12 {
+        try database.execute(
+          "CREATE TABLE IF NOT EXISTS body_weight_measurements(id TEXT PRIMARY KEY,day_key TEXT NOT NULL UNIQUE,grams INTEGER NOT NULL CHECK(grams>0))"
+        )
+        let columns = try database.query("PRAGMA table_info(notification_preferences)").map {
+          try $0.text("name")
+        }
+        if !columns.contains("weight_enabled") {
+          try database.execute(
+            "ALTER TABLE notification_preferences ADD COLUMN weight_enabled INTEGER NOT NULL DEFAULT 0 CHECK(weight_enabled IN (0,1))"
+          )
+          try database.execute(
+            "ALTER TABLE notification_preferences ADD COLUMN weight_weekday INTEGER CHECK(weight_weekday BETWEEN 1 AND 7)"
+          )
+          try database.execute(
+            "ALTER TABLE notification_preferences ADD COLUMN weight_minutes INTEGER CHECK(weight_minutes BETWEEN 0 AND 1439)"
+          )
+        }
+        try database.execute("PRAGMA user_version=12")
+      }
+      if version < 13 {
+        try GoalReconciliation.updateAll(database)
+        try database.execute("PRAGMA user_version=13")
+      }
+      if version < 14 {
+        let columns = try database.query("PRAGMA table_info(workout_goal_decisions)").map {
+          try $0.text("name")
+        }
+        if !columns.contains("goal_payload") {
+          try database.execute("ALTER TABLE workout_goal_decisions ADD COLUMN goal_payload TEXT")
+          // Older markers did not capture the chosen target. Preserve their current saved choice.
+          for decision in try database.query("SELECT exercise_id FROM workout_goal_decisions") {
+            let id = try decision.text("exercise_id")
+            if let row = try database.query(
+              """
+              SELECT se.goal_payload FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id
+              JOIN schedule_exercises se ON se.schedule_id=w.schedule_id AND se.exercise_id=e.catalogue_id
+              WHERE e.id=?
+              """, [.text(id)]
+            ).first {
+              try database.execute(
+                "UPDATE workout_goal_decisions SET goal_payload=? WHERE exercise_id=?",
+                [try row.optionalText("goal_payload").map(SQLValue.text) ?? .null, .text(id)])
+            }
+          }
+        }
+        try LatestExerciseGoals.update(database)
+        try database.execute("PRAGMA user_version=14")
+      }
+      if version < 15 {
+        try LatestExerciseGoals.update(database)
+        try database.execute("PRAGMA user_version=15")
       }
 
     }

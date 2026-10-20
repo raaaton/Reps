@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.0.5.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+Download **Sport-1.1.0.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -35,8 +35,11 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 ### Plan and prepare
 
 - Create and edit workouts, choose their day, and order exercises.
+- Set the number of sets per exercise in each workout, such as two push-up sets on Tuesday and four on Saturday, using a compact menu or custom input.
 - Track repetitions or timed holds, including free-duration exercises.
 - Set precise repetition and added-weight goals.
+- Exercise edits update future goals automatically; unavailable weight compositions still require review.
+- Progress shows each exercise’s main workout goal, selected by its total target volume.
 - Edit timed goals directly, including switching between a duration and untimed holds.
 - Manage a weighted backpack and its available load combinations.
 - Review your goals and the actual items needed before starting.
@@ -60,18 +63,21 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Pause and resume directly from the activity.
 - Native minutes/seconds rest picker with 30-second increments.
 - Optional 🏋️‍♂️ workout and 📸 monthly photo reminders, with a test notification in Settings.
+- A weekly body-weight reminder with a chosen day and time; recording that day’s weight removes its reminder.
 
 ### Understand your progress
 
 - Workout and exercise history, with manual entry and corrections.
-- Connected charts for workout volume, repetitions, added weight, and timed work.
-- Drag on charts to inspect individual sessions.
+- Body-weight tracking in kg: one measurement per day, editable history, and a date-based chart.
+- Shared 3-month, 6-month, and 1-year chart periods.
+- Connected charts for average volume, repetitions and work time per set, plus maximum added weight.
+- Drag on charts to inspect individual session totals and set counts.
 - Period totals, including total isometric work time, and a GitHub-style training activity grid from the first completed workout.
 - Neutral filler cells and missed scheduled-day dots; missed days use the current enabled schedule and exclude today.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
 - Review added-weight increases or decreases directly when moving to the next exercise or stretching.
-- Choose **Update Goal** or **Keep Current Goal**; your decision is saved and preserved at workout completion.
-- Other future goals match completed workout results; configured timed targets stay unchanged.
+- Choose **Update Goal** or **Keep Current Goal** for load changes; an explicitly chosen different load keeps its associated targets.
+- At completion, future goals follow the latest session containing that exercise across all workouts, including actual per-set hold durations. Each workout keeps its set count. Targets use the ceiling-average repetitions or seconds at the highest load actually used in that session. At the same load, recorded performance refreshes the target even when a load increase is declined.
 - Warm-up and stretch results remain separate from working-set progression.
 
 ### Keep photos private
@@ -88,7 +94,7 @@ The vault uses a device-bound key protected by the current biometric enrollment.
 ### Own your training data
 
 - **Import from Files** and **Export to Files**. Export directly saves one JSON file containing current training data and settings, without format choices.
-- The JSON archive preserves workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals and training settings. Legacy CSV import remains supported.
+- The JSON archive preserves workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals, body-weight measurements and training settings. Legacy CSV import remains supported.
 - CSV import replaces training history after preview and confirmation, preserving your configuration.
 - JSON restore replaces training data and settings after preview and confirmation.
 
@@ -151,7 +157,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **199 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
+The current suite contains **275 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 
