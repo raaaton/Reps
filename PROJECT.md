@@ -409,3 +409,7 @@ Device feedback72: replace learned ordered targets with one mean rounded upward 
 ## Calisthenics skills — accepted 23 October 2026
 
 The approved Skills specification is docs/exec-plans/2026-10-23-calisthenics-skills-design.md. Four preloaded roadmaps (Handstand, L-sit, Planche, Front Lever), personal steps, optional extensions and configurable workout blocks are included. Skills are available from Progress; standalone practice shares the same engine. Free practice records elapsed practice excluding explicit pauses, not hold time. Detailed holds/repetitions remain distinct from strength statistics. Achievement is declared by the person; no automatic technical certification or mandatory unlocks. Instructions work offline, with optional external HTTPS demonstration links opened only on request.
+
+## Consistency streak — accepted24October2026
+
+Replace the completed-workout-day total with a current streak expressed as inclusive calendar days, rest days included. Break after N consecutively missed planned workouts, where N dynamically equals current enabled nonempty weekly workouts; next completion restarts at1. Today is only missed once it has ended. Completion resets the miss counter; photo presence does not count. Settings chooses exact days or the largest full unit (7-day weeks,30-day months,365-day years). Native summary remains left-aligned Streak and right-aligned value, with no literal separators.

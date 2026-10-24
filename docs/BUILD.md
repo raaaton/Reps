@@ -196,3 +196,9 @@ USB delivery confirmed: device-run.sh exits0; installation/verification100%. Dir
 ## White photo-day camera — 1.2.6 (88)
 
 User-requested white camera.fill in Consistency, including completed dates. Visual-only retouch, separate versioned commit before the streak feature. Strict lint, nine metadata/style checks, real xtool build, regenerated/embedded App Intents metadata and unsigned app/widget inspection pass. Standard USB delivery tracked in the photo-activity ExecPlan; no new domain tests or private-data access. Physical rendering remains user validation.
+
+## Current workout streak — 1.2.7(89)
+
+355host tests/zero failures7.604s, strict Swift lint, nine metadata/style checks, independent code review and unsigned app/widget inspection pass. Actual xtool23.94s plus metadata regeneration/embedding2.33s; no compilation warnings/errors. Source plists and inspection agree on1.2.7(89). Preflight is the directly verified installed1.2.6(88), same effective identity/signer/exact cached certificate/capabilities and valid CMS-verified app/widget profiles. Normal USB delivery is in progress. No schema/archive, dependency, SDK, permission or capability change. Physical summary/picker rendering is not established by these checks.
+
+Streak89delivery confirmed: device-run.sh exits0, installation/verification100%; direct postflight verifies one Sport1.2.7(89), unchanged identity/signer/entitlements/exact certificate and valid CMS-verified app/widget profiles. Physical summary, native picker, relaunch preference and camera appearance await user review. Two dedicated local commits requested; no new push/public Release.

@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The current 1.2.6 update is awaiting iPhone feedback; its IPA has not been released.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The current 1.2.7 update is awaiting iPhone feedback; its IPA has not been released.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -75,7 +75,9 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Connected charts for average volume, repetitions and work time per set, plus maximum added weight.
 - Drag on charts to inspect individual session totals and set counts.
 - Period totals, including total isometric work time, and a GitHub-style activity grid from the first completed workout or progress-photo date.
-- Neutral filler cells, crosses for missed scheduled workouts and camera icons on progress-photo days, without a legend. Missed days use the current enabled schedule and exclude today; photos do not count as completed workouts.
+- A current **Streak** in calendar days, including rest days; it breaks after one current week’s worth of consecutive missed scheduled workouts and restarts on the next completion.
+- Choose **Days** or **Largest Unit** in **Settings → Progress → Streak Units** (15 days → 2 weeks; 372 days → 1 year).
+- Neutral filler cells, crosses for missed scheduled workouts and white camera icons on progress-photo days, without a legend. Missed days use the current enabled schedule and exclude today; photos do not count as completed workouts.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
 - Review added-weight increases or decreases directly when moving to the next exercise or stretching.
 - Choose **Update Goal** or **Keep Current Goal** for load changes; an explicitly chosen different load keeps its associated targets.

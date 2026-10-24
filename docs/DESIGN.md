@@ -444,3 +444,9 @@ Day detail displays the photo count without loading media or bypassing Private P
 ## White photo-day camera — 1.2.6 (88)
 
 User-requested white camera.fill in Consistency, including completed dates. Visual-only retouch, separate versioned commit before the streak feature. Strict lint, nine metadata/style checks, real xtool build, regenerated/embedded App Intents metadata and unsigned app/widget inspection pass. Standard USB delivery tracked in the photo-activity ExecPlan; no new domain tests or private-data access. Physical rendering remains user validation.
+
+## Current workout streak — 1.2.7(89)
+
+Consistency now shows native LabeledContent("Streak", value:e.g."15 days") in place of the lifetime completed-day counter. Duration is inclusive calendar days from the first completion in the current run through today, including rest days. A completion resets consecutive misses; N missed planned workouts breaks the run, with N derived dynamically from current enabled nonempty workout weekdays. Today remains eligible until midnight. Photos/active/canceled workouts do not rescue a streak. No weekly schedule =>0days. Changing the current schedule recalculates historical attendance and streak; historical planning snapshots do not exist.
+
+Settings→Progress→Streak Units uses a native in-context menu picker with Days (default) and Largest Unit. Largest Unit floors7/30/365-day conversions, preferring years then months then weeks; the user’s15→2weeks and372→1year examples are covered. A footer explains rest days, current-schedule break rules and unit lengths. This presentation choice follows the existing @AppStorage haptics convention and changes the value immediately without changing the actual streak. White camera glyph from the separate1.2.6commit is retained.

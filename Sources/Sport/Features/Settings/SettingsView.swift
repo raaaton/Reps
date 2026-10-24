@@ -1,7 +1,10 @@
+import SportCore
 import SwiftUI
 
 struct SettingsView: View {
   @AppStorage(SportHaptics.preferenceKey) private var hapticsEnabled = true
+  @AppStorage(StreakDisplayUnit.preferenceKey) private var streakDisplayUnit = StreakDisplayUnit
+    .days
   var body: some View {
     List {
       Section("Training") {
@@ -32,6 +35,22 @@ struct SettingsView: View {
         TrainingContent { snapshot in
           StretchingSettingRow(enabled: snapshot.stretchingEnabled)
         }
+      }
+
+      Section {
+        Picker(selection: $streakDisplayUnit) {
+          Text("Days").tag(StreakDisplayUnit.days)
+          Text("Largest Unit").tag(StreakDisplayUnit.largestUnit)
+        } label: {
+          Label("Streak Units", systemImage: "flame")
+        }
+        .pickerStyle(.menu)
+      } header: {
+        Text("Progress")
+      } footer: {
+        Text(
+          "Streaks count calendar days, including rest days. A full week of consecutively missed workouts breaks the streak, based on your current schedule. Largest Unit shows full weeks, 30-day months or 365-day years."
+        )
       }
 
       Section("Reminders and Privacy") {

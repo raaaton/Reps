@@ -5,6 +5,8 @@ struct ProgressionView: View {
   @EnvironmentObject private var store: TrainingStore
   @EnvironmentObject private var vault: PhotoVaultStore
   @Environment(\.scenePhase) private var scenePhase
+  @AppStorage(StreakDisplayUnit.preferenceKey) private var streakDisplayUnit = StreakDisplayUnit
+    .days
   @State private var vaultOpen = false
   @State private var bodyWeightOpen = false
   @State private var bodyWeightVisible = false
@@ -27,8 +29,10 @@ struct ProgressionView: View {
         List {
           Section("Consistency") {
             LabeledContent(
-              "Days with Completed Workouts",
-              value: String(days.filter { $0.state == .completed }.count))
+              "Streak",
+              value: streakDisplayUnit.label(
+                days: WorkoutStreak.days(
+                  attendance: days, workoutsPerWeek: scheduledWeekdays.count)))
             AttendanceGrid(days: days) { selectedDay = $0 }
             NavigationLink("View Days as a List") { AttendanceListView(days: days) }
             if vault.photoActivity?.needsUnlock == true {

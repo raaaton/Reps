@@ -296,3 +296,9 @@ USB delivery confirmed: device-run.sh exits0; installation/verification100%. Dir
 ## White photo-day camera — 1.2.6 (88)
 
 User-requested white camera.fill in Consistency, including completed dates. Visual-only retouch, separate versioned commit before the streak feature. Strict lint, nine metadata/style checks, real xtool build, regenerated/embedded App Intents metadata and unsigned app/widget inspection pass. Standard USB delivery tracked in the photo-activity ExecPlan; no new domain tests or private-data access. Physical rendering remains user validation.
+
+## White camera and current streak —24October2026
+
+The user requests two distinct commits. First: white photo-day camera,1.2.6(88), committed3c393ca and installed; postflight confirms same identity/signer/exact certificate/capabilities and valid app/widget profiles. Second:1.2.7(89) current streak and Days/Largest Unit preference. Dynamic weekly threshold, calendar-day duration, rest/today and photo exclusions are covered by355passing tests and an independent review. Real iOS build and inspection pass; second USB delivery and physical acceptance are tracked in the [ExecPlan](exec-plans/2026-10-24-workout-streak.md). No new GitHub push or public Release requested in this turn.
+
+Streak89delivery confirmed: device-run.sh exits0, installation/verification100%; direct postflight verifies one Sport1.2.7(89), unchanged identity/signer/entitlements/exact certificate and valid CMS-verified app/widget profiles. Physical summary, native picker, relaunch preference and camera appearance await user review. Two dedicated local commits requested; no new push/public Release.
