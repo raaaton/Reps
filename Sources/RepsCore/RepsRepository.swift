@@ -192,6 +192,7 @@ public actor RepsRepository {
       exercises: exercises, schedules: schedules, restSeconds: try rest.integer("rest_seconds"),
       weightItems: try readWeightItems(), goals: try readGoals(),
       stretchingEnabled: try rest.integer("stretching_enabled") == 1,
-      skills: try readSkills(), skillProgress: try readSkillProgress())
+      skills: try readSkills(), skillProgress: try readSkillProgress(),
+      maximumWeightObjects: try rest.integer("maximum_weight_objects"))
   }
 }

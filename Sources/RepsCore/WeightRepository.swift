@@ -21,7 +21,8 @@ extension RepsRepository {
     try database.transaction {
       var items = try readWeightItems().filter { $0.id != item.id }
       items.append(item)
-      _ = try WeightInventory.loads(items: items)
+      _ = try WeightInventory.loads(
+        items: items, maximumObjects: WeightLimitPreference.read(database))
       try database.execute(
         "INSERT INTO weight_items(id,name,grams,enabled,quantity) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,grams=excluded.grams,enabled=excluded.enabled,quantity=excluded.quantity",
         [
@@ -30,16 +31,38 @@ extension RepsRepository {
         ])
     }
   }
+  public func saveMaximumWeightObjects(_ maximum: Int) throws {
+    try database.transaction {
+      _ = try WeightInventory.loads(items: readWeightItems(), maximumObjects: maximum)
+      try database.execute(
+        "UPDATE preferences SET maximum_weight_objects=? WHERE id=1", [.integer(maximum)])
+    }
+  }
+
   public func deleteWeightItem(id: String) throws {
     try database.transaction {
       try database.execute("DELETE FROM weight_items WHERE id=?", [.text(id)])
     }
   }
   func validateLoad(_ load: AvailableLoad, grams: Int) throws {
-    guard load.grams == grams, WeightInventory.isAvailable(load, items: try readWeightItems())
+    guard load.grams == grams,
+      WeightInventory.isAvailable(
+        load, items: try readWeightItems(), maximumObjects: try WeightLimitPreference.read(database)
+      )
     else {
       throw TrainingError.invalid(
         "This load combination has changed. Choose the load again.")
     }
+  }
+}
+
+// Older migrations also compute goals before the preference column is introduced.
+enum WeightLimitPreference {
+  static func read(_ database: SQLiteDatabase) throws -> Int {
+    guard let row = try database.query("SELECT * FROM preferences WHERE id=1").first else {
+      throw TrainingError.storage
+    }
+    return row.values["maximum_weight_objects"] == nil
+      ? 10 : try row.integer("maximum_weight_objects")
   }
 }

@@ -9,6 +9,14 @@ func removingNewTrainingFields(_ raw: [String: Any]) -> [String: Any] {
     return object.mapValues(stripQuantities)
   }
   var root = (raw["version"] as? Int ?? 7) < 7 ? stripQuantities(raw) as! [String: Any] : raw
+  if (root["version"] as? Int ?? 8) < 8,
+    var contents = root["contents"] as? [String: Any],
+    var configuration = contents["configuration"] as? [String: Any]
+  {
+    configuration.removeValue(forKey: "maximumWeightObjects")
+    contents["configuration"] = configuration
+    root["contents"] = contents
+  }
   guard (root["version"] as? Int ?? 6) < 6, var contents = root["contents"] as? [String: Any] else {
     return root
   }

@@ -62,9 +62,13 @@ public struct AvailableLoad: Identifiable, Codable, Equatable, Sendable {
 
 public enum WeightInventory {
   public static let bag = LoadComponent(id: "base-bag", name: "Sac", grams: 3000)
-  public static let maximumObjects = 10
+  public static let defaultMaximumObjects = 10
 
-  public static func loads(items: [WeightItem]) throws -> [AvailableLoad] {
+  public static func loads(items: [WeightItem], maximumObjects: Int = 10) throws -> [AvailableLoad]
+  {
+    guard (1...1000).contains(maximumObjects) else {
+      throw TrainingError.invalid("Choose a maximum from 1 to 1,000 objects.")
+    }
     var totals: [Int: (components: [LoadComponent], objects: Int)] = [bag.grams: ([bag], 0)]
     var remainingWork = 200_000
     for item in items.sorted(by: { $0.id < $1.id }) {
@@ -113,7 +117,10 @@ public enum WeightInventory {
 
   // Feasibility is independent of the preferred composition for the same total.
   // This preserves exact saved choices while applying the cap to future selections.
-  public static func isAvailable(_ load: AvailableLoad, items: [WeightItem]) -> Bool {
+  public static func isAvailable(
+    _ load: AvailableLoad, items: [WeightItem], maximumObjects: Int = 10
+  ) -> Bool {
+    guard (1...1000).contains(maximumObjects) else { return false }
     if load.grams == 0 { return load.components.isEmpty }
     guard load.grams >= bag.grams else { return false }
     var seen = Set<String>()
@@ -144,24 +151,44 @@ public enum WeightInventory {
   // Project exact totals only after subset generation: pruning intermediate sums
   // would lose loads made from several small items. Validation keeps using loads().
   public static func spacedLoads(
-    _ loads: [AvailableLoad], retaining selected: AvailableLoad? = nil, items: [WeightItem]? = nil
+    _ loads: [AvailableLoad], retaining selected: AvailableLoad? = nil, items: [WeightItem]? = nil,
+    maximumObjects: Int = 10
   ) -> [AvailableLoad] {
+    // Give fewer physical copies priority BEFORE resolving nearby total weights.
+    var candidates: [(load: AvailableLoad, objects: Int)] = []
+    for load in loads where load.grams >= 0 {
+      let count = load.components.filter { $0.id != bag.id }.reduce(0) { $0 + $1.quantity }
+      candidates.append((load, count))
+    }
+    candidates.sort { lhs, rhs in
+      if lhs.objects != rhs.objects { return lhs.objects < rhs.objects }
+      return lhs.load.grams < rhs.load.grams
+    }
     var result: [AvailableLoad] = []
-    for load in loads.sorted(by: { $0.grams < $1.grams }) {
-      guard load.grams >= 0 else { continue }
-      if let last = result.last, load.grams - last.grams < 500 { continue }
+    // At most one accepted total fits in each 500g bucket. Only adjacent buckets
+    // can conflict, so priority filtering does not require a quadratic scan.
+    var chosenByBucket: [Int: Int] = [:]
+    for candidate in candidates {
+      let load = candidate.load
+      let bucket = load.grams / 500
+      let conflicts = (-1...1).contains { offset in
+        guard let grams = chosenByBucket[bucket + offset] else { return false }
+        return abs(grams - load.grams) < 500
+      }
+      guard !conflicts else { continue }
+      chosenByBucket[bucket] = load.grams
       result.append(load)
     }
     // Preserve a feasible filtered-out selection, without duplicating a total that
     // already offers its preferred composition. No inventory means exact membership.
     if let selected,
-      items.map({ isAvailable(selected, items: $0) }) ?? loads.contains(selected),
+      items.map({ isAvailable(selected, items: $0, maximumObjects: maximumObjects) })
+        ?? loads.contains(selected),
       !result.contains(where: { $0.grams == selected.grams })
     {
       result.append(selected)
-      result.sort { $0.grams < $1.grams }
     }
-    return result
+    return result.sorted { $0.grams < $1.grams }
   }
   static func encode(_ components: [LoadComponent]?) throws -> SQLValue {
     guard let components else { return .null }

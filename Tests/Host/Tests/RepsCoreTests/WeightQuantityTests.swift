@@ -78,7 +78,7 @@ final class WeightQuantityTests: XCTestCase, @unchecked Sendable {
     try db.execute("ALTER TABLE weight_items DROP COLUMN quantity")
     try db.execute("PRAGMA user_version=17")
     let migrated = try RepsRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 18)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 19)
     let after = try await migrated.exportTraining(now: now)
     XCTAssertEqual(after.contents, before.contents)
     XCTAssertTrue(after.contents.configuration.weightItems.allSatisfy { $0.quantity == 1 })
@@ -132,9 +132,12 @@ final class WeightQuantityTests: XCTestCase, @unchecked Sendable {
     config["weightItems"] = items
     contents["configuration"] = config
     root["contents"] = contents
+    config.removeValue(forKey: "maximumWeightObjects")
+    contents["configuration"] = config
+    root["contents"] = contents
     root["version"] = 6
     let legacy = try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root))
-    XCTAssertEqual(legacy.version, 7)
+    XCTAssertEqual(legacy.version, 8)
     XCTAssertTrue(legacy.contents.configuration.weightItems.allSatisfy { $0.quantity == 1 })
     root["version"] = 7
     for bad: Any in [0, -1, 1001, 1.5, NSNull()] {

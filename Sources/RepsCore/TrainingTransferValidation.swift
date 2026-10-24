@@ -121,7 +121,7 @@ extension TrainingTransfer {
     }
     let c = data.configuration
     guard c.exercises.count <= 1000, c.weightItems.count <= 1000, c.schedules.count <= 7,
-      c.restSeconds > 0
+      c.restSeconds > 0, (1...1000).contains(c.maximumWeightObjects)
     else { throw invalid }
     try unique(c.exercises.map(\.id))
     try unique(c.weightItems.map(\.id))
@@ -134,7 +134,7 @@ extension TrainingTransfer {
         item.id != WeightInventory.bag.id
       else { throw invalid }
     }
-    _ = try WeightInventory.loads(items: c.weightItems)
+    _ = try WeightInventory.loads(items: c.weightItems, maximumObjects: c.maximumWeightObjects)
     guard Set(c.schedules.map(\.weekday)).count == c.schedules.count else { throw invalid }
     for schedule in c.schedules {
       try text(schedule.name)

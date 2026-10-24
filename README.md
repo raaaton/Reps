@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.4.1 (101) is installed on the owner’s iPhone for minimum-object and ten-object-cap review; this local version is not yet published. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-minimal-weight-objects.md). The renamed source previously published here is 1.3.3. Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.0 (102) is installed on the owner’s iPhone for object-first choice filtering and the configurable object maximum; this local version is not yet published. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-weight-object-priority-setting.md). The renamed source previously published here is 1.3.3. Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -41,7 +41,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Exercise edits update future goals automatically; unavailable weight compositions still require review.
 - Progress shows each exercise’s main workout goal, selected by its total target volume.
 - Edit timed goals directly, including switching between a duration and untimed holds.
-- Manage a weighted backpack and its available load combinations. Set unit weight and available quantity for identical objects; compositions show grouped copies such as Book × 10 without duplicate totals. Each total uses the fewest objects, up to 10 weight objects plus the backpack.
+- Manage a weighted backpack and its available load combinations. Set unit weight and available quantity for identical objects; compositions show grouped copies such as Book × 10 without duplicate totals. Set **Maximum Objects** in Added Weight (10 by default, excluding the backpack). Choices prioritize fewer physical copies before applying the 0.5 kg spacing, then appear by ascending weight.
 - Review your goals and the actual items needed before starting.
 
 ### Train with a clear flow
@@ -79,7 +79,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Tap the streak value in **Progress** to choose **Days** or **Largest Unit** (15 days → 2 weeks; 372 days → 1 year).
 - Neutral filler cells, crosses for missed scheduled workouts and white camera icons on progress-photo days, without a legend. Missed days use the current enabled schedule and exclude today; photos do not count as completed workouts.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
-- Added-weight choices keep the lightest exact combination, then require at least 0.5 kg between choices. Existing valid selections and recorded compositions stay intact.
+- Added-weight choices favor fewer objects even at nearby different weights, then require at least 0.5 kg between choices. For example, 10.2 kg using one object is preferred over 10 kg using five. Existing valid selections and recorded compositions stay intact.
 - Review added-weight increases or decreases directly when moving to the next exercise or stretching.
 - Choose **Update Goal** or **Keep Current Goal** for load changes; an explicitly chosen different load keeps its associated targets.
 - At completion, future goals follow the latest session containing that exercise across all workouts, including actual per-set hold durations. Each workout keeps its set count. Targets use the ceiling-average repetitions or seconds at the highest load actually used in that session. At the same load, recorded performance refreshes the target even when a load increase is declined.
@@ -182,7 +182,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **394 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **402 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

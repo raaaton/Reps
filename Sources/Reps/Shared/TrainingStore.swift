@@ -32,13 +32,15 @@ final class TrainingStore: ObservableObject {
   }
   func isLoadAvailable(_ load: AvailableLoad) -> Bool {
     guard case .ready(let snapshot) = phase else { return false }
-    return WeightInventory.isAvailable(load, items: snapshot.weightItems)
+    return WeightInventory.isAvailable(
+      load, items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
   }
 
   func loadChoices(retaining selected: AvailableLoad) -> [AvailableLoad] {
     guard case .ready(let snapshot) = phase else { return [] }
     return WeightInventory.spacedLoads(
-      availableLoads, retaining: selected, items: snapshot.weightItems)
+      availableLoads, retaining: selected, items: snapshot.weightItems,
+      maximumObjects: snapshot.maximumWeightObjects)
   }
 
   private var refreshingWorkouts = false
@@ -75,7 +77,8 @@ final class TrainingStore: ObservableObject {
         workoutError = nil
       }
       if generation == request {
-        availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+        availableLoads = try WeightInventory.loads(
+          items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
         bodyWeights = weights
         skillHistory = skills
         phase = .ready(snapshot)
@@ -110,6 +113,10 @@ final class TrainingStore: ObservableObject {
 
   func saveRest(seconds: Int) async throws {
     try await commit { try await $0.saveRest(seconds: seconds) }
+  }
+
+  func saveMaximumWeightObjects(_ maximum: Int) async throws {
+    try await commit { try await $0.saveMaximumWeightObjects(maximum) }
   }
 
   func saveStretching(enabled: Bool) async throws {
@@ -360,7 +367,8 @@ final class TrainingStore: ObservableObject {
         if !overview.expiredStretchIDs.isEmpty {
           let snapshot = try await repository.snapshot()
           if generation == configurationRequest && workoutGeneration == request {
-            availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+            availableLoads = try WeightInventory.loads(
+              items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
             phase = .ready(snapshot)
             historyRevision += 1
           }
@@ -402,7 +410,8 @@ final class TrainingStore: ObservableObject {
       {
         event = .success
       }
-      availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
+      availableLoads = try WeightInventory.loads(
+        items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
       bodyWeights = weights
       skillHistory = skills
       phase = .ready(snapshot)

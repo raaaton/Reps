@@ -287,3 +287,7 @@ Training schema18 adds only weight_items.quantity with a1…1000SQL constraint/d
 ## Minimum-object choices —1.4.1(101)
 
 No schema, archive, vault, permission or cryptographic change. Bounded-count generation caps future compositions at10physical weight objects excluding the bag, retaining4095totals and200000component-work bounds. Independent exact inventory validation rejects duplicate/missing bag, disabled/renamed/missing items, weight mismatches, overflow and overquantity/over10new choices. Backup validation retains older self-consistent snapshots above10without making them selectable.
+
+## Configurable weight-object limit — 1.5.0 (102)
+
+Training schema 19 adds only preferences.maximum_weight_objects (default 10, SQL range 1–1,000). JSON 8 includes maximumWeightObjects; versions 1–7 default to 10, while closed-shape unknown/private field rejection remains. JSON restores the preference; CSV replacement preserves it. Proposed changes regenerate bounded loads before any write, so invalid or overly complex settings roll back atomically. Older migration helpers use the default before the column exists. Active/history compositions and all vault/keychain/identity/capability behavior are unchanged.

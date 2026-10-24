@@ -6,6 +6,7 @@ struct WeightInventoryView: View {
   @State private var editing: WeightItem?
   @State private var deleting: WeightItem?
   @State private var busy = false
+  @State private var editingMaximum = false
   @State private var error: String?
   var body: some View {
     TrainingContent { snapshot in
@@ -14,6 +15,15 @@ struct WeightInventoryView: View {
           LabeledContent("Backpack", value: "3 kg")
         } footer: {
           Text("Fixed weight, added once to each weighted combination.")
+        }
+        Section {
+          Button {
+            editingMaximum = true
+          } label: {
+            LabeledContent("Maximum Objects", value: String(snapshot.maximumWeightObjects))
+          }.buttonStyle(.plain)
+        } footer: {
+          Text("The backpack does not count toward this limit.")
         }
         Section("Items") {
           if snapshot.weightItems.isEmpty {
@@ -61,7 +71,9 @@ struct WeightInventoryView: View {
         } header: {
           Text("Available Loads")
         } footer: {
-          Text("Fewest objects for each weight, up to 10 objects plus the backpack.")
+          Text(
+            "Fewer objects take priority before the 0.5 kg spacing. Up to \(snapshot.maximumWeightObjects) objects plus the backpack."
+          )
         }
       }
       .disabled(busy)
@@ -73,6 +85,9 @@ struct WeightInventoryView: View {
         }
       }
       .sheet(item: $editing) { WeightItemEditor(item: $0) }
+      .sheet(isPresented: $editingMaximum) {
+        MaximumWeightObjectsEditor(maximum: snapshot.maximumWeightObjects)
+      }
       .repsConfirmation(
         "Delete This Item?",
         isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),

@@ -64,7 +64,8 @@ extension RepsRepository {
     let goal =
       schedule.map { $0.goals[exerciseID] }
       ?? snapshot.goals.first { $0.definition.id == exerciseID }
-    let loads = try WeightInventory.loads(items: snapshot.weightItems)
+    let loads = try WeightInventory.loads(
+      items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
     let previous = try readLatestPerformance(
       exerciseID: exerciseID)
     return GoalContext(
@@ -72,7 +73,8 @@ extension RepsRepository {
       suggestion: GoalEngine.suggestion(target: exercise, previous: previous, loads: loads),
       isAvailable: goal.map {
         $0.isCompatible(with: exercise)
-          && WeightInventory.isAvailable($0.load, items: snapshot.weightItems)
+          && WeightInventory.isAvailable(
+            $0.load, items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
       } ?? true,
       scheduleID: schedule?.id)
   }
@@ -153,7 +155,8 @@ extension RepsRepository {
       }),
       target == exercise.definition
     else { return nil }
-    let loads = try WeightInventory.loads(items: snapshot.weightItems)
+    let loads = try WeightInventory.loads(
+      items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects)
     let rated = WorkoutExercise(
       id: exercise.id, definition: exercise.definition, sets: exercise.sets,
       feelingTenths: feelingTenths, setStartedAt: exercise.setStartedAt,

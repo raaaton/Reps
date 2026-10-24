@@ -61,7 +61,7 @@ extension TimedBaselineGoalTests {
     try await r.saveGoal(goal, original: nil, scheduleID: "legs")
     let archive = try await r.exportTraining(now: now)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 7)
+    XCTAssertEqual(decoded.version, 8)
     let destination = try RepsRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now)
     try await destination.applyTrainingImport(preview, now: now)

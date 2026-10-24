@@ -21,7 +21,7 @@ final class ReminderMigrationTests: XCTestCase, @unchecked Sendable {
     try db.execute("INSERT INTO preferences VALUES(1,180)")
     try db.execute("PRAGMA user_version=4")
     _ = try RepsRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 18)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 19)
     let row = try db.query("SELECT * FROM notification_preferences").first
     XCTAssertEqual(try row?.integer("workouts_enabled"), 0)
     XCTAssertEqual(try row?.integer("photos_enabled"), 0)

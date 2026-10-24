@@ -85,7 +85,8 @@ extension TrainingSnapshot {
       var target = exercise
       target.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
       return !goal.isCompatible(with: target)
-        || !WeightInventory.isAvailable(goal.load, items: weightItems)
+        || !WeightInventory.isAvailable(
+          goal.load, items: weightItems, maximumObjects: maximumWeightObjects)
     }
   }
 }

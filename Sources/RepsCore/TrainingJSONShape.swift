@@ -5,7 +5,8 @@ extension TrainingTransfer {
   static func checkJSONShape(_ data: Data) throws {
     let root = try JSONSerialization.jsonObject(with: data)
     let archiveVersion = (root as? [String: Any])?["version"] as? Int
-    let hasSkills = archiveVersion == 6 || archiveVersion == 7
+    let hasQuantities = archiveVersion == 7 || archiveVersion == 8
+    let hasSkills = archiveVersion == 6 || hasQuantities
     func object(_ raw: Any, _ allowed: [String]) throws -> [String: Any] {
       guard let value = raw as? [String: Any], Set(value.keys).isSubset(of: Set(allowed)) else {
         throw invalid
@@ -28,7 +29,7 @@ extension TrainingTransfer {
       guard let raw, !(raw is NSNull) else { return }
       for component in try array(raw) {
         _ = try object(
-          component, ["id", "name", "grams"] + (archiveVersion == 7 ? ["quantity"] : []))
+          component, ["id", "name", "grams"] + (hasQuantities ? ["quantity"] : []))
       }
     }
     func goal(_ raw: Any?) throws {
@@ -51,7 +52,9 @@ extension TrainingTransfer {
     let c = try object(
       contents["configuration"] ?? NSNull(),
       ["exercises", "schedules", "restSeconds", "weightItems", "goals", "stretchingEnabled"]
-        + (hasSkills ? ["skills", "skillProgress"] : []))
+        + (hasSkills ? ["skills", "skillProgress"] : [])
+        + (archiveVersion == 8 ? ["maximumWeightObjects"] : []))
+    if archiveVersion == 8, c["maximumWeightObjects"] == nil { throw invalid }
     if archiveVersion == 5 || hasSkills, !(c["stretchingEnabled"] is Bool) {
       throw invalid
     }
@@ -79,7 +82,7 @@ extension TrainingTransfer {
     }
     for item in try array(c["weightItems"]) {
       _ = try object(
-        item, ["id", "name", "grams", "isEnabled"] + (archiveVersion == 7 ? ["quantity"] : []))
+        item, ["id", "name", "grams", "isEnabled"] + (hasQuantities ? ["quantity"] : []))
     }
     for item in try array(c["goals"]) { try goal(item) }
     let notifications = try object(
