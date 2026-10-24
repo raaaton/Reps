@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key><string>Reps</string>
-    <key>CFBundleShortVersionString</key><string>1.5.0</string>
-    <key>CFBundleVersion</key><string>104</string>
+    <key>CFBundleShortVersionString</key><string>1.6.0</string>
+    <key>CFBundleVersion</key><string>106</string>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>NSExtension</key>
     <dict>

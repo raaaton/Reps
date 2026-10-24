@@ -44,7 +44,7 @@ final class BodyWeightTransferTests: XCTestCase, @unchecked Sendable {
     let r = try RepsRepository(path: ":memory:")
     try await setup(r)
     let archive = try await r.exportTraining(now: now)
-    XCTAssertEqual(archive.version, 8)
+    XCTAssertEqual(archive.version, 9)
     let decoded = try TrainingArchive.decode(archive.encoded())
     let destination = try RepsRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now)

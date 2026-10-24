@@ -4,7 +4,7 @@ enum TrainingSchema {
   static func migrate(_ database: SQLiteDatabase) throws {
     try database.transaction {
       let version = try database.query("PRAGMA user_version").first?.integer("user_version") ?? 0
-      guard version <= 19 else { throw TrainingError.newerSchema }
+      guard version <= 20 else { throw TrainingError.newerSchema }
       if version == 0 {
         for statement in statements { try database.execute(statement) }
         try seed(database)
@@ -193,6 +193,17 @@ enum TrainingSchema {
           )
         }
         try database.execute("PRAGMA user_version=19")
+      }
+      if version < 20 {
+        let columns = try database.query("PRAGMA table_info(preferences)").map {
+          try $0.text("name")
+        }
+        if !columns.contains("backpack_weight_grams") {
+          try database.execute(
+            "ALTER TABLE preferences ADD COLUMN backpack_weight_grams INTEGER NOT NULL DEFAULT 3000 CHECK(backpack_weight_grams>0)"
+          )
+        }
+        try database.execute("PRAGMA user_version=20")
       }
     }
   }

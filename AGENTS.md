@@ -39,6 +39,7 @@ En mode auto_review, soumettre directement les escalades nécessaires au reviewe
 - Nouvelle fonctionnalité importante : incrémenter le minor et remettre le patch à zéro (`X.Y.Z` → `X.Y+1.0`).
 - Demander l’accord explicite de l’utilisateur avant toute version majeure (`X+1.0.0`).
 - Créer un commit dédié à chaque changement qui mérite une nouvelle sous-version (`X.Y.Z+1`), après vérification. Respecter les autorisations de push de la session.
+- Une demande utilisateur de push GitHub inclut la publication de la release correspondant à la version poussée. Construire et vérifier l’IPA Release unsigned, publier uniquement l’IPA et vérifier la release/tag/source/asset ; ne pas redemander si une release est souhaitée.
 - Incrémenter le numéro de build indépendamment, à chaque nouvelle livraison iPhone. Garder les versions de l’app, du widget et de l’inspection cohérentes.
 
 ## Données et métier

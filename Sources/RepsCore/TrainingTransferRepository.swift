@@ -155,10 +155,10 @@ extension RepsRepository {
         [.text(goal.definition.id), try ExerciseGoal.encode(goal)])
     }
     try database.execute(
-      "UPDATE preferences SET rest_seconds=?,stretching_enabled=?,maximum_weight_objects=? WHERE id=1",
+      "UPDATE preferences SET rest_seconds=?,stretching_enabled=?,maximum_weight_objects=?,backpack_weight_grams=? WHERE id=1",
       [
         .integer(c.restSeconds), .integer(c.stretchingEnabled ? 1 : 0),
-        .integer(c.maximumWeightObjects),
+        .integer(c.maximumWeightObjects), .integer(c.backpackWeightGrams),
       ])
   }
   private func insertTransferredWorkout(_ w: WorkoutSession) throws {

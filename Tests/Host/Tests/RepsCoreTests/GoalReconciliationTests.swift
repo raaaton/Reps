@@ -150,7 +150,7 @@ final class GoalReconciliationTests: XCTestCase, @unchecked Sendable {
     XCTAssertTrue(c.isAvailable)
     XCTAssertEqual(c.adopted?.repetitions, [10, 10, 10, 11])
     XCTAssertEqual(c.adopted?.load, old.load)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 19)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 20)
     let unchanged = try await reopened.workout(id: active.id)
     XCTAssertEqual(unchanged, active)
   }

@@ -5,7 +5,9 @@ extension TrainingTransfer {
   static func checkJSONShape(_ data: Data) throws {
     let root = try JSONSerialization.jsonObject(with: data)
     let archiveVersion = (root as? [String: Any])?["version"] as? Int
-    let hasQuantities = archiveVersion == 7 || archiveVersion == 8
+    let hasBackpack = archiveVersion == 9
+    let hasMaximum = archiveVersion == 8 || hasBackpack
+    let hasQuantities = archiveVersion == 7 || hasMaximum
     let hasSkills = archiveVersion == 6 || hasQuantities
     func object(_ raw: Any, _ allowed: [String]) throws -> [String: Any] {
       guard let value = raw as? [String: Any], Set(value.keys).isSubset(of: Set(allowed)) else {
@@ -53,8 +55,10 @@ extension TrainingTransfer {
       contents["configuration"] ?? NSNull(),
       ["exercises", "schedules", "restSeconds", "weightItems", "goals", "stretchingEnabled"]
         + (hasSkills ? ["skills", "skillProgress"] : [])
-        + (archiveVersion == 8 ? ["maximumWeightObjects"] : []))
-    if archiveVersion == 8, c["maximumWeightObjects"] == nil { throw invalid }
+        + (hasMaximum ? ["maximumWeightObjects"] : [])
+        + (hasBackpack ? ["backpackWeightGrams"] : []))
+    if hasMaximum, c["maximumWeightObjects"] == nil { throw invalid }
+    if hasBackpack, c["backpackWeightGrams"] == nil { throw invalid }
     if archiveVersion == 5 || hasSkills, !(c["stretchingEnabled"] is Bool) {
       throw invalid
     }

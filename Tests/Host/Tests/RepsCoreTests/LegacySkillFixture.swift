@@ -17,6 +17,14 @@ func removingNewTrainingFields(_ raw: [String: Any]) -> [String: Any] {
     contents["configuration"] = configuration
     root["contents"] = contents
   }
+  if (root["version"] as? Int ?? 9) < 9,
+    var contents = root["contents"] as? [String: Any],
+    var configuration = contents["configuration"] as? [String: Any]
+  {
+    configuration.removeValue(forKey: "backpackWeightGrams")
+    contents["configuration"] = configuration
+    root["contents"] = contents
+  }
   guard (root["version"] as? Int ?? 6) < 6, var contents = root["contents"] as? [String: Any] else {
     return root
   }

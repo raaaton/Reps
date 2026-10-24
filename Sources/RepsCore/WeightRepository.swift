@@ -22,7 +22,8 @@ extension RepsRepository {
       var items = try readWeightItems().filter { $0.id != item.id }
       items.append(item)
       _ = try WeightInventory.loads(
-        items: items, maximumObjects: WeightLimitPreference.read(database))
+        items: items, maximumObjects: WeightLimitPreference.read(database),
+        backpackGrams: WeightLimitPreference.backpackGrams(database))
       try database.execute(
         "INSERT INTO weight_items(id,name,grams,enabled,quantity) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,grams=excluded.grams,enabled=excluded.enabled,quantity=excluded.quantity",
         [
@@ -33,9 +34,21 @@ extension RepsRepository {
   }
   public func saveMaximumWeightObjects(_ maximum: Int) throws {
     try database.transaction {
-      _ = try WeightInventory.loads(items: readWeightItems(), maximumObjects: maximum)
+      _ = try WeightInventory.loads(
+        items: readWeightItems(), maximumObjects: maximum,
+        backpackGrams: WeightLimitPreference.backpackGrams(database))
       try database.execute(
         "UPDATE preferences SET maximum_weight_objects=? WHERE id=1", [.integer(maximum)])
+    }
+  }
+
+  public func saveBackpackWeight(grams: Int) throws {
+    try database.transaction {
+      _ = try WeightInventory.loads(
+        items: readWeightItems(),
+        maximumObjects: WeightLimitPreference.read(database), backpackGrams: grams)
+      try database.execute(
+        "UPDATE preferences SET backpack_weight_grams=? WHERE id=1", [.integer(grams)])
     }
   }
 
@@ -47,7 +60,9 @@ extension RepsRepository {
   func validateLoad(_ load: AvailableLoad, grams: Int) throws {
     guard load.grams == grams,
       WeightInventory.isAvailable(
-        load, items: try readWeightItems(), maximumObjects: try WeightLimitPreference.read(database)
+        load, items: try readWeightItems(),
+        maximumObjects: try WeightLimitPreference.read(database),
+        backpackGrams: try WeightLimitPreference.backpackGrams(database)
       )
     else {
       throw TrainingError.invalid(
@@ -58,6 +73,14 @@ extension RepsRepository {
 
 // Older migrations also compute goals before the preference column is introduced.
 enum WeightLimitPreference {
+  static func backpackGrams(_ database: SQLiteDatabase) throws -> Int {
+    guard let row = try database.query("SELECT * FROM preferences WHERE id=1").first else {
+      throw TrainingError.storage
+    }
+    return row.values["backpack_weight_grams"] == nil
+      ? 3000 : try row.integer("backpack_weight_grams")
+  }
+
   static func read(_ database: SQLiteDatabase) throws -> Int {
     guard let row = try database.query("SELECT * FROM preferences WHERE id=1").first else {
       throw TrainingError.storage

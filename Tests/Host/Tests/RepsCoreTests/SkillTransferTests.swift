@@ -18,7 +18,7 @@ final class SkillTransferTests: XCTestCase {
       SkillCommand(practiceID: p.id, expectedRevision: p.revision, action: .pause), now: now + 1000)
     let archive = try await r.exportTraining(now: now + 2000)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 8)
+    XCTAssertEqual(decoded.version, 9)
     XCTAssertEqual(decoded.contents, archive.contents)
     let destination = try RepsRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now + 2000)

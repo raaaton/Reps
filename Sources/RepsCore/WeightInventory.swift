@@ -64,11 +64,16 @@ public enum WeightInventory {
   public static let bag = LoadComponent(id: "base-bag", name: "Sac", grams: 3000)
   public static let defaultMaximumObjects = 10
 
-  public static func loads(items: [WeightItem], maximumObjects: Int = 10) throws -> [AvailableLoad]
+  public static func loads(items: [WeightItem], maximumObjects: Int = 10, backpackGrams: Int = 3000)
+    throws -> [AvailableLoad]
   {
     guard (1...1000).contains(maximumObjects) else {
       throw TrainingError.invalid("Choose a maximum from 1 to 1,000 objects.")
     }
+    guard backpackGrams > 0 else {
+      throw TrainingError.invalid("Enter a positive backpack weight.")
+    }
+    let bag = LoadComponent(id: Self.bag.id, name: Self.bag.name, grams: backpackGrams)
     var totals: [Int: (components: [LoadComponent], objects: Int)] = [bag.grams: ([bag], 0)]
     var remainingWork = 200_000
     for item in items.sorted(by: { $0.id < $1.id }) {
@@ -118,9 +123,10 @@ public enum WeightInventory {
   // Feasibility is independent of the preferred composition for the same total.
   // This preserves exact saved choices while applying the cap to future selections.
   public static func isAvailable(
-    _ load: AvailableLoad, items: [WeightItem], maximumObjects: Int = 10
+    _ load: AvailableLoad, items: [WeightItem], maximumObjects: Int = 10, backpackGrams: Int = 3000
   ) -> Bool {
-    guard (1...1000).contains(maximumObjects) else { return false }
+    guard (1...1000).contains(maximumObjects), backpackGrams > 0 else { return false }
+    let bag = LoadComponent(id: Self.bag.id, name: Self.bag.name, grams: backpackGrams)
     if load.grams == 0 { return load.components.isEmpty }
     guard load.grams >= bag.grams else { return false }
     var seen = Set<String>()
@@ -152,7 +158,7 @@ public enum WeightInventory {
   // would lose loads made from several small items. Validation keeps using loads().
   public static func spacedLoads(
     _ loads: [AvailableLoad], retaining selected: AvailableLoad? = nil, items: [WeightItem]? = nil,
-    maximumObjects: Int = 10
+    maximumObjects: Int = 10, backpackGrams: Int = 3000
   ) -> [AvailableLoad] {
     // Give fewer physical copies priority BEFORE resolving nearby total weights.
     var candidates: [(load: AvailableLoad, objects: Int)] = []
@@ -182,7 +188,10 @@ public enum WeightInventory {
     // Preserve a feasible filtered-out selection, without duplicating a total that
     // already offers its preferred composition. No inventory means exact membership.
     if let selected,
-      items.map({ isAvailable(selected, items: $0, maximumObjects: maximumObjects) })
+      items.map({
+        isAvailable(
+          selected, items: $0, maximumObjects: maximumObjects, backpackGrams: backpackGrams)
+      })
         ?? loads.contains(selected),
       !result.contains(where: { $0.grams == selected.grams })
     {

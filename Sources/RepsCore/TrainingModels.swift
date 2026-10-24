@@ -115,6 +115,7 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public var goals: [ExerciseGoal] = []
   public var stretchingEnabled: Bool = true
   public var maximumWeightObjects: Int = 10
+  public var backpackWeightGrams: Int = 3000
   public var skills: [SkillDefinition] = []
   public var skillProgress: [SkillProgress] = []
 
@@ -122,7 +123,7 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
     exercises: [TrainingExercise], schedules: [TrainingSchedule], restSeconds: Int,
     weightItems: [WeightItem] = [], goals: [ExerciseGoal] = [], stretchingEnabled: Bool = true,
     skills: [SkillDefinition] = [], skillProgress: [SkillProgress] = [],
-    maximumWeightObjects: Int = 10
+    maximumWeightObjects: Int = 10, backpackWeightGrams: Int = 3000
   ) {
     self.exercises = exercises
     self.schedules = schedules
@@ -131,13 +132,14 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
     self.goals = goals
     self.stretchingEnabled = stretchingEnabled
     self.maximumWeightObjects = maximumWeightObjects
+    self.backpackWeightGrams = backpackWeightGrams
     self.skills = skills
     self.skillProgress = skillProgress
   }
 
   enum CodingKeys: String, CodingKey {
     case exercises, schedules, restSeconds, weightItems, goals, stretchingEnabled, skills,
-      skillProgress, maximumWeightObjects
+      skillProgress, maximumWeightObjects, backpackWeightGrams
   }
 
   public init(from decoder: Decoder) throws {
@@ -151,6 +153,9 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
     maximumWeightObjects =
       c.contains(.maximumWeightObjects)
       ? try c.decode(Int.self, forKey: .maximumWeightObjects) : 10
+    backpackWeightGrams =
+      c.contains(.backpackWeightGrams)
+      ? try c.decode(Int.self, forKey: .backpackWeightGrams) : 3000
     skills =
       try c.decodeIfPresent([SkillDefinition].self, forKey: .skills) ?? SkillCatalogue.definitions
     skillProgress = try c.decodeIfPresent([SkillProgress].self, forKey: .skillProgress) ?? []

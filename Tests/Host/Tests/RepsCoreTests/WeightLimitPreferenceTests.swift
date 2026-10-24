@@ -89,7 +89,7 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     try await r.saveMaximumWeightObjects(20)
     let archive = try await r.exportTraining(now: now)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 8)
+    XCTAssertEqual(decoded.version, 9)
     let target = try RepsRepository(path: ":memory:")
     let preview = try await target.previewArchiveImport(decoded, now: now)
     try await target.applyTrainingImport(preview, now: now)
@@ -105,6 +105,7 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     var contents = try XCTUnwrap(root["contents"] as? [String: Any])
     var config = try XCTUnwrap(contents["configuration"] as? [String: Any])
     config.removeValue(forKey: "maximumWeightObjects")
+    config.removeValue(forKey: "backpackWeightGrams")
     contents["configuration"] = config
     root["contents"] = contents
     let old = try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root))
@@ -129,6 +130,6 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     let reopened = try RepsRepository(path: path)
     let after = try await reopened.exportTraining(now: now)
     XCTAssertEqual(after.contents, before.contents)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 19)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 20)
   }
 }

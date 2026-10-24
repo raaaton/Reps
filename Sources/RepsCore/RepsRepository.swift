@@ -193,6 +193,7 @@ public actor RepsRepository {
       weightItems: try readWeightItems(), goals: try readGoals(),
       stretchingEnabled: try rest.integer("stretching_enabled") == 1,
       skills: try readSkills(), skillProgress: try readSkillProgress(),
-      maximumWeightObjects: try rest.integer("maximum_weight_objects"))
+      maximumWeightObjects: try rest.integer("maximum_weight_objects"),
+      backpackWeightGrams: try rest.integer("backpack_weight_grams"))
   }
 }

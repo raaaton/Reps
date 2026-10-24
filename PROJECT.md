@@ -119,7 +119,7 @@ The running timer is derived from a persisted absolute deadline; pause stores th
 
 ## 8. Added weight
 
-The fixed base backpack weighs 3.0 kg. It is added exactly once to each weighted load. Bodyweight is a separate 0 kg option. Initial items (quantity 1 each):
+The base backpack defaults to 3.0 kg and its positive weight is editable in Added Weight. It is added exactly once to each weighted load. Backpack and Maximum Objects share one native grouped section and both edit through a modal. Bodyweight is a separate 0 kg option. Initial items (quantity 1 each):
 
 * La rivière à l'envers — 0.9 kg
 * 1200 voitures — 2.1 kg

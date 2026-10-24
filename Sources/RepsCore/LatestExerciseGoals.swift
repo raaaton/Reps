@@ -21,7 +21,8 @@ enum LatestExerciseGoals {
             id: try $0.text("id"), name: try $0.text("name"),
             grams: try $0.integer("grams"), isEnabled: try $0.integer("enabled") == 1,
             quantity: $0.values["quantity"] == nil ? 1 : try $0.integer("quantity"))
-        }, maximumObjects: WeightLimitPreference.read(database))
+        }, maximumObjects: WeightLimitPreference.read(database),
+        backpackGrams: WeightLimitPreference.backpackGrams(database))
       // Capture the explicit choice once; later goal edits must not rewrite that decision.
       let payload = try database.query(
         "SELECT goal_payload FROM workout_goal_decisions WHERE exercise_id=?",

@@ -7,14 +7,18 @@ struct WeightInventoryView: View {
   @State private var deleting: WeightItem?
   @State private var busy = false
   @State private var editingMaximum = false
+  @State private var editingBackpack = false
   @State private var error: String?
   var body: some View {
     TrainingContent { snapshot in
       List {
         Section {
-          LabeledContent("Backpack", value: "3 kg")
-        }
-        Section {
+          Button {
+            editingBackpack = true
+          } label: {
+            LabeledContent(
+              "Backpack", value: "\(WorkoutLabels.weight(snapshot.backpackWeightGrams)) kg")
+          }.buttonStyle(.plain)
           Button {
             editingMaximum = true
           } label: {
@@ -77,6 +81,9 @@ struct WeightInventoryView: View {
         }
       }
       .sheet(item: $editing) { WeightItemEditor(item: $0) }
+      .sheet(isPresented: $editingBackpack) {
+        BackpackWeightEditor(grams: snapshot.backpackWeightGrams)
+      }
       .sheet(isPresented: $editingMaximum) {
         MaximumWeightObjectsEditor(maximum: snapshot.maximumWeightObjects)
       }
@@ -168,7 +175,8 @@ private struct WeightItemEditor: View {
               saving)
           }
           ToolbarItem(placement: .confirmationAction) {
-            Button(saving ? "Saving…" : "Save") { save() }
+            Button(saving ? "Saving…" : "Save", systemImage: "checkmark") { save() }
+              .tint(.white).labelStyle(.iconOnly)
               .disabled(
                 saving || item.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                   || weight.isEmpty || !(1...1000).contains(Int(quantity) ?? 0))

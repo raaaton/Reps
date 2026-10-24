@@ -208,3 +208,7 @@ Three WeightPriorityTests first fail four assertions against the old ascending-w
 ## Added Weight footer cleanup — 1.5.0 (104)
 
 No domain or persistence change from bb590a3 (verified byte-identical), so no new/full repeated host tests. Strict Swift lint, 13 metadata/style checks and real app/widget build/portrait inspection pass. Targeted independent review confirms exactly five footers removed while modal, field labels, values, validation, confirmations and errors remain. Physical screen whitespace/text and original modal require user review.
+
+## Editable backpack coverage — 1.6.0 (105)
+
+Seven BackpackWeightTests first failed on the missing custom-bag API; all409host tests now pass(10.242s). They cover custom bag added once/bodyweight0, persisted precision/default, invalid/overflow rollback, exact old-goal review, active/recorded snapshot preservation, JSON9/legacy8/CSV compatibility and19→20migration. Older archive fixtures strip the new configuration field when modeling older shapes. Strict Swift lint,13metadata/style/branding checks and independent review pass. Actual native build/metadata/app-widget inspection verifies1.6.0(105)and portrait; UI and device interactions still need physical review.

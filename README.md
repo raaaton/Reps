@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.0 (104) is installed on the owner’s iPhone with the original controls and the small Added Weight descriptions removed; this local version is not yet published. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-added-weight-description-cleanup.md). The renamed source previously published here is 1.3.3. Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.6.0 (105) is installed on the owner’s iPhone with grouped Backpack/Maximum Objects settings and editable backpack weight. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-editable-backpack-release.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -41,7 +41,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Exercise edits update future goals automatically; unavailable weight compositions still require review.
 - Progress shows each exercise’s main workout goal, selected by its total target volume.
 - Edit timed goals directly, including switching between a duration and untimed holds.
-- Manage a weighted backpack and its available load combinations. Set unit weight and available quantity for identical objects; compositions show grouped copies such as Book × 10 without duplicate totals. Set **Maximum Objects** in Added Weight (10 by default, excluding the backpack). Choices prioritize fewer physical copies before applying the 0.5 kg spacing, then appear by ascending weight.
+- Edit the backpack’s own weight in kilograms from the same grouped settings section as Maximum Objects. Manage its available load combinations. Set unit weight and available quantity for identical objects; compositions show grouped copies such as Book × 10 without duplicate totals. Set **Maximum Objects** in Added Weight (10 by default, excluding the backpack). Choices prioritize fewer physical copies before applying the 0.5 kg spacing, then appear by ascending weight.
 - Review your goals and the actual items needed before starting.
 
 ### Train with a clear flow
@@ -182,7 +182,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **402 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **409 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

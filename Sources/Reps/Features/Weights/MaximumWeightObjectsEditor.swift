@@ -45,7 +45,8 @@ struct MaximumWeightObjectsEditor: View {
             .disabled(saving)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(saving ? "Saving…" : "Save") { save() }.disabled(saving || maximum == nil)
+          Button(saving ? "Saving…" : "Save", systemImage: "checkmark") { save() }
+            .tint(.white).labelStyle(.iconOnly).disabled(saving || maximum == nil)
         }
         ToolbarItemGroup(placement: .keyboard) {
           Spacer()
