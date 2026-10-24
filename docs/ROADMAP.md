@@ -318,3 +318,9 @@ Final92delivery confirmed: standard USB helper exits0/install+verification100%; 
 Native transitions restored, privacy presenters preserved during temporary inactivity with direct active recovery and an opaque UIKit snapshot shield, day stacks with contextual/swipe deletion, paired preroll/host-clock start with bounded preparation and privacy interruption cancellation. Permanent video-only passthrough encrypts segmented output without a Sport-owned clear video file; validated replacements preserve old clips until CAS commit, including a full5000-clip vault.373host tests,9metadata checks, strict lint and independent security review pass. Native95/96synthetic audio/provider/seek/alignment/revocation checks pass. Final97delivery and extended native/physical results are tracked in the [ExecPlan](exec-plans/2026-10-24-vault-video-corrections.md). No publication authorized.
 
 Final1.3.1(97)installed and postflight verified under unchanged identity/signature/capabilities. Native97extended synthetic probe passes; physical warning recovery, animations, fullscreen snapshot, accessibility and existing-photos acceptance remain pending. No GitHub publication.
+
+## Added-weight spacing —1.3.2
+
+New load choices and progression proposals use at least500g spacing, keeping the lightest exact combination; existing valid selected/goal/historical loads are preserved. Filtering is a projection after exact generation, retaining sums made from small items and existing complexity bounds.378host tests, strict lint,9metadata/style checks, real xtool build and app/widget inspection pass. USB delivery and physical feedback tracked in [ExecPlan](exec-plans/2026-10-24-load-spacing.md); no push authorized.
+
+1.3.2(98)installed successfully and direct identity/signature/profile postflight passes. Physical list and prior-selection review pending; no push/release.

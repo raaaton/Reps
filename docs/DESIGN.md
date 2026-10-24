@@ -466,3 +466,7 @@ Apple HIG Playing video recommends the system player and original aspect ratio; 
 ### Vault movement video corrections
 
 Movement videos use the same dated stack layout as physique photos; a day's clips open in a native list supporting confirmed contextual and trailing-swipe deletion. The privacy mask no longer disables descendant animation transactions, so native sheet/editor transitions work normally, including system Reduce Motion behavior. Comparison uses stable player identities and per-scrubber updates, prepares both players, then schedules a common host-clock start while preserving independent alignments. Linked buffering pauses both rather than allowing one to continue drifting.
+
+### Added-weight choice spacing
+
+Inventory choices, selectors and progression proposals retain ascending exact totals at least500g apart, anchored to the last retained load, keeping the lighter option. Exactly500g remains. An existing valid picker selection remains visible even if the new-choice filter omits it. Full inventory validity, adopted goals and saved/active snapshots retain their exact grams and components. Filtering occurs after subset generation, so small items can still combine; exhaustive-generation complexity guards remain unchanged.

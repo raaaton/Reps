@@ -22,6 +22,18 @@ final class ProgressionTests: XCTestCase {
   private var loads: [AvailableLoad] {
     [0, 3000, 3900, 4500, 5100].map { AvailableLoad(grams: $0, components: []) }
   }
+  func testProgressionUsesSpacedChoicesAndKeepsReferenceExact() {
+    let choices = [0, 3000, 3200, 3500, 3700, 4000].map {
+      AvailableLoad(grams: $0, components: [])
+    }
+    let record = previous(weights: [3000, 3000, 3000, 3000])
+    XCTAssertEqual(
+      Progression.assess(target: target, previous: record, loads: choices).nextLoad?.grams, 3500)
+    let old = previous(weights: [3200, 3200, 3200, 3200])
+    let result = Progression.assess(target: target, previous: old, loads: choices)
+    XCTAssertEqual(result.referenceGrams, 3200)
+    XCTAssertEqual(result.nextLoad?.grams, 3500)
+  }
   func testInclusiveThresholdAndMixedLoadsUseStrictlyHeavierChoice() {
     let result = Progression.assess(target: target, previous: previous(), loads: loads)
     XCTAssertEqual(result.status, .increase)

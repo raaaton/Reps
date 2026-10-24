@@ -70,6 +70,24 @@ public enum WeightInventory {
     return [.bodyweight]
       + totals.sorted { $0.key < $1.key }.map { AvailableLoad(grams: $0.key, components: $0.value) }
   }
+  // Project exact totals only after subset generation: pruning intermediate sums
+  // would lose loads made from several small items. Validation keeps using loads().
+  public static func spacedLoads(_ loads: [AvailableLoad], retaining selected: AvailableLoad? = nil)
+    -> [AvailableLoad]
+  {
+    var result: [AvailableLoad] = []
+    for load in loads.sorted(by: { $0.grams < $1.grams }) {
+      guard load.grams >= 0 else { continue }
+      if let last = result.last, load.grams - last.grams < 500 { continue }
+      result.append(load)
+    }
+    // Preserve an exact existing selection without making filtered-out loads new defaults.
+    if let selected, loads.contains(selected), !result.contains(selected) {
+      result.append(selected)
+      result.sort { $0.grams < $1.grams }
+    }
+    return result
+  }
   static func encode(_ components: [LoadComponent]?) throws -> SQLValue {
     guard let components else { return .null }
     let encoder = JSONEncoder()

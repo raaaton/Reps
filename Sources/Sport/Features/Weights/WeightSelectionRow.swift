@@ -23,7 +23,10 @@ struct WeightSelectionRow: View {
     .accessibilityLabel("Added Weight")
     .accessibilityValue("\(WorkoutLabels.weight(selection.grams)) kilograms")
     .sheet(isPresented: $choosing) {
-      LoadPicker(loads: store.availableLoads, selected: selection) { selection = $0 }
+      LoadPicker(
+        loads: WeightInventory.spacedLoads(store.availableLoads, retaining: selection),
+        selected: selection
+      ) { selection = $0 }
     }
   }
 }

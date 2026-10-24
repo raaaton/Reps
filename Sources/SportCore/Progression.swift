@@ -11,6 +11,7 @@ public enum Progression {
     target: TrainingExercise, previous: WorkoutExercise?, loads: [AvailableLoad],
     feelingTenths: Int? = nil
   ) -> ProgressionAssessment {
+    let choices = WeightInventory.spacedLoads(loads)
     let missing = ProgressionAssessment(status: .insufficient, referenceGrams: nil, nextLoad: nil)
     guard let previous, previous.definition.id == target.id,
       previous.definition.tracking == target.tracking, target.setCount > 0,
@@ -34,7 +35,7 @@ public enum Progression {
       Set(previous.sets.map(\.weightGrams)).count == 1
     {
       guard
-        let lower = loads.filter({ $0.grams >= 0 && $0.grams < reference }).max(by: {
+        let lower = choices.filter({ $0.grams >= 0 && $0.grams < reference }).max(by: {
           $0.grams < $1.grams
         })
       else { return result(.noLighterLoad) }
@@ -59,7 +60,7 @@ public enum Progression {
         return result(.maintain)
       }
       guard feeling < 80 else { return result(.achieved) }
-      guard let next = loads.filter({ $0.grams > reference }).min(by: { $0.grams < $1.grams })
+      guard let next = choices.filter({ $0.grams > reference }).min(by: { $0.grams < $1.grams })
       else { return result(.noHeavierLoad) }
       return result(.increase, next)
     }

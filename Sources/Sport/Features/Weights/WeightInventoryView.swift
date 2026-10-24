@@ -46,7 +46,7 @@ struct WeightInventoryView: View {
           }
         }
         Section("Available Loads") {
-          ForEach(store.availableLoads) { load in
+          ForEach(WeightInventory.spacedLoads(store.availableLoads)) { load in
             if load.grams == 0 {
               Text("Bodyweight · 0 kg")
             } else {
