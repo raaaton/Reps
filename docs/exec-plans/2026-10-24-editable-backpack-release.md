@@ -21,3 +21,7 @@ Build/verify107using scripts/release-local.sh, commit exact verified source, fet
 Evidence: /tmp/reps-151-{bootstrap,release,install}.log, /tmp/reps-151-publication.json, /tmp/reps-151-remote-release.json, /tmp/reps-151-postflight.json. Prior iteration evidence remains /tmp/reps-backpack-* and /tmp/reps-160-*.
 
 Corrected107pipeline succeeds:409host tests,13metadata checks, strict lint, actual optimized app/widget compilation/metadata, portrait-only and unsigned IPA inspection. Artifact SHA256 f83c98ddf9e592f0aa1f7be09ab21e90caea2fb717375bf7409077ab2072010d.
+
+Completed delivery/publication: Reps1.5.1(107) is installed; direct app inventory and CMS postflight verify one Reps app, unchanged effective identity/signer/exact certificate/entitlements and valid app/widget profiles. Installed via xtool dev run --configuration release --usb (exit0, install/verification100%). Physical UI is still user review.
+
+GitHub release https://github.com/raaaton/Reps/releases/tag/v1.5.1 is latest, with one unsigned Reps-1.5.1.ipa asset. Main and annotated tag initially point to exact built source81e92e6ee4d50a1ae51094a6f84ff02bbfdf0e41. Downloaded IPA is byte-identical, SHA256f83c98ddf9e592f0aa1f7be09ab21e90caea2fb717375bf7409077ab2072010d, and passes full unsigned/version107/portrait/app-widget inspection. No checksum attachment. The user explicitly authorized deletion of mistakenv1.6.0release/tag after automatic review required consent; both were deleted and remote tag absence/latest1.5.1were verified. Subsequent commits only record this delivery/publication evidence.

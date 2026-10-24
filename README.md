@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.1 (107) groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-editable-backpack-release.md). Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.1 (107) is installed on the owner’s iPhone and published. It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-editable-backpack-release.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
