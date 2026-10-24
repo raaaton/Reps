@@ -24,7 +24,7 @@ struct WeightSelectionRow: View {
     .accessibilityValue("\(WorkoutLabels.weight(selection.grams)) kilograms")
     .sheet(isPresented: $choosing) {
       LoadPicker(
-        loads: WeightInventory.spacedLoads(store.availableLoads, retaining: selection),
+        loads: store.loadChoices(retaining: selection),
         selected: selection
       ) { selection = $0 }
     }

@@ -135,10 +135,12 @@ final class WeightInventoryTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(changed.exercises.first?.sets.first?.weightGrams, 6000)
   }
 
-  func testManyEqualWeightObjectsAreRejectedBeforeComponentWorkExplodes() {
+  func testManyEqualWeightObjectsStayBoundedByTheTenObjectCap() throws {
     let items = (0..<200).map {
       WeightItem(id: "tiny-\($0)", name: "Tiny", grams: 1, isEnabled: true)
     }
-    XCTAssertThrowsError(try WeightInventory.loads(items: items))
+    let loads = try WeightInventory.loads(items: items)
+    XCTAssertEqual(loads.count, 12)
+    XCTAssertEqual(loads.last?.grams, 3010)
   }
 }

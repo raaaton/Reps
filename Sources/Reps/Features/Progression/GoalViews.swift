@@ -243,7 +243,7 @@ private struct GoalCustomizationView: View {
           )
         }
       }
-      if !store.availableLoads.contains(load) {
+      if !store.isLoadAvailable(load) {
         Section {
           Text(
             "This combination is unavailable. Choose a load before saving."
@@ -269,7 +269,7 @@ private struct GoalCustomizationView: View {
         RepsConfirmationButton(title: "Save") {
           save()
         }.labelStyle(.iconOnly).disabled(
-          saving || !store.availableLoads.contains(load) || context.exercise.setCount > 1000)
+          saving || !store.isLoadAvailable(load) || context.exercise.setCount > 1000)
       }
     }
     .alert(

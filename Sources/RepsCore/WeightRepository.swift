@@ -36,7 +36,7 @@ extension RepsRepository {
     }
   }
   func validateLoad(_ load: AvailableLoad, grams: Int) throws {
-    guard load.grams == grams, try WeightInventory.loads(items: readWeightItems()).contains(load)
+    guard load.grams == grams, WeightInventory.isAvailable(load, items: try readWeightItems())
     else {
       throw TrainingError.invalid(
         "This load combination has changed. Choose the load again.")

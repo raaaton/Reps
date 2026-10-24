@@ -478,3 +478,9 @@ User explicitly requested portrait throughout. The iPhone plist allows only UIIn
 Added Weight uses native Form controls: Unit Weight (kg), Quantity with direct number entry and an adjacent native stepper, and the existing enable toggle. Default1; range1…1000. Inventory rows show count × unit kg; preparation, picker and history group names as Book × 10 with total component kg. A ten-copy100g item supplies0…10copies; each total appears once, backpack included once. Existing500g offered-choice spacing stays.
 
 Quantity snapshots preserve original name, subtotal grams and count independently of current inventory. Existing components default1 and retain their previous display. Dynamic Type, VoiceOver and actual fullscreen rotation still require physical review.
+
+## Minimum objects and ten-object cap —1.4.1(101)
+
+Available Loads retains ascending total weight and500g choice spacing. For each exact total, use the minimum number of physical copies, up to10weight objects plus the fixed backpack; grouped lines count their quantities. Prefer1×1kg over10×100g. Inventory quantities stay1…1000; only proposed compositions are capped. Stable deterministic ties. The native list footer explains this rule without adding a setting.
+
+Feasibility validation checks saved exact names/IDs/unit weights/enabled inventory/counts independently from the preferred composition. Old selections of≤10objects remain usable; the picker shows the preferred composition once when that same total is already offered. Feasible filtered-out selected totals stay available. Recorded/active snapshots and existing archives are unchanged; future over10choices require review. Portrait-only declaration and global mask remain intact.

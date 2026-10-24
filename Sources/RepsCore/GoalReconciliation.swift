@@ -74,7 +74,7 @@ extension TrainingSnapshot {
     return result
   }
 
-  public func needsGoalReview(for exercise: TrainingExercise, availableLoads: [AvailableLoad])
+  public func needsGoalReview(for exercise: TrainingExercise, availableLoads _: [AvailableLoad])
     -> Bool
   {
     schedules.contains { schedule in
@@ -84,7 +84,8 @@ extension TrainingSnapshot {
       }
       var target = exercise
       target.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
-      return !goal.isCompatible(with: target) || !availableLoads.contains(goal.load)
+      return !goal.isCompatible(with: target)
+        || !WeightInventory.isAvailable(goal.load, items: weightItems)
     }
   }
 }

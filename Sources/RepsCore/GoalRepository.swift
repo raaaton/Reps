@@ -70,7 +70,10 @@ extension RepsRepository {
     return GoalContext(
       exercise: exercise, adopted: goal,
       suggestion: GoalEngine.suggestion(target: exercise, previous: previous, loads: loads),
-      isAvailable: goal.map { $0.isCompatible(with: exercise) && loads.contains($0.load) } ?? true,
+      isAvailable: goal.map {
+        $0.isCompatible(with: exercise)
+          && WeightInventory.isAvailable($0.load, items: snapshot.weightItems)
+      } ?? true,
       scheduleID: schedule?.id)
   }
   public func goalContext(exerciseID: String, scheduleID: String? = nil) throws -> GoalContext {

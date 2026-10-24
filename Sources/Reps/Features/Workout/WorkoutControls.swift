@@ -39,7 +39,7 @@ struct ActiveSetForm: View {
           LabeledContent("Target for This Set", value: "\(target) repetitions").foregroundStyle(
             .secondary)
         }
-        if !store.availableLoads.contains(load) {
+        if !store.isLoadAvailable(load) {
           Text("This combination has changed. Choose the load you used.").font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -68,7 +68,7 @@ struct ActiveSetForm: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .disabled(
-          saving || !store.availableLoads.contains(load)
+          saving || !store.isLoadAvailable(load)
             || (exercise.definition.tracking == .repetitions && repetitions.isEmpty
               && WorkoutInputDefaults.repetitionTarget(for: exercise) == nil)
         )

@@ -26,7 +26,7 @@ struct TimedSetPreparation: View {
           LabeledContent("Target for This Set", value: "\(WorkoutLabels.seconds(target)) s")
             .foregroundStyle(.secondary)
         }
-        if !store.availableLoads.contains(load) {
+        if !store.isLoadAvailable(load) {
           Text("This combination has changed. Choose your added weight.").foregroundStyle(
             .secondary)
         }
@@ -55,7 +55,7 @@ struct TimedSetPreparation: View {
         }
         .repsProminentButton().controlSize(.large)
         .listRowBackground(Color.clear).listRowSeparator(.hidden)
-        .disabled(!store.availableLoads.contains(load))
+        .disabled(!store.isLoadAvailable(load))
       } footer: {
         Text("A 3-second countdown comes before timing starts.")
       }

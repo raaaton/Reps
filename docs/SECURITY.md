@@ -283,3 +283,7 @@ Reps keeps the installed app/widget identifiers com.raaaton.sport and com.raaato
 ## Inventory quantities —1.4.0(100)
 
 Training schema18 adds only weight_items.quantity with a1…1000SQL constraint/default1. Training JSON7 adds inventory/component counts; reads1…6 default missing counts to1. Unknown/private JSON fields remain rejected. Component grams continue to be subtotals; imports reject invalid/nonintegral counts, nondivisible subtotals, overflow and duplicate component identifiers. CSV component JSON retains counts. Existing vault schema, encryption, Keychain identity, privacy lifecycle, entitlements and permissions are unchanged.
+
+## Minimum-object choices —1.4.1(101)
+
+No schema, archive, vault, permission or cryptographic change. Bounded-count generation caps future compositions at10physical weight objects excluding the bag, retaining4095totals and200000component-work bounds. Independent exact inventory validation rejects duplicate/missing bag, disabled/renamed/missing items, weight mismatches, overflow and overquantity/over10new choices. Backup validation retains older self-consistent snapshots above10without making them selectable.

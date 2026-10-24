@@ -30,6 +30,17 @@ final class TrainingStore: ObservableObject {
     if case .ready = phase { return true }
     return false
   }
+  func isLoadAvailable(_ load: AvailableLoad) -> Bool {
+    guard case .ready(let snapshot) = phase else { return false }
+    return WeightInventory.isAvailable(load, items: snapshot.weightItems)
+  }
+
+  func loadChoices(retaining selected: AvailableLoad) -> [AvailableLoad] {
+    guard case .ready(let snapshot) = phase else { return [] }
+    return WeightInventory.spacedLoads(
+      availableLoads, retaining: selected, items: snapshot.weightItems)
+  }
+
   private var refreshingWorkouts = false
   private var workoutRefreshPending = false
   private var pendingRestFeedback = false
