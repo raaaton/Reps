@@ -495,7 +495,7 @@ Settings → Added Weight → Maximum Objects opens a native saved-draft form wi
 
 At the user’s request the approved Maximum Objects modal remains. Remove only five explanatory Section footers in Added Weight and its item/maximum editors: fixed backpack weight, excluded backpack, choice algorithm, unit-weight/quantity help and maximum-range help. Labels, values, empty states, confirmations and errors stay. No domain/persistence/selection/portrait behavior changes.
 
-## Grouped backpack settings — 1.6.0 (105)
+## Grouped backpack settings — 1.5.1 (107)
 
 Backpack and Maximum Objects are two native rows in one List Section, giving one system-rounded group. Both open saved-draft native forms with Cancel/Save; Backpack uses the existing decimal kilogram parser (up to three decimal places), current weight and keyboard dismissal. Default 3 kg, strictly positive; disabled during save, clear errors, no explanatory footer restored. Physical grouping, keyboard, Dynamic Type and VoiceOver remain user review.
 

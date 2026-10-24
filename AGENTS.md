@@ -36,7 +36,7 @@ En mode auto_review, soumettre directement les escalades nécessaires au reviewe
 ## Versions
 
 - Correctif sans nouvelle fonctionnalité : incrémenter le patch (`X.Y.Z` → `X.Y.Z+1`).
-- Nouvelle fonctionnalité importante : incrémenter le minor et remettre le patch à zéro (`X.Y.Z` → `X.Y+1.0`).
+- Petits ajouts de fonctionnalités, réglages, améliorations UI et corrections : incrémenter uniquement le patch. Une fonctionnalité supplémentaire ne justifie pas à elle seule un minor. Réserver le minor à une évolution produit substantielle ; en cas de doute, choisir le patch. Correction explicite de l’utilisateur le24octobre2026 : Backpack éditable/regroupement/checkmarks relève de1.5.1, pas1.6.0.
 - Demander l’accord explicite de l’utilisateur avant toute version majeure (`X+1.0.0`).
 - Créer un commit dédié à chaque changement qui mérite une nouvelle sous-version (`X.Y.Z+1`), après vérification. Respecter les autorisations de push de la session.
 - Une demande utilisateur de push GitHub inclut la publication de la release correspondant à la version poussée. Construire et vérifier l’IPA Release unsigned, publier uniquement l’IPA et vérifier la release/tag/source/asset ; ne pas redemander si une release est souhaitée.

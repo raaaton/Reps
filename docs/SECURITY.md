@@ -292,6 +292,6 @@ No schema, archive, vault, permission or cryptographic change. Bounded-count gen
 
 Training schema 19 adds only preferences.maximum_weight_objects (default 10, SQL range 1–1,000). JSON 8 includes maximumWeightObjects; versions 1–7 default to 10, while closed-shape unknown/private field rejection remains. JSON restores the preference; CSV replacement preserves it. Proposed changes regenerate bounded loads before any write, so invalid or overly complex settings roll back atomically. Older migration helpers use the default before the column exists. Active/history compositions and all vault/keychain/identity/capability behavior are unchanged.
 
-## Editable backpack — 1.6.0 (105)
+## Editable backpack — 1.5.1 (107)
 
 SQLite20 adds preferences.backpack_weight_grams with default3000 and positive SQL constraint. JSON9 includes backpackWeightGrams;1…8default3000, unknown/private fields remain rejected, CSV retains current preference. Candidate generation/validation occurs before the transactional preference write, rejecting invalid/overflowing totals atomically. Legacy goal migration helpers read the default before the column exists. Snapshots retain original component grams; vault encryption, privacy, device identity/certificates/capabilities are unchanged. Public release packaging continues to reject profiles, signing credentials, private data and databases.
