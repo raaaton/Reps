@@ -160,3 +160,9 @@ Visual-only shared LabelStyle, no domain changes. Check Settings navigation rows
 ## Native Skills menus — build86
 
 Physical checks: open Skills plus menu (AI/manual icons blue, titles primary); open preset More (duplicate blue, archive/reset red); open custom More (edit blue); long-press roadmap (current/first-success/consistent blue); check AI Other Options and workout Add Skill menus. Plus/ellipsis trigger glyphs stay white and archived deletion stays red. Linux lint/build/metadata checks cannot validate native menu image coloring. Original UIImage rendering mirrors the red technique the user confirmed working. No domain changes.
+
+## Consistency photo activity — 1.2.5 (87)
+
+345 host tests pass, including eleven new photo-activity/attendance cases: legacy migration and byte preservation, public counting after lock/reopen without payload reads, edits/deletion/reset, invalid dates/expired leases, stale/incomplete/duplicate/foreign backfill, forced metadata-update rollback, forced second-row backfill rollback and deletion staleness; photo-only range, completed/missed/today states, invalid/future/nonpositive counts and explicit ranges across Paris DST. The migration assertion failed against baseline schema1 before correction (one behavioral failure); the initial sandbox blockage/fixture compiler error are not counted as RED. Attendance tests produced seven failing assertions before implementation. Additional review cases were not separately observed RED.
+
+Strict Swift lint and nine metadata/style checks pass; real xtool compilation and final app/widget inspection pass with regenerated App Intents metadata. Independent security/code review reports no actionable finding and recommended the added multirow rollback case. Host tests do not execute CryptoKit, Face ID or SwiftUI. Physical checklist and USB evidence: [ExecPlan](exec-plans/2026-10-24-attendance-photo-activity.md). No real private media or user database is inspected by the agent.

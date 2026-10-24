@@ -434,3 +434,9 @@ SF Symbols beside normal content/action text use Sport's adaptive blue accent th
 ## Native Skills menu symbols — 1.2.4 (86)
 
 Device feedback shows native menu entries ignore the global template LabelStyle. Ordinary Skills menu/context-menu labels use original UIKit SF Symbol images precolored with Sport's adaptive accent, following the already-working destructive symbol rendering. Title text stays primary; toolbar plus/ellipsis stay white; destructive labels/images retain red. Other content styling and native tabs remain unchanged.
+
+## Consistency photo days — 1.2.5 (87)
+
+Remove the entire Filled/Dot/week legend. Missed scheduled workouts use xmark. Dates containing progress photos use camera.fill; completed-workout dates keep the accent background and contrasting ink. Other photo dates use the accent camera on a neutral background. Photo presence never completes a workout. The grid and day list include photo-only dates; their natural range starts at the earliest completed workout or indexed photo date. Current missed-day rules, fillers and horizontal navigation remain.
+
+Day detail displays the photo count without loading media or bypassing Private Photos. VoiceOver/list summaries include both workout state and photo count when applicable. A short temporary message explains that older photo days require one normal vault unlock; generic activity-read errors expose no private details. Vault Settings explains that dates/counts are visible outside Face ID while images remain encrypted. camera.fill is Sport's product choice using a familiar system symbol, not an Apple-prescribed attendance metaphor. Physical small-cell readability, Dynamic Type and appearance checks remain required.

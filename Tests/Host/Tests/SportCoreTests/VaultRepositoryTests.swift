@@ -9,7 +9,9 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
     let one = photo()
     let two = photo()
     let other = photo()
-    for value in [one, two, other] { try await repo.insert(value, lease: lease) }
+    for value in [one, two, other] {
+      try await repo.insert(value, dayKey: "2026-10-24", lease: lease)
+    }
     try await repo.delete(ids: [one.id, two.id], lease: lease)
     let remaining = try await repo.metadata(lease: lease)
     XCTAssertEqual(remaining.map(\.id), [other.id])
@@ -26,7 +28,7 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
     try await repo.initialize(keyID: lease.keyID, verification: Data(repeating: 1, count: 64))
     let one = photo()
     let two = photo()
-    for value in [one, two] { try await repo.insert(value, lease: lease) }
+    for value in [one, two] { try await repo.insert(value, dayKey: "2026-10-24", lease: lease) }
     let db = try SQLiteDatabase(path: path)
     try db.execute(
       "CREATE TRIGGER refuse_photo_delete BEFORE DELETE ON vault_photos WHEN OLD.id='\(two.id)' BEGIN SELECT RAISE(ABORT,'refused'); END"
@@ -45,7 +47,7 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
     let lease = VaultLease(keyID: UUID().uuidString)
     try await repo.initialize(keyID: lease.keyID, verification: Data(repeating: 1, count: 64))
     let value = photo()
-    try await repo.insert(value, lease: lease)
+    try await repo.insert(value, dayKey: "2026-10-24", lease: lease)
     let reopened = try VaultRepository(path: path)
     let loaded = try await reopened.content(id: value.id, thumbnail: false, lease: lease)
     XCTAssertEqual(loaded, value.original)
@@ -76,8 +78,8 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
     let (repo, lease) = try await fixture()
     let one = photo()
     let two = photo()
-    try await repo.insert(one, lease: lease)
-    try await repo.insert(two, lease: lease)
+    try await repo.insert(one, dayKey: "2026-10-24", lease: lease)
+    try await repo.insert(two, dayKey: "2026-10-24", lease: lease)
     let original = try await repo.content(id: one.id, thumbnail: false, lease: lease)
     XCTAssertEqual(original, one.original)
     try await repo.delete(id: two.id, lease: lease)
@@ -90,14 +92,14 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
   func testRevokedAndForeignLeasesCannotReadOrWrite() async throws {
     let (repo, lease) = try await fixture()
     let value = photo()
-    try await repo.insert(value, lease: lease)
+    try await repo.insert(value, dayKey: "2026-10-24", lease: lease)
     lease.invalidate()
     do {
       _ = try await repo.metadata(lease: lease)
       XCTFail()
     } catch {}
     do {
-      try await repo.insert(photo(), lease: lease)
+      try await repo.insert(photo(), dayKey: "2026-10-24", lease: lease)
       XCTFail()
     } catch {}
     let foreign = VaultLease(keyID: UUID().uuidString)
@@ -117,9 +119,9 @@ final class VaultRepositoryTests: XCTestCase, @unchecked Sendable {
   func testDuplicatesRollbackAndResetMakesOldLeaseInvalid() async throws {
     let (repo, lease) = try await fixture()
     let one = photo()
-    try await repo.insert(one, lease: lease)
+    try await repo.insert(one, dayKey: "2026-10-24", lease: lease)
     do {
-      try await repo.insert(photo(one.id), lease: lease)
+      try await repo.insert(photo(one.id), dayKey: "2026-10-24", lease: lease)
       XCTFail()
     } catch {}
     let saved = try await repo.content(id: one.id, thumbnail: false, lease: lease)

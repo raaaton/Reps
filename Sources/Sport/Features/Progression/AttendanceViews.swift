@@ -40,11 +40,23 @@ struct AttendanceGrid: View {
                       RoundedRectangle(cornerRadius: 3).fill(
                         day.state == .completed
                           ? SportAccentColors(accentChoice).fill : Color.secondary.opacity(0.15))
-                      if day.state == .missed { Circle().fill(Color.primary).padding(5) }
-                      if day.state == .completed {
-                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
-                          .foregroundStyle(SportAccentColors(accentChoice).ink).accessibilityHidden(
-                            true)
+                      if day.photoCount > 0 {
+                        Image(systemName: "camera.fill")
+                          .font(.system(size: cell * 0.55, weight: .semibold))
+                          .foregroundStyle(
+                            day.state == .completed
+                              ? SportAccentColors(accentChoice).ink
+                              : SportAccentColors(accentChoice).tint
+                          )
+                          .accessibilityHidden(true)
+                      } else if day.state == .missed || day.state == .completed {
+                        Image(systemName: day.state == .completed ? "checkmark" : "xmark")
+                          .font(.system(size: cell * 0.5, weight: .bold))
+                          .foregroundStyle(
+                            day.state == .completed
+                              ? SportAccentColors(accentChoice).ink : Color.primary
+                          )
+                          .accessibilityHidden(true)
                       }
                     }
                     .frame(width: cell, height: cell)
@@ -52,7 +64,7 @@ struct AttendanceGrid: View {
                     .contentShape(Rectangle())
                   }
                   .buttonStyle(.plain)
-                  .accessibilityLabel("\(WorkoutLabels.day(day.key)), \(stateLabel(day.state))")
+                  .accessibilityLabel("\(WorkoutLabels.day(day.key)), \(day.activitySummary)")
                 } else {
                   Color.clear.frame(width: target, height: target).accessibilityHidden(true)
                 }
@@ -65,19 +77,10 @@ struct AttendanceGrid: View {
       .defaultScrollAnchor(.trailing)
     }
     .frame(height: 7 * target + 6 * 3)
-    Text("Filled: completed · Dot: missed · \(weeks) \(weeks == 1 ? "week" : "weeks")")
-      .font(.caption).foregroundStyle(.secondary)
   }
   private func choose(_ day: AttendanceDay) {
     SportHaptics.shared.play(.selection)
     select(day)
-  }
-  private func stateLabel(_ state: AttendanceState) -> String {
-    switch state {
-    case .completed: "workout completed"
-    case .missed: "scheduled workout missed"
-    case .neutral: "no completed workout"
-    }
   }
 }
 
@@ -85,6 +88,13 @@ struct AttendanceDayView: View {
   let day: AttendanceDay
   var body: some View {
     List {
+      if day.photoCount > 0 {
+        LabeledContent {
+          Text(String(day.photoCount))
+        } label: {
+          Label("Progress Photos", systemImage: "camera")
+        }
+      }
       if day.workouts.isEmpty {
         Text(
           day.state == .missed
@@ -119,26 +129,36 @@ struct AttendanceListView: View {
   let days: [AttendanceDay]
   var body: some View {
     List {
-      let recorded = days.filter { $0.state != .neutral }
+      let recorded = days.filter { $0.state != .neutral || $0.photoCount > 0 }
       ForEach(recorded.reversed()) { day in
         NavigationLink {
           AttendanceDayView(day: day)
         } label: {
           VStack(alignment: .leading, spacing: 4) {
             Text(WorkoutLabels.day(day.key)).foregroundStyle(.primary)
-            Text(
-              day.state == .completed
-                ? "Workout Complete"
-                : "Missed Workout"
-            ).font(.subheadline).foregroundStyle(.secondary)
+            Text(day.activitySummary).font(.subheadline).foregroundStyle(.secondary)
           }
         }
       }
       if recorded.isEmpty {
-        ContentUnavailableView("No Workouts in This Period", systemImage: "calendar")
+        ContentUnavailableView("No Activity in This Period", systemImage: "calendar")
           .listRowBackground(Color.clear)
       }
     }
     .navigationTitle("Consistency").navigationBarTitleDisplayMode(.inline)
+  }
+}
+
+extension AttendanceDay {
+  fileprivate var activitySummary: String {
+    let workout: String =
+      switch state {
+      case .completed: "Workout Complete"
+      case .missed: "Scheduled Workout Missed"
+      case .neutral: "No Completed Workout"
+      }
+    guard photoCount > 0 else { return workout }
+    let photos = "\(photoCount) progress \(photoCount == 1 ? "photo" : "photos")"
+    return state == .neutral ? photos : "\(workout) · \(photos)"
   }
 }

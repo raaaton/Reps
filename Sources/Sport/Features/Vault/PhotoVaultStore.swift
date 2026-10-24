@@ -12,6 +12,8 @@ import UIKit
 final class PhotoVaultStore: ObservableObject {
   @Published private(set) var gate = VaultAccessGate()
   @Published private(set) var photos: [VaultPhotoEntry] = []
+  @Published private(set) var photoActivity: VaultPhotoActivity?
+  @Published private(set) var photoActivityError: String?
   @Published private(set) var thumbnails: [String: UIImage] = [:]
   @Published private(set) var preview: UIImage?
   @Published private(set) var comparisonImages: [String: UIImage] = [:]
@@ -27,6 +29,7 @@ final class PhotoVaultStore: ObservableObject {
   private var previewID: String?
   private var comparisonRequest: UUID?
   private var resetting = false
+  private var activityRequest = UUID()
   var sessionToken: UUID? { gate.phase == .unlocked ? lease?.id : nil }
   func allows(_ session: UUID) -> Bool {
     sessionToken == session && lease.map { current($0) } == true
@@ -54,6 +57,20 @@ final class PhotoVaultStore: ObservableObject {
   }
   private func current(_ lease: VaultLease) -> Bool {
     self.lease === lease && gate.phase == .unlocked && (try? lease.check()) != nil
+  }
+  func refreshPhotoActivity() async {
+    let request = UUID()
+    activityRequest = request
+    do {
+      let activity = try await database().photoActivity()
+      guard activityRequest == request else { return }
+      photoActivity = activity
+      photoActivityError = nil
+    } catch {
+      guard activityRequest == request else { return }
+      photoActivity = nil
+      photoActivityError = "Photo activity is unavailable. Try opening Progress again."
+    }
   }
   private func message(_ error: Error) -> String {
     if let error = error as? VaultFailure { return error.localizedDescription }
@@ -114,9 +131,20 @@ final class PhotoVaultStore: ObservableObject {
             guard UUID(uuidString: row.id) != nil, VaultDates.date(meta.dayKey) != nil,
               ["public.jpeg", "public.png", "public.heic", "public.heif"].contains(meta.type)
             else { throw VaultFailure.damaged }
-            return VaultDecodedEntry(id: row.id, metadata: meta)
+            return VaultDecodedEntry(id: row.id, metadata: meta, encryptedMetadata: row.data)
           }
         }.value
+        guard gate.accepts(token) else {
+          lease.invalidate()
+          return
+        }
+        try await repo.indexPhotoDays(
+          entries.map {
+            VaultPhotoIndexEntry(
+              id: $0.id, dayKey: $0.metadata.dayKey, encryptedMetadata: $0.encryptedMetadata)
+          },
+          lease: lease)
+        await refreshPhotoActivity()
         guard gate.complete(token) else {
           lease.invalidate()
           return
@@ -252,7 +280,8 @@ final class PhotoVaultStore: ObservableObject {
         bytes, day: dayKey, pose: pose, key: key, keyID: lease.keyID)
     }.value
     guard current(lease) else { return }
-    try await database().insert(record, lease: lease)
+    try await database().insert(record, dayKey: dayKey, lease: lease)
+    await refreshPhotoActivity()
     guard current(lease) else { return }
     let data = try VaultCryptography.open(
       record.metadata, key: key, keyID: lease.keyID, id: record.id, role: "metadata")
@@ -271,6 +300,7 @@ final class PhotoVaultStore: ObservableObject {
     defer { if current(lease) { busy = false } }
     do {
       try await database().delete(id: id, lease: lease)
+      await refreshPhotoActivity()
       guard current(lease) else { return }
       if let id {
         photos.removeAll { $0.id == id }
@@ -301,7 +331,9 @@ final class PhotoVaultStore: ObservableObject {
       metadata.pose = pose
       let encrypted = try VaultCryptography.seal(
         JSONEncoder().encode(metadata), key: key, keyID: lease.keyID, id: id, role: "metadata")
-      try await database().changeMetadata(id: id, encrypted: encrypted, lease: lease)
+      try await database().changeMetadata(
+        id: id, encrypted: encrypted, dayKey: metadata.dayKey, lease: lease)
+      await refreshPhotoActivity()
       guard current(lease) else { return false }
       photos.removeAll { $0.id == id }
       photos.append(VaultPhotoEntry(id: id, metadata: metadata))
@@ -321,6 +353,7 @@ final class PhotoVaultStore: ObservableObject {
     defer { if current(lease) { busy = false } }
     do {
       try await database().delete(ids: ids, lease: lease)
+      await refreshPhotoActivity()
       guard current(lease) else { return }
       let removed = Set(ids)
       photos.removeAll { removed.contains($0.id) }
@@ -405,6 +438,7 @@ final class PhotoVaultStore: ObservableObject {
     do {
       try VaultKeychain.reset()
       try await database().reset()
+      await refreshPhotoActivity()
       notice = "Vault reset."
     } catch { self.error = message(error) }
     resetting = false
@@ -414,6 +448,7 @@ final class PhotoVaultStore: ObservableObject {
 private struct VaultDecodedEntry: Sendable {
   let id: String
   let metadata: VaultPhotoMetadata
+  let encryptedMetadata: Data
 }
 enum VaultDates {
   static func date(_ key: String) -> Date? {

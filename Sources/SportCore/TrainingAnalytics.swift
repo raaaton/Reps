@@ -7,6 +7,7 @@ public struct AttendanceDay: Identifiable, Sendable {
   public let date: Date
   public let state: AttendanceState
   public let workouts: [WorkoutSummary]
+  public let photoCount: Int
 }
 public struct TrendSample: Identifiable, Sendable {
   public let id: String
@@ -43,7 +44,7 @@ public enum TrainingAnalytics {
   }
   public static func attendance(
     history: [WorkoutSummary], scheduledWeekdays: Set<Int> = [], ending: Date, weeks: Int? = nil,
-    calendar: Calendar = .current
+    calendar: Calendar = .current, photoCounts: [String: Int] = [:]
   ) -> [AttendanceDay] {
     var local = Calendar(identifier: .gregorian)
     local.timeZone = calendar.timeZone
@@ -53,6 +54,9 @@ public enum TrainingAnalytics {
     let grouped = Dictionary(grouping: history, by: \.dayKey)
     let firstCompleted = history.filter { $0.status == .completed }
       .compactMap { date(for: $0.dayKey, calendar: local) }.filter { $0 <= end }.min()
+    let firstPhoto = photoCounts.filter { $0.value > 0 }.keys
+      .compactMap { date(for: $0, calendar: local) }.filter { $0 <= end }.min()
+    let firstActivity = [firstCompleted, firstPhoto].compactMap { $0 }.min()
     let start: Date
     if let weeks {
       guard
@@ -60,9 +64,9 @@ public enum TrainingAnalytics {
           byAdding: .day, value: -(min(53, max(1, weeks)) - 1) * 7, to: monday)
       else { return [] }
       start = explicitStart
-    } else if let firstCompleted {
-      let firstOffset = TrainingSnapshot.isoWeekday(on: firstCompleted, calendar: local) - 1
-      guard let firstMonday = local.date(byAdding: .day, value: -firstOffset, to: firstCompleted)
+    } else if let firstActivity {
+      let firstOffset = TrainingSnapshot.isoWeekday(on: firstActivity, calendar: local) - 1
+      guard let firstMonday = local.date(byAdding: .day, value: -firstOffset, to: firstActivity)
       else { return [] }
       start = firstMonday
     } else {
@@ -80,7 +84,10 @@ public enum TrainingAnalytics {
           day >= $0 && day < end
             && scheduledWeekdays.contains(TrainingSnapshot.isoWeekday(on: day, calendar: local))
         } == true ? .missed : .neutral
-      result.append(AttendanceDay(key: key, date: day, state: state, workouts: entries))
+      result.append(
+        AttendanceDay(
+          key: key, date: day, state: state, workouts: entries,
+          photoCount: max(0, photoCounts[key] ?? 0)))
       guard let next = local.date(byAdding: .day, value: 1, to: day), next > day else { break }
       day = next
     }

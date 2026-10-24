@@ -53,7 +53,7 @@ public actor VaultRepository {
     guard try database.query("PRAGMA secure_delete=ON").first?.integer("secure_delete") == 1
     else { throw VaultFailure.damaged }
     let version = try database.query("PRAGMA user_version").first!.integer("user_version")
-    guard version == 0 || version == 1 else { throw VaultFailure.damaged }
+    guard (0...2).contains(version) else { throw VaultFailure.damaged }
     if version == 0 {
       try database.transaction {
         try database.execute(
@@ -63,6 +63,12 @@ public actor VaultRepository {
           "CREATE TABLE vault_photos (id TEXT PRIMARY KEY NOT NULL, metadata BLOB NOT NULL, original BLOB NOT NULL, thumbnail BLOB NOT NULL)"
         )
         try database.execute("PRAGMA user_version=1")
+      }
+    }
+    if version <= 1 {
+      try database.transaction {
+        try database.execute("ALTER TABLE vault_photos ADD COLUMN day_key TEXT")
+        try database.execute("PRAGMA user_version=2")
       }
     }
     db = database
@@ -129,7 +135,8 @@ public actor VaultRepository {
     try lease.check()
     return try row.blob(column)
   }
-  public func insert(_ photo: VaultEncryptedPhoto, lease: VaultLease) throws {
+  public func insert(_ photo: VaultEncryptedPhoto, dayKey: String, lease: VaultLease) throws {
+    guard Self.validDay(dayKey) else { throw VaultFailure.damaged }
     guard UUID(uuidString: photo.id) != nil, (28...16384).contains(photo.metadata.count),
       (28...(24 * 1024 * 1024 + 28)).contains(photo.original.count),
       (28...(1024 * 1024)).contains(photo.thumbnail.count)
@@ -140,20 +147,27 @@ public actor VaultRepository {
         throw VaultFailure.tooLarge
       }
       try db.execute(
-        "INSERT INTO vault_photos VALUES(?,?,?,?)",
-        [.text(photo.id), .blob(photo.metadata), .blob(photo.original), .blob(photo.thumbnail)])
+        "INSERT INTO vault_photos(id,metadata,original,thumbnail,day_key) VALUES(?,?,?,?,?)",
+        [
+          .text(photo.id), .blob(photo.metadata), .blob(photo.original), .blob(photo.thumbnail),
+          .text(dayKey),
+        ])
       try lease.check()
     }
   }
-  public func changeMetadata(id: String, encrypted: Data, lease: VaultLease) throws {
-    guard (28...16384).contains(encrypted.count) else { throw VaultFailure.damaged }
+  public func changeMetadata(id: String, encrypted: Data, dayKey: String, lease: VaultLease) throws
+  {
+    guard Self.validDay(dayKey), (28...16384).contains(encrypted.count) else {
+      throw VaultFailure.damaged
+    }
     try db.transaction {
       try authorize(lease)
       guard try db.query("SELECT id FROM vault_photos WHERE id=?", [.text(id)]).count == 1 else {
         throw VaultFailure.damaged
       }
       try db.execute(
-        "UPDATE vault_photos SET metadata=? WHERE id=?", [.blob(encrypted), .text(id)])
+        "UPDATE vault_photos SET metadata=?,day_key=? WHERE id=?",
+        [.blob(encrypted), .text(dayKey), .text(id)])
       try lease.check()
     }
   }
@@ -185,5 +199,54 @@ public actor VaultRepository {
       }
       try lease.check()
     }
+  }
+
+  // No lease or key required: this query never selects encrypted payloads.
+  public func photoActivity() throws -> VaultPhotoActivity {
+    let rows = try db.query(
+      "SELECT day_key,COUNT(*) AS n FROM vault_photos GROUP BY day_key LIMIT 1001")
+    var counts: [String: Int] = [:]
+    var total = 0
+    var needsUnlock = false
+    for row in rows {
+      let count = try row.integer("n")
+      guard count > 0, count <= 1000 - total else { throw VaultFailure.damaged }
+      total += count
+      if let day = try row.optionalText("day_key") {
+        guard Self.validDay(day) else { throw VaultFailure.damaged }
+        counts[day] = count
+      } else {
+        needsUnlock = true
+      }
+    }
+    return VaultPhotoActivity(countsByDay: counts, needsUnlock: needsUnlock)
+  }
+
+  public func indexPhotoDays(_ entries: [VaultPhotoIndexEntry], lease: VaultLease) throws {
+    guard entries.count <= 1000, Set(entries.map(\.id)).count == entries.count,
+      entries.allSatisfy({ UUID(uuidString: $0.id) != nil && Self.validDay($0.dayKey) })
+    else { throw VaultFailure.damaged }
+    try db.transaction {
+      try authorize(lease)
+      let rows = try metadata(lease: lease)
+      let expected = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0.data) })
+      guard expected.count == entries.count,
+        entries.allSatisfy({ expected[$0.id] == $0.encryptedMetadata })
+      else { throw VaultFailure.damaged }
+      for entry in entries {
+        try db.execute(
+          "UPDATE vault_photos SET day_key=? WHERE id=?", [.text(entry.dayKey), .text(entry.id)])
+      }
+      try lease.check()
+    }
+  }
+
+  private static func validDay(_ day: String) -> Bool {
+    guard day.utf8.count == 10,
+      day.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"#, options: .regularExpression) != nil
+    else { return false }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    return TrainingAnalytics.date(for: day, calendar: calendar) != nil
   }
 }

@@ -16,7 +16,7 @@ struct VaultSettingsView: View {
       }
       Section {
         Text(
-          "Originals and thumbnails are encrypted on this iPhone. Training CSV and JSON exports exclude private photos."
+          "Originals and thumbnails are encrypted on this iPhone. Photo dates and counts are visible in Progress without unlocking the vault. Training CSV and JSON exports exclude private photos and their activity."
         )
         .foregroundStyle(.secondary)
       }

@@ -36,6 +36,7 @@ En mode auto_review, soumettre directement les escalades nécessaires au reviewe
 - Correctif sans nouvelle fonctionnalité : incrémenter le patch (`X.Y.Z` → `X.Y.Z+1`).
 - Nouvelle fonctionnalité importante : incrémenter le minor et remettre le patch à zéro (`X.Y.Z` → `X.Y+1.0`).
 - Demander l’accord explicite de l’utilisateur avant toute version majeure (`X+1.0.0`).
+- Créer un commit dédié à chaque changement qui mérite une nouvelle sous-version (`X.Y.Z+1`), après vérification. Respecter les autorisations de push de la session.
 - Incrémenter le numéro de build indépendamment, à chaque nouvelle livraison iPhone. Garder les versions de l’app, du widget et de l’inspection cohérentes.
 
 ## Données et métier

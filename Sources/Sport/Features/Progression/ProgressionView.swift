@@ -4,6 +4,7 @@ import SwiftUI
 struct ProgressionView: View {
   @EnvironmentObject private var store: TrainingStore
   @EnvironmentObject private var vault: PhotoVaultStore
+  @Environment(\.scenePhase) private var scenePhase
   @State private var vaultOpen = false
   @State private var bodyWeightOpen = false
   @State private var bodyWeightVisible = false
@@ -21,7 +22,8 @@ struct ProgressionView: View {
             $0.isEnabled && !snapshot.exercises(for: $0).isEmpty
           }.map(\.weekday))
         let days = TrainingAnalytics.attendance(
-          history: summaries, scheduledWeekdays: scheduledWeekdays, ending: context.date)
+          history: summaries, scheduledWeekdays: scheduledWeekdays, ending: context.date,
+          photoCounts: vault.photoActivity?.countsByDay ?? [:])
         List {
           Section("Consistency") {
             LabeledContent(
@@ -29,6 +31,13 @@ struct ProgressionView: View {
               value: String(days.filter { $0.state == .completed }.count))
             AttendanceGrid(days: days) { selectedDay = $0 }
             NavigationLink("View Days as a List") { AttendanceListView(days: days) }
+            if vault.photoActivity?.needsUnlock == true {
+              Text("Unlock Private Photos once to show earlier photo days here.")
+                .font(.footnote).foregroundStyle(.secondary)
+            }
+            if let error = vault.photoActivityError {
+              Text(error).font(.footnote).foregroundStyle(.secondary)
+            }
           }
           Section {
             SkillsNavigationRow()
@@ -110,6 +119,9 @@ struct ProgressionView: View {
     .onChange(of: store.bodyWeightEntryRequest) { _, _ in openBodyWeightRequest() }
     .onChange(of: store.isReady) { _, _ in openBodyWeightRequest() }
     .task { openBodyWeightRequest() }
+    .task(id: scenePhase) {
+      if scenePhase == .active { await vault.refreshPhotoActivity() }
+    }
     .modifier(ArchivedExerciseDeletion(selection: $deletingArchived))
     .fullScreenCover(isPresented: $vaultOpen, onDismiss: vaultDismissed) { PhotoVaultView() }
     .task(id: store.historyRevision) {

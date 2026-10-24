@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The local 1.2.4 update is awaiting iPhone feedback and has not been published.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The current 1.2.5 update is awaiting iPhone feedback; its IPA has not been released.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -74,8 +74,8 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Shared 3-month, 6-month, and 1-year chart periods.
 - Connected charts for average volume, repetitions and work time per set, plus maximum added weight.
 - Drag on charts to inspect individual session totals and set counts.
-- Period totals, including total isometric work time, and a GitHub-style training activity grid from the first completed workout.
-- Neutral filler cells and missed scheduled-day dots; missed days use the current enabled schedule and exclude today.
+- Period totals, including total isometric work time, and a GitHub-style activity grid from the first completed workout or progress-photo date.
+- Neutral filler cells, crosses for missed scheduled workouts and camera icons on progress-photo days, without a legend. Missed days use the current enabled schedule and exclude today; photos do not count as completed workouts.
 - Explicit next-session suggestions based on completed sets, your goals, effort, and available weight.
 - Review added-weight increases or decreases directly when moving to the next exercise or stretching.
 - Choose **Update Goal** or **Keep Current Goal** for load changes; an explicitly chosen different load keeps its associated targets.
@@ -98,6 +98,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - A Face ID-protected progress-photo vault.
 - Encrypted originals and thumbnails using CryptoKit AES-GCM.
 - Immediate locking when leaving the vault or backgrounding the app, with its preview covered.
+- Photo dates and counts remain visible in Progress while images stay locked. Older photo days appear after the next normal vault unlock.
 - Date-based photo stacks: Front Relaxed, Front Flexed, Back, and Other.
 - Compare matching poses, zoom, and switch between comparison photos.
 - Explicit photo export and confirmed deletion.
