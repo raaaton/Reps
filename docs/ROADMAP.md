@@ -306,3 +306,9 @@ Streak89delivery confirmed: device-run.sh exits0, installation/verification100%;
 ## Direct streak-unit menu —1.2.8(90)
 
 At the user's request, tap the right-hand streak value (e.g.33days) directly to open a native menu containing the Days/Largest Unit picker with current selection. Settings no longer contains the Progress/Streak Units section or its footer. The existing preference key, saved choice, formatting and streak rules are retained. StreakSummaryRow owns the same @AppStorage value and exposes a VoiceOver label/value/hint; the native left-label/right-value row layout remains. Physical menu behavior and text size checks remain required.
+
+## Private movement videos —1.3.0
+
+User-approved Private Vault Physique/Movements, Following Skill folders and vault-only custom movements, dated video import and aligned comparison are implemented. Vault migration/chunked encryption preserve photos and the existing key.370host tests and the native synthetic encrypted-player probe pass; independent review findings are fixed. Build91was a restricted-import prototype, installed with verified same identity/certificate/capabilities. Final build92activates imports after native proof; delivery and physical acceptance are tracked in the [ExecPlan](exec-plans/2026-10-24-vault-movement-videos.md). No GitHub publication authorized.
+
+Final92delivery confirmed: standard USB helper exits0/install+verification100%; direct postflight validates the same identity/exact certificate/capabilities and both app/widget CMS profiles. Import is enabled after successful native proof. Actual personal import and UI/Face ID acceptance remain user checks, not inferred from build or installation.

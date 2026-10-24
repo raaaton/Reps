@@ -74,7 +74,7 @@ final class VaultPhotoActivityTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(activity.countsByDay, ["2026-10-24": 1])
   }
 
-  func testLegacyMigrationPreservesEveryEncryptedByteAndAddsOnlyAnEmptyDateIndex() async throws {
+  func testLegacyMigrationPreservesEveryEncryptedByteAndKeepsPhotoDateIndexEmpty() async throws {
     let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
     defer { try? FileManager.default.removeItem(atPath: path) }
     let db = try SQLiteDatabase(path: path)
@@ -100,7 +100,7 @@ final class VaultPhotoActivityTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(original, photo.original)
     XCTAssertEqual(thumbnail, photo.thumbnail)
     XCTAssertEqual(metadata.first?.data, photo.metadata)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 2)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 3)
     var activity = try await repo.photoActivity()
     XCTAssertEqual(activity, VaultPhotoActivity(needsUnlock: true))
     try await repo.indexPhotoDays(

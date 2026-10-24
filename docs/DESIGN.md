@@ -454,3 +454,11 @@ Settings→Progress→Streak Units uses a native in-context menu picker with Day
 ## Direct streak-unit menu —1.2.8(90)
 
 At the user's request, tap the right-hand streak value (e.g.33days) directly to open a native menu containing the Days/Largest Unit picker with current selection. Settings no longer contains the Progress/Streak Units section or its footer. The existing preference key, saved choice, formatting and streak rules are retained. StreakSummaryRow owns the same @AppStorage value and exposes a VoiceOver label/value/hint; the native left-label/right-value row layout remains. Physical menu behavior and text size checks remain required.
+
+## Private movement videos —1.3.0
+
+Progress→Private Vault retains the four native tabs and existing full-screen Face ID boundary. A native segmented picker switches Physique/Movements. Movements is a native list of Following Skills, Custom Movements and Saved Movements; automatic entries reuse stable encrypted Skill links, with random vault row identifiers. Custom movement creation/rename never touches the training catalogue. Titles, forms and all video sheets are masked when inactive; movement navigation titles become generic under coverage.
+
+Movement details show dated native rows with lazy thumbnails and durations; import is a system PhotosPicker restricted to video, followed by an editable progression date and explicit Save. One video uses AVPlayerViewController. Comparison preserves the original aspect ratios in two equal columns, with dates, native sliders,1/0.5/0.25xpicker, Link Playback and shared/separate controls. Manual seek establishes each gesture offset; shared start uses the same host clock, and a boundary/end callback pauses both at the first end. Comparison is muted. Secondary actions use native menus with original UIKit accent glyphs; destructive actions remain red. Dynamic Type and VoiceOver labels are present; visual/touch acceptance remains physical.
+
+Apple HIG Playing video recommends the system player and original aspect ratio; Segmented controls supports related subviews. The two vault categories, limits, movement grouping and paired alignment policy are Sport choices. No custom glass/card system or decorative animation is introduced.

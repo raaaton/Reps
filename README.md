@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). Version 1.2.8 is installed and its updated streak menu has been approved on iPhone; its public IPA has not been released.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). Version 1.3.0 (92) is installed on the owner’s iPhone with private movement videos. Physical acceptance and public release remain pending.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -95,17 +95,21 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Choose your current step and mark first success or consistent performance yourself.
 - Preserve skill configuration, results and active state in JSON backups; CSV replacement keeps skill practices.
 
-### Keep photos private
+### Keep progress media private
 
-- A Face ID-protected progress-photo vault.
+- A Face ID-protected Private Vault with Physique photos and movement videos.
 - Encrypted originals and thumbnails using CryptoKit AES-GCM.
 - Immediate locking when leaving the vault or backgrounding the app, with its preview covered.
 - Photo dates and counts remain visible in Progress while images stay locked. Older photo days appear after the next normal vault unlock.
 - Date-based photo stacks: Front Relaxed, Front Flexed, Back, and Other.
 - Compare matching poses, zoom, and switch between comparison photos.
 - Explicit photo export and confirmed deletion.
+- Movement folders automatically show Skills you follow, alongside custom movements saved only in the vault.
+- Import dated MOV/MP4 videos from Photos, up to 5 minutes and 500 MiB, without changing the original.
+- Review technique at 1×, 0.5× or 0.25×; align and compare two videos with shared or separate playback.
+- Saved videos remain available after their Skill is completed, archived or deleted.
 
-The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable photo backup. Training exports contain **no private photos or vault key**. See [security](docs/SECURITY.md).
+The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable media backup. Training exports contain **no vault photos, videos, custom movements or vault key**. See [security](docs/SECURITY.md).
 
 ### Own your training data
 
@@ -173,7 +177,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **334 host tests** for the real Swift domain and SQLite code, plus **9 metadata and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **370 host tests** for the real Swift domain and SQLite code, plus **9 metadata and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

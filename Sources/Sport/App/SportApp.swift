@@ -27,9 +27,22 @@ struct SportApp: App {
     return nil
   }
 
+  @ViewBuilder
+  private var rootView: some View {
+    #if DEBUG
+      if ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+        VaultVideoProbeScreen()
+      } else {
+        SportTabView()
+      }
+    #else
+      SportTabView()
+    #endif
+  }
+
   var body: some Scene {
     WindowGroup {
-      SportTabView()
+      rootView
         .tint(SportAccentColors(.icyCyan).tint)
         .environment(\.sportAccent, .icyCyan)
         .environmentObject(store)
@@ -43,7 +56,11 @@ struct SportApp: App {
         .onReceive(NotificationCenter.default.publisher(for: SportRuntime.restDidChange)) { _ in
           Task { await store.refreshWorkouts() }
         }
-        .task { await store.reload() }
+        .task {
+          if !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+            await store.reload()
+          }
+        }
         .task(id: restWake) {
           guard let wake = restWake else { return }
           while !Task.isCancelled {
@@ -68,11 +85,14 @@ struct SportApp: App {
           case .background: vault.background()
           @unknown default: vault.background()
           }
-          if phase == .active { Task { await store.reload() } }
+          if phase == .active, !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+            Task { await store.reload() }
+          }
         }
         .onReceive(
           NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)
         ) { _ in
+          guard !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") else { return }
           clockRevision &+= 1
           Task { await store.reload() }
         }

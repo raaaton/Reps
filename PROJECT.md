@@ -167,6 +167,14 @@ Photos imported into the vault are separate from the normal Photos library.
 
 Exporting a vault photo back to the Photos library is an explicit user action.
 
+### Private movement videos
+
+Private Vault contains Physique photos and Movements under the same explicit Face ID unlock. Movements automatically lists current Following Skills; custom movements exist exclusively in the vault. Stored video groups survive Skill completion, archiving and deletion, retaining their last saved name. No writes to exercise, Skill, schedule or workout configuration are made by vault movement actions.
+
+Import one selected MOV/MP4 video from Photos, preserving original encoded bytes, up to300seconds/500MiB. Choose/edit its progression date (media creation date when available, otherwise today). Each movement has newest-first dated videos with lazy thumbnails and durations. Individual playback uses native controls and1/0.5/0.25x. Comparison accepts any two distinct videos of the same movement, including the same date; independent positioning aligns a gesture before shared playback, and both pause at the first end. Comparison is muted. Videos retain their aspect ratio. No recording, automatic posture analysis or video export in this version.
+
+Video originals are AES-GCM1MiBchunks in the independent private SQLite database; thumbnails, dates, movement names and Skill links are encrypted. Player byte requests decrypt bounded chunks in memory, never a Sport-owned clear video file. Photos-provider copies stay system-managed; only encrypted temporary staging is owned by Sport. Locking revokes reads and clears players/previews. No PiP/external playback. Reset explicitly removes photos, videos, movements and key; Delete All Photos remains photo-only. Videos never populate public photo activity or training exports.
+
 ## 11. Security model
 
 The application uses:

@@ -17,12 +17,12 @@ final class PhotoVaultStore: ObservableObject {
   @Published private(set) var thumbnails: [String: UIImage] = [:]
   @Published private(set) var preview: UIImage?
   @Published private(set) var comparisonImages: [String: UIImage] = [:]
-  @Published private(set) var busy = false
+  @Published var busy = false
   @Published var error: String?
   @Published var notice: String?
   @Published private(set) var dismissRequest = UUID()
-  private var key: SymmetricKey?
-  private var lease: VaultLease?
+  var key: SymmetricKey?
+  var lease: VaultLease?
   private var context: LAContext?
   private var repository: VaultRepository?
   private var thumbnailOrder: [String] = []
@@ -30,12 +30,24 @@ final class PhotoVaultStore: ObservableObject {
   private var comparisonRequest: UUID?
   private var resetting = false
   private var activityRequest = UUID()
+  @Published var movements: [VaultMovementEntry] = []
+  @Published var videos: [VaultVideoEntry] = []
+  @Published var videoThumbnails: [String: UIImage] = [:]
+  @Published var videoStaging: VaultVideoStaging?
+  var videoRequest = UUID()
+  var videoPlaybacks: [UUID: VaultVideoPlayback] = [:]
+  init() {
+    do { try VaultVideoStaging.removeAbandoned() } catch {
+      self.error =
+        "An interrupted video import could not be cleaned up. Restart Sport and try again."
+    }
+  }
   var sessionToken: UUID? { gate.phase == .unlocked ? lease?.id : nil }
   func allows(_ session: UUID) -> Bool {
     sessionToken == session && lease.map { current($0) } == true
   }
 
-  private func database() throws -> VaultRepository {
+  func database() throws -> VaultRepository {
     if let repository { return repository }
     let support = try FileManager.default.url(
       for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -55,7 +67,7 @@ final class PhotoVaultStore: ObservableObject {
     self.repository = repository
     return repository
   }
-  private func current(_ lease: VaultLease) -> Bool {
+  func current(_ lease: VaultLease) -> Bool {
     self.lease === lease && gate.phase == .unlocked && (try? lease.check()) != nil
   }
   func refreshPhotoActivity() async {
@@ -72,8 +84,9 @@ final class PhotoVaultStore: ObservableObject {
       photoActivityError = "Photo activity is unavailable. Try opening Progress again."
     }
   }
-  private func message(_ error: Error) -> String {
+  func message(_ error: Error) -> String {
     if let error = error as? VaultFailure { return error.localizedDescription }
+    if let error = error as? VaultVideoFailure { return error.localizedDescription }
     if let error = error as? VaultMediaError { return error.localizedDescription }
     return "The operation could not be completed. The vault was not reset. Try again."
   }
@@ -93,7 +106,7 @@ final class PhotoVaultStore: ObservableObject {
         guard
           try await context.evaluatePolicy(
             .deviceOwnerAuthenticationWithBiometrics,
-            localizedReason: "Unlock your private photos in Sport.")
+            localizedReason: "Unlock your private photos and videos in Sport.")
         else { throw VaultFailure.locked }
         guard gate.accepts(token) else { return }
         let repo = try database()
@@ -145,11 +158,14 @@ final class PhotoVaultStore: ObservableObject {
           },
           lease: lease)
         await refreshPhotoActivity()
+        let videoState = try await readVideoState(key: key, lease: lease)
         guard gate.complete(token) else {
           lease.invalidate()
           return
         }
         self.key = key
+        movements = videoState.0
+        videos = videoState.1
         photos = entries.map { VaultPhotoEntry(id: $0.id, metadata: $0.metadata) }.sorted {
           $0.metadata.dayKey > $1.metadata.dayKey
         }
@@ -178,6 +194,13 @@ final class PhotoVaultStore: ObservableObject {
     lease = nil
     key = nil
     gate.lock()
+    for playback in videoPlaybacks.values { playback.stop() }
+    videoPlaybacks = [:]
+    videoRequest = UUID()
+    videoStaging = nil
+    movements = []
+    videos = []
+    videoThumbnails = [:]
     photos = []
     thumbnails = [:]
     thumbnailOrder = []

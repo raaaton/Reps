@@ -31,7 +31,7 @@ struct ProgressionView: View {
             AttendanceGrid(days: days) { selectedDay = $0 }
             NavigationLink("View Days as a List") { AttendanceListView(days: days) }
             if vault.photoActivity?.needsUnlock == true {
-              Text("Unlock Private Photos once to show earlier photo days here.")
+              Text("Unlock Private Vault once to show earlier photo days here.")
                 .font(.footnote).foregroundStyle(.secondary)
             }
             if let error = vault.photoActivityError {
@@ -100,7 +100,7 @@ struct ProgressionView: View {
             Button {
               vaultOpen = true
             } label: {
-              Label("Private Photos", systemImage: "lock")
+              Label("Private Vault", systemImage: "lock")
             }.foregroundStyle(.primary)
           }
         }

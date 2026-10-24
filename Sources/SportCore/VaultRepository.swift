@@ -47,13 +47,13 @@ public struct VaultEncryptedPhoto: Sendable {
 
 // Independent database: training transfers never read or replace encrypted vault rows.
 public actor VaultRepository {
-  private let db: SQLiteDatabase
+  let db: SQLiteDatabase
   public init(path: String) throws {
     let database = try SQLiteDatabase(path: path)
     guard try database.query("PRAGMA secure_delete=ON").first?.integer("secure_delete") == 1
     else { throw VaultFailure.damaged }
     let version = try database.query("PRAGMA user_version").first!.integer("user_version")
-    guard (0...2).contains(version) else { throw VaultFailure.damaged }
+    guard (0...3).contains(version) else { throw VaultFailure.damaged }
     if version == 0 {
       try database.transaction {
         try database.execute(
@@ -71,6 +71,8 @@ public actor VaultRepository {
         try database.execute("PRAGMA user_version=2")
       }
     }
+    if version <= 2 { try VaultVideoSchema.migrate(database) }
+    try database.execute("DELETE FROM vault_videos WHERE complete=0")
     db = database
   }
   public func state() throws -> (keyID: String, verification: Data)? {
@@ -92,6 +94,9 @@ public actor VaultRepository {
     guard try db.query("SELECT COUNT(*) AS n FROM vault_photos").first!.integer("n") == 0 else {
       throw VaultFailure.damaged
     }
+    guard try db.query("SELECT COUNT(*) AS n FROM vault_movements").first!.integer("n") == 0,
+      try db.query("SELECT COUNT(*) AS n FROM vault_videos").first!.integer("n") == 0
+    else { throw VaultFailure.damaged }
     return nil
   }
   public func initialize(keyID: String, verification: Data) throws {
@@ -103,7 +108,7 @@ public actor VaultRepository {
       try db.execute("INSERT INTO vault_state VALUES(1,?,?)", [.text(keyID), .blob(verification)])
     }
   }
-  private func authorize(_ lease: VaultLease) throws {
+  func authorize(_ lease: VaultLease) throws {
     try lease.check()
     guard try state()?.keyID == lease.keyID else { throw VaultFailure.locked }
   }
@@ -185,6 +190,7 @@ public actor VaultRepository {
   public func reset() throws {
     try db.transaction {
       try db.execute("DELETE FROM vault_photos")
+      try db.execute("DELETE FROM vault_movements")
       try db.execute("DELETE FROM vault_state")
     }
   }

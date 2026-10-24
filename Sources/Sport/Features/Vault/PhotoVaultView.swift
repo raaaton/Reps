@@ -20,7 +20,7 @@ struct VaultPrivacySurface<Content: View>: View {
   var body: some View {
     ZStack {
       if vault.gate.covered {
-        ContentUnavailableView("Private Photos", systemImage: "lock.fill")
+        ContentUnavailableView("Private Vault", systemImage: "lock.fill")
       } else {
         content()
       }
@@ -37,6 +37,7 @@ struct VaultPrivacySurface<Content: View>: View {
 struct PhotoVaultView: View {
   @EnvironmentObject private var vault: PhotoVaultStore
   @Environment(\.dismiss) private var dismiss
+  @State private var section = VaultSection.physique
   @State private var selected: VaultDayRoute?
   @State private var importing: VaultImportRoute?
   @State private var comparing: VaultComparisonRoute?
@@ -46,60 +47,18 @@ struct PhotoVaultView: View {
     NavigationStack {
       VaultPrivacySurface {
         if vault.gate.phase == .unlocked {
-          if vault.photos.isEmpty {
-            ContentUnavailableView(
-              "No Private Photos", systemImage: "photo",
-              description: Text(
-                "Add a photo with the + button. It will be encrypted in Sport."))
-          } else {
-            ScrollView {
-              LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 16) {
-                ForEach(VaultPhotoCollection.days(vault.photos)) { day in
-                  if let session = vault.sessionToken {
-                    Button {
-                      selected = VaultDayRoute(id: day.id, session: session)
-                    } label: {
-                      VStack(alignment: .leading, spacing: 6) {
-                        ZStack {
-                          if day.photos.count > 1 {
-                            RoundedRectangle(cornerRadius: 12).fill(.quaternary)
-                              .padding(.horizontal, 8).offset(y: -8)
-                            RoundedRectangle(cornerRadius: 12).fill(.tertiary)
-                              .padding(.horizontal, 4).offset(y: -4)
-                          }
-                          if let photo = day.photos.first {
-                            VaultThumbnail(photo: photo, session: session)
-                          }
-                        }
-                        .frame(height: 180).padding(.top, 8)
-                        Text(WorkoutLabels.day(day.id)).font(.subheadline).fontWeight(.medium)
-                        Text("\(day.photos.count) \(day.photos.count == 1 ? "photo" : "photos")")
-                          .font(.caption)
-                          .foregroundStyle(.secondary)
-                      }
-                    }.buttonStyle(.plain)
-                      .contextMenu {
-                        SportDestructiveButton("Delete Stack", systemImage: "trash") {
-                          deletingDay = VaultDayDeletion(
-                            dayKey: day.id, ids: day.photos.map(\.id), session: session)
-                        }.disabled(vault.busy)
-                      } preview: {
-                        Label("Private Stack", systemImage: "photo.stack")
-                          .font(.headline).padding(24)
-                      }
-                      .accessibilityElement(children: .ignore)
-                      .accessibilityLabel(
-                        "\(WorkoutLabels.day(day.id)), \(day.photos.count) photos")
-                  }
-                }
-              }.padding()
-            }
+          VStack(spacing: 0) {
+            Picker("Vault Section", selection: $section) {
+              Text("Physique").tag(VaultSection.physique)
+              Text("Movements").tag(VaultSection.movements)
+            }.pickerStyle(.segmented).padding()
+            if section == .physique { photoGallery } else { VaultMovementsView() }
           }
         } else {
           VStack(spacing: 24) {
             ContentUnavailableView(
-              "Private Photos Locked", systemImage: "lock.fill",
-              description: Text("Unlock with Face ID to view your photos."))
+              "Private Vault Locked", systemImage: "lock.fill",
+              description: Text("Unlock with Face ID to view your photos and videos."))
             Button {
               vault.unlock()
             } label: {
@@ -112,7 +71,7 @@ struct PhotoVaultView: View {
           }.padding()
         }
       }
-      .navigationTitle("Private Photos").navigationBarTitleDisplayMode(.inline)
+      .navigationTitle("Private Vault").navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close", systemImage: "xmark") {
@@ -121,26 +80,30 @@ struct PhotoVaultView: View {
           }.tint(.white)
         }
         if vault.gate.phase == .unlocked, !vault.gate.covered {
-          ToolbarItem(placement: .topBarTrailing) {
-            Button("Compare", systemImage: "rectangle.split.2x1") {
-              if let session = vault.sessionToken {
-                comparing = VaultComparisonRoute(session: session)
-              }
-            }.tint(.white).disabled(vault.busy || vault.photos.isEmpty)
-          }
-          ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-              Button("Import from Photos", systemImage: "photo") { beginImport(camera: false) }
-              Button("Take Photo", systemImage: "camera") { beginImport(camera: true) }
-            } label: {
-              Label("Add Photo", systemImage: "plus")
-            }.tint(.white).disabled(vault.busy)
+          if section == .physique {
+            ToolbarItem(placement: .topBarTrailing) {
+              Button("Compare", systemImage: "rectangle.split.2x1") {
+                if let session = vault.sessionToken {
+                  comparing = VaultComparisonRoute(session: session)
+                }
+              }.tint(.white).disabled(vault.busy || vault.photos.isEmpty)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+              Menu {
+                Button("Import from Photos", systemImage: "photo") { beginImport(camera: false) }
+                Button("Take Photo", systemImage: "camera") { beginImport(camera: true) }
+              } label: {
+                Label("Add Photo", systemImage: "plus")
+              }.tint(.white).disabled(vault.busy)
+            }
           }
           ToolbarItem(placement: .topBarTrailing) {
             Menu {
               Button("Lock", systemImage: "lock.fill") { vault.lock() }
-              SportDestructiveButton("Delete All Photos", systemImage: "trash") {
-                deleteAllSession = vault.sessionToken
+              if section == .physique {
+                SportDestructiveButton("Delete All Photos", systemImage: "trash") {
+                  deleteAllSession = vault.sessionToken
+                }
               }
             } label: {
               Label("Options", systemImage: "ellipsis")
@@ -212,6 +175,58 @@ struct PhotoVaultView: View {
       .onChange(of: vault.dismissRequest) { _, _ in dismiss() }
     }.interactiveDismissDisabled()
   }
+  @ViewBuilder private var photoGallery: some View {
+    if vault.photos.isEmpty {
+      ContentUnavailableView(
+        "No Private Photos", systemImage: "photo",
+        description: Text(
+          "Add a photo with the + button. It will be encrypted in Sport."))
+    } else {
+      ScrollView {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 16) {
+          ForEach(VaultPhotoCollection.days(vault.photos)) { day in
+            if let session = vault.sessionToken {
+              Button {
+                selected = VaultDayRoute(id: day.id, session: session)
+              } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                  ZStack {
+                    if day.photos.count > 1 {
+                      RoundedRectangle(cornerRadius: 12).fill(.quaternary)
+                        .padding(.horizontal, 8).offset(y: -8)
+                      RoundedRectangle(cornerRadius: 12).fill(.tertiary)
+                        .padding(.horizontal, 4).offset(y: -4)
+                    }
+                    if let photo = day.photos.first {
+                      VaultThumbnail(photo: photo, session: session)
+                    }
+                  }
+                  .frame(height: 180).padding(.top, 8)
+                  Text(WorkoutLabels.day(day.id)).font(.subheadline).fontWeight(.medium)
+                  Text("\(day.photos.count) \(day.photos.count == 1 ? "photo" : "photos")")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+              }.buttonStyle(.plain)
+                .contextMenu {
+                  SportDestructiveButton("Delete Stack", systemImage: "trash") {
+                    deletingDay = VaultDayDeletion(
+                      dayKey: day.id, ids: day.photos.map(\.id), session: session)
+                  }.disabled(vault.busy)
+                } preview: {
+                  Label("Private Stack", systemImage: "photo.stack")
+                    .font(.headline).padding(24)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                  "\(WorkoutLabels.day(day.id)), \(day.photos.count) photos")
+            }
+          }
+        }.padding()
+      }
+    }
+  }
+  private enum VaultSection { case physique, movements }
   private func beginImport(camera: Bool) {
     if let session = vault.sessionToken {
       importing = VaultImportRoute(camera: camera, session: session)

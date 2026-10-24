@@ -44,7 +44,7 @@ struct SettingsView: View {
         NavigationLink {
           VaultSettingsView()
         } label: {
-          Label("Photo Vault", systemImage: "lock")
+          Label("Private Vault", systemImage: "lock")
         }
       }
 

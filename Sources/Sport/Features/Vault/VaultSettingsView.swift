@@ -16,7 +16,7 @@ struct VaultSettingsView: View {
       }
       Section {
         Text(
-          "Originals and thumbnails are encrypted on this iPhone. Photo dates and counts are visible in Progress without unlocking the vault. Training CSV and JSON exports exclude private photos and their activity."
+          "Photos, videos, movement names and thumbnails are encrypted on this iPhone. Photo dates and counts are visible in Progress without unlocking the vault. Training CSV and JSON exports exclude all vault media, movements and private activity."
         )
         .foregroundStyle(.secondary)
       }
@@ -26,11 +26,11 @@ struct VaultSettingsView: View {
         }.foregroundStyle(.red).disabled(vault.busy)
       } footer: {
         Text(
-          "Sport never replaces an inaccessible key after biometric changes. Reset permanently deletes all private photos in the vault."
+          "Sport never replaces an inaccessible key after biometric changes. Reset permanently deletes all private photos, videos and movements in the vault."
         )
       }
     }
-    .navigationTitle("Photo Vault").navigationBarTitleDisplayMode(.inline)
+    .navigationTitle("Private Vault").navigationBarTitleDisplayMode(.inline)
     .task {
       let context = LAContext()
       faceIDAvailable =
@@ -38,12 +38,12 @@ struct VaultSettingsView: View {
         && context.biometryType == .faceID
       context.invalidate()
     }
-    .sportConfirmation("Reset Photo Vault?", isPresented: $confirmReset) {
+    .sportConfirmation("Reset Private Vault?", isPresented: $confirmReset) {
       Button("Delete Everything", role: .destructive) { Task { await vault.reset() } }
       Button("Cancel", role: .cancel) {}
     } message: {
       Text(
-        "All private Sport photos and their key will be permanently deleted. Originals in Photos and training data will be kept."
+        "All private Sport photos, videos, movements and their key will be permanently deleted. Originals in Photos and training data will be kept."
       )
     }
     .alert(
