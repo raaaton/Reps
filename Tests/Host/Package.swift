@@ -2,10 +2,10 @@
 import PackageDescription
 
 let package = Package(
-  name: "SportHostTests",
+  name: "RepsHostTests",
   targets: [
     .systemLibrary(name: "CSQLite", pkgConfig: "sqlite3"),
-    .target(name: "SportCore", dependencies: ["CSQLite"]),
-    .testTarget(name: "SportCoreTests", dependencies: ["SportCore", "CSQLite"]),
+    .target(name: "RepsCore", dependencies: ["CSQLite"]),
+    .testTarget(name: "RepsCoreTests", dependencies: ["RepsCore", "CSQLite"]),
   ]
 )

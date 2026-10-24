@@ -13,9 +13,9 @@ FIELDS = json.loads((ROOT / "Tests/Metadata/Fixtures/live-activity-protocol.json
 
 class LiveMetadataTests(unittest.TestCase):
     def inputs(self):
-        path = ROOT / "xtool/Sport.app/Metadata.appintents/extract.actionsdata"
+        path = ROOT / "xtool/Reps.app/Metadata.appintents/extract.actionsdata"
         action = json.loads(path.read_text())["actions"]["RestPauseIntent"]
-        const = ROOT / ".build/out/Intermediates.noindex/Sport.build/Debug-iphoneos/Sport-t.build/Objects-normal/arm64/RestPauseIntent.swiftconstvalues"
+        const = ROOT / ".build/out/Intermediates.noindex/Reps.build/Debug-iphoneos/Sport-t.build/Objects-normal/arm64/RestPauseIntent.swiftconstvalues"
         return action, json.loads(const.read_text())
 
     def test_adapter_preserves_every_other_compiled_field_and_is_idempotent(self):
@@ -65,8 +65,8 @@ class LiveMetadataTests(unittest.TestCase):
         self.assertEqual(action, before)
 
     def test_both_bundles_keep_native_live_activity_routing(self):
-        for module, path in [("Sport", "xtool/Sport.app"),
-                             ("SportRestWidget", "xtool/Sport.app/PlugIns/SportRestWidget.appex")]:
+        for module, path in [("Sport", "xtool/Reps.app"),
+                             ("SportRestWidget", "xtool/Reps.app/PlugIns/RepsRestWidget.appex")]:
             with self.subTest(module=module):
                 data = json.loads((ROOT / path / "Metadata.appintents/extract.actionsdata").read_text())
                 action = data["actions"]["RestPauseIntent"]

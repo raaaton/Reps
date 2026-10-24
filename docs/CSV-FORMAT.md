@@ -1,6 +1,6 @@
-# Données d’entraînement — CSV Sport v1 et archive JSON v1
+# Données d’entraînement — CSV Reps v1 et archive JSON v1
 
-Sport0.7.4 : remplacement complet de l’historique CSV demandé et confirmé par l’utilisateur ;124tests hôte/lint/build réussis, installationUSB et postflight réussis ; recette iPhone attendue. Formats CSV/JSON inchangés ; voir ExecPlan cumul/remplacement.
+Reps0.7.4 : remplacement complet de l’historique CSV demandé et confirmé par l’utilisateur ;124tests hôte/lint/build réussis, installationUSB et postflight réussis ; recette iPhone attendue. Formats CSV/JSON inchangés ; voir ExecPlan cumul/remplacement.
 
 ## Photos privées
 
@@ -8,7 +8,7 @@ Sport0.7.4 : remplacement complet de l’historique CSV demandé et confirmé pa
 
 ## Fichier de test
 
-[Sport-demo-2026.csv](fixtures/Sport-demo-2026.csv) :117séances fictives,752séries,13janvier–11octobre2026. Noms DEMO et IDs demo-2026-. Répétitions et durées, charges0/3,9/4,5/5,1kg, Feelings6,5/7,5/8 et quelques anciennes notes7,3/7,9, séances partielles et jours neutres. Certaines compositions sont connues, d’autres explicitement non renseignées. La copie embarquée dans Sources/Sport/Resources est identique.
+[Reps-demo-2026.csv](fixtures/Reps-demo-2026.csv) :117séances fictives,752séries,13janvier–11octobre2026. Noms DEMO et IDs demo-2026-. Répétitions et durées, charges0/3,9/4,5/5,1kg, Feelings6,5/7,5/8 et quelques anciennes notes7,3/7,9, séances partielles et jours neutres. Certaines compositions sont connues, d’autres explicitement non renseignées. La copie embarquée dans Sources/Reps/Resources est identique.
 
 Réglages→Import et export→Prévisualiser le CSV de démonstration présente le même fichier. Importer remplace tout l’historique après aperçu et confirmation native centrée, en conservant planning/catalogue/inventaire/objectifs/réglages. Une seconde importation identique est sans effet et conserve la copie avant import précédente. Des versions différentes sous les mêmes anciens IDs remplacent les anciennes ; des IDs dupliqués ou conflictuels au sein du CSV restent refusés. Rien n’est injecté automatiquement. Enregistrer le CSV de démonstration permet d’obtenir le fichier par Fichiers. scripts/generate-test-csv.py le régénère sans vraie donnée personnelle.
 
@@ -31,7 +31,7 @@ UTF8 (BOM facultatif à la lecture, présent à l’export), virgule comme sépa
 
 Décimales exportées avec point, import décimal accepte point/virgule si le champ reste correctement cité. Les IDs/séries/exercices sont uniques et les numéros de séries sont continus. La date de classement reste indépendante des timestamps après correction historique.
 
-Protection tableur : pour tout texte commençant par apostrophe,=,+,-,@,tabulation, CR/LF ou formule précédée d’espaces, une apostrophe est ajoutée à l’export puis retirée à la lecture Sport. Ce mécanisme est réversible ; l’interopérabilité réelle avec Numbers/Excel doit être vérifiée sur appareil. CSV reste un export d’historique, **pas une sauvegarde du planning/réglages/catalogue/inventaire**. Les formats CSV arbitraires et les archives d’anciennes apps ne sont pas pris en charge.
+Protection tableur : pour tout texte commençant par apostrophe,=,+,-,@,tabulation, CR/LF ou formule précédée d’espaces, une apostrophe est ajoutée à l’export puis retirée à la lecture Reps. Ce mécanisme est réversible ; l’interopérabilité réelle avec Numbers/Excel doit être vérifiée sur appareil. CSV reste un export d’historique, **pas une sauvegarde du planning/réglages/catalogue/inventaire**. Les formats CSV arbitraires et les archives d’anciennes apps ne sont pas pris en charge.
 
 ## JSON
 
@@ -44,15 +44,15 @@ Restauration JSON = remplacement des données d’entraînement avec aperçu et 
 10MiB de fichier/dataset sérialisé,100000séries,10000séances,1000exercices/inventaire,7jours de planning. Le résultat d’un import doit rester exportable sous la même limite avant commit. Validation avant écriture ; transaction, comparaison de l’état de l’aperçu et rollback en cas d’échec. Dates non canoniques, mode/métrique incohérents, conflits dans le fichier ou JSONprivé/versioninconnue refusés. Les nouvelles corrections sont couvertes par la suite124tests et le build iOS réel ; le rendu, Fichiers et les gestes restent à confirmer sur iPhone.
 
 
-0.11.1 propose séparément un fichier .sporttest contenant un échantillon synthétique chiffré. Ce n’est ni un CSV/JSON ni une sauvegarde de vos données. Les formats d’entraînement restent identiques et excluent toujours les photos privées ; aucun remplacement de données n’est permis dans la preuve.
+0.11.1 propose séparément un fichier .repstest contenant un échantillon synthétique chiffré. Ce n’est ni un CSV/JSON ni une sauvegarde de vos données. Les formats d’entraînement restent identiques et excluent toujours les photos privées ; aucun remplacement de données n’est permis dans la preuve.
 
 
-Depuis0.11.2 : Import and Export contient seulement Import from Files et Export to Files. Choisir CSV(historique), JSON(entraînement/configuration) ou Before Last Import(JSON si disponible) dans le menu Export. Import/preview/confirmation/remplacement inchangés. Les commandes de démo et l’échantillon.sporttest sont retirés du produit ; fichiersCSV de test locaux conservés. Les références à ces boutons dans les paragraphes précédents sont historiques.
+Depuis0.11.2 : Import and Export contient seulement Import from Files et Export to Files. Choisir CSV(historique), JSON(entraînement/configuration) ou Before Last Import(JSON si disponible) dans le menu Export. Import/preview/confirmation/remplacement inchangés. Les commandes de démo et l’échantillon.repstest sont retirés du produit ; fichiersCSV de test locaux conservés. Les références à ces boutons dans les paragraphes précédents sont historiques.
 
 
 ## Échauffements et étirements — CSV v2 (0.12.0)
 
-Les exports ajoutent la colonne finale `support_json` (version de ligne 2). Elle contient l’instantané borné des étapes d’accompagnement, leurs cibles, départs et résultats réellement enregistrés ; les photos privées restent exclues. Ce JSON est identique sur les lignes d’une même séance et validé avant import. Les séries de travail restent les seules lignes `set` et les seules données de progression. La lecture de CSV v1 à 31 colonnes reste supportée, sans créer d’échauffements ou d’étirements rétroactifs. Les anciennes versions de Sport ne savent pas importer CSV v2. Les archives internes de récupération conservent aussi l’accompagnement et continuent d’exclure le coffre.
+Les exports ajoutent la colonne finale `support_json` (version de ligne 2). Elle contient l’instantané borné des étapes d’accompagnement, leurs cibles, départs et résultats réellement enregistrés ; les photos privées restent exclues. Ce JSON est identique sur les lignes d’une même séance et validé avant import. Les séries de travail restent les seules lignes `set` et les seules données de progression. La lecture de CSV v1 à 31 colonnes reste supportée, sans créer d’échauffements ou d’étirements rétroactifs. Les anciennes versions de Reps ne savent pas importer CSV v2. Les archives internes de récupération conservent aussi l’accompagnement et continuent d’exclure le coffre.
 
 
 ## Export direct — 18 octobre 2026
@@ -62,14 +62,14 @@ Choix utilisateur : Export to Files enregistre directement une archive JSON de t
 
 ## Configuration par workout — 19 octobre 2026
 
-Les nouveaux exports JSON utilisent la version2 de sport.training. Chaque schedule contient setCounts (nombre positif par exerciseID) et goals (objectifs par exercice affecté). Les versions1 restent importables : affectations initialisées depuis les anciens nombres et objectifs du catalogue, sans modifier les instantanés historiques. Les objectifs incompatibles restent conservés pour révision. IDs dupliqués refusés avant construction des dictionnaires. Les anciennes versions de Sport ne restaurent pas ces JSONv2. Les CSV historiques v1/v2 et leur remplacement de l'historique restent inchangés ; ils ne remplacent pas la configuration par workout. Photos et clés toujours exclues.
+Les nouveaux exports JSON utilisent la version2 de sport.training. Chaque schedule contient setCounts (nombre positif par exerciseID) et goals (objectifs par exercice affecté). Les versions1 restent importables : affectations initialisées depuis les anciens nombres et objectifs du catalogue, sans modifier les instantanés historiques. Les objectifs incompatibles restent conservés pour révision. IDs dupliqués refusés avant construction des dictionnaires. Les anciennes versions de Reps ne restaurent pas ces JSONv2. Les CSV historiques v1/v2 et leur remplacement de l'historique restent inchangés ; ils ne remplacent pas la configuration par workout. Photos et clés toujours exclues.
 
 
 ## Body Weight — JSONv3
 
 Les nouveaux exports sport.training version3 contiennent contents.bodyWeights : tableau d'objets id/dayKey/grams (date canoniqueYYYY-MM-DD unique, poids positif en grammes entiers). Les notifications ajoutent weightEnabled, weightWeekday (ISO1=lundi...7=dimanche) et weightMinutes (minute du jour) ; jour/heure requis si activé. Fichiers v3 incomplets, doublons ou valeurs invalides refusés avant mutation.
 
-Lecture v1/v2 maintenue : la provenance ancienne est interne, jamais un champ modifiable du JSON. À la prévisualisation, mesures et rappel actuels sont conservés puis intégrés au jeu final ; le reste de la restauration garde sa sémantique. L'import CSV remplace uniquement l'historique des séances et conserve poids/rappel. Nouveaux JSONv3 restaurent aussi les pesées/rappel ; la copie recovery et le garde contre les données modifiées incluent ces éléments. Photos privées et clés restent exclues. Les anciennes versions de Sport ne restaurent pasJSONv3.
+Lecture v1/v2 maintenue : la provenance ancienne est interne, jamais un champ modifiable du JSON. À la prévisualisation, mesures et rappel actuels sont conservés puis intégrés au jeu final ; le reste de la restauration garde sa sémantique. L'import CSV remplace uniquement l'historique des séances et conserve poids/rappel. Nouveaux JSONv3 restaurent aussi les pesées/rappel ; la copie recovery et le garde contre les données modifiées incluent ces éléments. Photos privées et clés restent exclues. Les anciennes versions de Reps ne restaurent pasJSONv3.
 
 
 Build70: JSON restore preview reconciles future goals against the imported exercise definition and each workout's set count, matching the accepted exercise-edit policy. Exact saved load compositions are retained for explicit review if unavailable. Historical and active workout snapshots are not normalized; CSV history calculations and format remain unchanged. JSON remains v3.

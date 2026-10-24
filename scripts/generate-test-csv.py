@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate fictional Sport CSV v1, without personal data or private photos."""
+"""Generate fictional Reps CSV v1, without personal data or private photos."""
 import csv, io, json, datetime
 from pathlib import Path
 
@@ -40,6 +40,6 @@ stream=io.StringIO(newline='')
 writer=csv.writer(stream,lineterminator='\r\n',quoting=csv.QUOTE_ALL)
 writer.writerow(COLUMNS);writer.writerows(rows)
 data=('\ufeff'+stream.getvalue()).encode('utf-8')
-for file in [ROOT/'docs/fixtures/Sport-demo-2026.csv',ROOT/'Sources/Sport/Resources/Sport-demo-2026.csv']:
+for file in [ROOT/'docs/fixtures/Reps-demo-2026.csv',ROOT/'Sources/Reps/Resources/Reps-demo-2026.csv']:
     file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(data)
 print(f'Fictional fixture: {workouts} workouts, {sum(r[1]=="set" for r in rows)} sets, {len(data)} bytes, 2026-01-13 to {last}.')

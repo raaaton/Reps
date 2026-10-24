@@ -1,10 +1,10 @@
-# Sport — Product Specification
+# Reps — Product Specification
 
 > Native implementation decision, 11 October 2026: Swift/SwiftUI + Swift Package Manager + xtool on Linux, no Expo/React Native/JavaScript/macOS build service. This document describes the target product, not shipped features. See README.md and docs/ROADMAP.md for current implementation and physical-device validation. The interface must feel as familiar, restrained and coherent as a first-party Apple app; verify that experience on iPhone at every milestone.
 
 ## 1. Product
 
-Sport is a private personal iOS workout tracker designed around a simple home bodyweight/weighted training routine.
+Reps is a private personal iOS workout tracker designed around a simple home bodyweight/weighted training routine.
 
 The application replaces a collection of Apple Reminders, Notes, Numbers and Shortcuts workflows with one coherent application.
 
@@ -159,9 +159,9 @@ The photo vault must:
 * clear decrypted photo state when the vault locks
 * avoid exposing images through notifications or logs
 
-The vault stores an encrypted original and encrypted thumbnail in Sport's private container. Its random AES-256 key is held in biometric-protected Keychain storage for the current biometric set and this device only. The private-photo destination within Progress remains locked until an explicit Face ID unlock. User decision, 13 October: lock immediately when leaving the vault or entering background; mask the vault preview as the app becomes inactive. No 1- or 5-minute unlocked background session. The public training screens have no privacy overlay. Sport creates thumbnails and previews in memory and stores encrypted BLOBs in an independent SQLite database. PhotosPicker provider copies remain system-managed; any received camera temporary owned by Sport is removed without deleting an external original.
+The vault stores an encrypted original and encrypted thumbnail in Reps's private container. Its random AES-256 key is held in biometric-protected Keychain storage for the current biometric set and this device only. The private-photo destination within Progress remains locked until an explicit Face ID unlock. User decision, 13 October: lock immediately when leaving the vault or entering background; mask the vault preview as the app becomes inactive. No 1- or 5-minute unlocked background session. The public training screens have no privacy overlay. Reps creates thumbnails and previews in memory and stores encrypted BLOBs in an independent SQLite database. PhotosPicker provider copies remain system-managed; any received camera temporary owned by Reps is removed without deleting an external original.
 
-The user can import from Photos or camera, select a progression date, view and delete a private copy, and explicitly create an unprotected copy in Photos. Export always requires a confirmation and add-only Photos permission. Settings provides Face ID availability, confirmed delete-all, and an explicit destructive vault reset for cases where biometric changes make the existing key inaccessible. Sport never replaces a lost vault key automatically.
+The user can import from Photos or camera, select a progression date, view and delete a private copy, and explicitly create an unprotected copy in Photos. Export always requires a confirmation and add-only Photos permission. Settings provides Face ID availability, confirmed delete-all, and an explicit destructive vault reset for cases where biometric changes make the existing key inaccessible. Reps never replaces a lost vault key automatically.
 
 Photos imported into the vault are separate from the normal Photos library.
 
@@ -173,7 +173,7 @@ Private Vault contains Physique photos and Movements under the same explicit Fac
 
 Import one selected MOV/MP4 video from Photos, preserving original encoded bytes, up to300seconds/500MiB. Choose/edit its progression date (media creation date when available, otherwise today). Each movement has newest-first dated videos with lazy thumbnails and durations. Individual playback uses native controls and1/0.5/0.25x. Comparison accepts any two distinct videos of the same movement, including the same date; independent positioning aligns a gesture before shared playback, and both pause at the first end. Comparison is muted. Videos retain their aspect ratio. No recording, automatic posture analysis or video export in this version.
 
-Video originals are AES-GCM1MiBchunks in the independent private SQLite database; thumbnails, dates, movement names and Skill links are encrypted. Player byte requests decrypt bounded chunks in memory, never a Sport-owned clear video file. Photos-provider copies stay system-managed; only encrypted temporary staging is owned by Sport. Locking revokes reads and clears players/previews. No PiP/external playback. Reset explicitly removes photos, videos, movements and key; Delete All Photos remains photo-only. Videos never populate public photo activity or training exports.
+Video originals are AES-GCM1MiBchunks in the independent private SQLite database; thumbnails, dates, movement names and Skill links are encrypted. Player byte requests decrypt bounded chunks in memory, never a Reps-owned clear video file. Photos-provider copies stay system-managed; only encrypted temporary staging is owned by Reps. Locking revokes reads and clears players/previews. No PiP/external playback. Reset explicitly removes photos, videos, movements and key; Delete All Photos remains photo-only. Videos never populate public photo activity or training exports.
 
 ## 11. Security model
 
@@ -198,9 +198,9 @@ The app schedules opt-in local notifications on this device for:
 
 Notification content must never contain private progress-photo information.
 
-Workout reminders are derived from active weekly schedule entries. Each session stores its own optional reminder time to the minute; an unset time creates no reminder, and no time is invented. The app schedules concrete occurrences 28 days ahead and omits any schedule date with an existing workout row, including an active workout, so starting a session suppresses that day's reminder. Changes to notification preferences, schedule, app foreground state, or workout lifecycle trigger a full resynchronization of requests managed by Sport.
+Workout reminders are derived from active weekly schedule entries. Each session stores its own optional reminder time to the minute; an unset time creates no reminder, and no time is invented. The app schedules concrete occurrences 28 days ahead and omits any schedule date with an existing workout row, including an active workout, so starting a session suppresses that day's reminder. Changes to notification preferences, schedule, app foreground state, or workout lifecycle trigger a full resynchronization of requests managed by Reps.
 
-Photo reminders occur on the first day of each month at 06:00 by default, with an editable hour. Notification permission is requested only when the user enables a reminder. A denied iOS permission is not repeatedly requested; Settings explains how to open iOS Settings instead. Notification taps open Today or Progress, never a private photo. While Sport is foregrounded, local reminders may appear as a banner and in Notification Center without sound or badge.
+Photo reminders occur on the first day of each month at 06:00 by default, with an editable hour. Notification permission is requested only when the user enables a reminder. A denied iOS permission is not repeatedly requested; Settings explains how to open iOS Settings instead. Notification taps open Today or Progress, never a private photo. While Reps is foregrounded, local reminders may appear as a banner and in Notification Center without sound or badge.
 
 ## 13. Apple integrations
 
@@ -216,7 +216,7 @@ Expose useful actions through App Intents where practical.
 
 ### Live Activities
 
-The rest timer uses a countdown Live Activity and a locally scheduled completion Live Activity on iOS 26 or later. The countdown shows the exercise, next set, and system-rendered timer; Pause and Resume update the persisted timer and reschedule its completion. Skip, pause, and other early endings cancel the pending completion. At the saved deadline, ActivityKit starts the completion activity with an alert configuration so iOS can present the expanded “Repos terminé” state while Sport is suspended. Sport still reconciles the countdown against SQLite on launch and foregrounding. No remote push token, backend, or Live Activity push notification is enabled.
+The rest timer uses a countdown Live Activity and a locally scheduled completion Live Activity on iOS 26 or later. The countdown shows the exercise, next set, and system-rendered timer; Pause and Resume update the persisted timer and reschedule its completion. Skip, pause, and other early endings cancel the pending completion. At the saved deadline, ActivityKit starts the completion activity with an alert configuration so iOS can present the expanded “Repos terminé” state while Reps is suspended. Reps still reconciles the countdown against SQLite on launch and foregrounding. No remote push token, backend, or Live Activity push notification is enabled.
 
 ## 14. Navigation
 
@@ -239,7 +239,7 @@ No remote server is required.
 
 ## 16. Data export
 
-The planned native milestone 10 provides a versioned, restorable Sport backup through Files, covering training data, snapshots, configuration, adopted objectives and the future vault media. Private media require a portable encrypted archive format validated after the vault exists; never export the biometric Keychain key or silently replace inaccessible keys. Import previews and validates data before a confirmed restoration, preserving a backup of the previous state. Merge policy, active-workout recovery and external legacy-app formats must be specified before implementation.
+The planned native milestone 10 provides a versioned, restorable Reps backup through Files, covering training data, snapshots, configuration, adopted objectives and the future vault media. Private media require a portable encrypted archive format validated after the vault exists; never export the biometric Keychain key or silently replace inaccessible keys. Import previews and validates data before a confirmed restoration, preserving a backup of the previous state. Merge policy, active-workout recovery and external legacy-app formats must be specified before implementation.
 
 CSV is a separate readable export for Numbers, not a complete backup. Numbers is not a dependency. These are planned features, not available in the installed build.
 
@@ -322,7 +322,7 @@ Calculate integer sums with checked overflow and cache repetition totals by comp
 
 ## 27. Motion and haptics advanced, 13 October 2026
 
-The user explicitly requests milestone 9 now, before the vault. Apply its previously agreed scope to existing screens. Use discrete native content transitions and optional foreground feedback after persisted state changes; no animation on each live timer tick, no delayed writes, no replay on passive reads. Keep system controls/navigation intact. The local haptics preference applies to Sport-authored feedback, including countdown/rest, and is separate from iOS alerts/sounds and training CSV/JSON. Vault-specific motion/privacy checks remain future work.
+The user explicitly requests milestone 9 now, before the vault. Apply its previously agreed scope to existing screens. Use discrete native content transitions and optional foreground feedback after persisted state changes; no animation on each live timer tick, no delayed writes, no replay on passive reads. Keep system controls/navigation intact. The local haptics preference applies to Reps-authored feedback, including countdown/rest, and is separate from iOS alerts/sounds and training CSV/JSON. Vault-specific motion/privacy checks remain future work.
 
 
 ## Correction des transitions graphiques — 0.9.1
@@ -342,7 +342,7 @@ Tous les tableaux d’objectifs utilisent la même notation : 10·10·10·10 dev
 
 ## Vault comparison and goal clarity — 13 October
 
-Sport0.10.0 confirmed working by the user. Follow-up presentation explicitly approved: one photo stack per progression day, poses Front relaxed / Front flexed / Back, comparison of two photos of the same pose on different dates. Every photo remains preserved, including duplicates and old unclassified photos; pose is optional for existing encrypted metadata and assigned explicitly through Edit. New imports/camera captures choose a pose, suggesting the next missing pose for the selected date. Comparison renders bounded previews side by side, uses the vault session/lease/cancellation guards, clears decrypted references on lock/dismiss and masks every new private surface. No key, permission, SQLite schema, notification or archive change.
+Reps0.10.0 confirmed working by the user. Follow-up presentation explicitly approved: one photo stack per progression day, poses Front relaxed / Front flexed / Back, comparison of two photos of the same pose on different dates. Every photo remains preserved, including duplicates and old unclassified photos; pose is optional for existing encrypted metadata and assigned explicitly through Edit. New imports/camera captures choose a pose, suggesting the next missing pose for the selected date. Comparison renders bounded previews side by side, uses the vault session/lease/cancellation guards, clears decrypted references on lock/dismiss and masks every new private surface. No key, permission, SQLite schema, notification or archive change.
 
 Reset uses a red arrow.counterclockwise SF Symbol with its destructive confirmation. Training rows show one concrete compact goal and disclose details; the program range appears in the goal overview instead of duplicating the target. Goal overview shows current target and a different suggestion if available; manual load/per-set editing is a separate Personalize screen. Existing thresholds, transaction/stale guards and explicit adoption remain unchanged. Version0.10.1; physical review required before the next milestone.
 

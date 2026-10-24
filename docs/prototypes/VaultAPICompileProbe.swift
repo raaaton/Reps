@@ -12,7 +12,7 @@ enum VaultAPICompileProbe {
   static func authenticate(_ context: LAContext) async throws {
     _ = try await context.evaluatePolicy(
       .deviceOwnerAuthenticationWithBiometrics,
-      localizedReason: "Déverrouiller les photos privées de Sport.")
+      localizedReason: "Déverrouiller les photos privées de Reps.")
   }
 
   static func accessControl() throws -> SecAccessControl {

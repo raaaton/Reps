@@ -28,15 +28,15 @@ def main():
     output = root / ".build/live-metadata"
     output.mkdir(parents=True, exist_ok=True)
     products = [
-        ("Sport", "app", root / "xtool/Sport.app", "com.raaaton.sport"),
-        ("SportRestWidget", "widget", root / "xtool/Sport.app/PlugIns/SportRestWidget.appex",
-         "com.raaaton.sport.rest-widget"),
+        ("Sport", "app", root / "xtool/Reps.app", "com.raaaton.sport", "Reps"),
+        ("SportRestWidget", "widget", root / "xtool/Reps.app/PlugIns/RepsRestWidget.appex",
+         "com.raaaton.sport.rest-widget", "RepsRestWidget"),
     ]
     with tempfile.TemporaryDirectory(dir=output) as temporary:
         staged = []
-        for module, destination, bundle, identity in products:
+        for module, destination, bundle, identity, executable in products:
             const_name = f"{module}-primary" if arguments.configuration == "release" else "RestPauseIntent"
-            const = root / f".build/out/Intermediates.noindex/Sport.build/{configuration}-iphoneos/{module}-t.build/Objects-normal/arm64/{const_name}.swiftconstvalues"
+            const = root / f".build/out/Intermediates.noindex/Reps.build/{configuration}-iphoneos/{module}-t.build/Objects-normal/arm64/{const_name}.swiftconstvalues"
             # SwiftBuild keeps an unchanged const-values file's timestamp on incremental builds.
             # Run after a successful build; validate its actual declarations below.
             if not const.is_file():
@@ -46,7 +46,7 @@ def main():
                 "python3", str(tool), "--module-name", module,
                 "--bundle-identifier", identity, "--output", str(metadata_output),
                 "--const-values", str(const), "--info-plist", str(bundle / "Info.plist"),
-                "--binary-file", str(bundle / module),
+                "--binary-file", str(bundle / executable),
             ], check=True, capture_output=True, text=True)
             metadata = metadata_output / "Metadata.appintents"
             data = json.loads((metadata / "extract.actionsdata").read_text())

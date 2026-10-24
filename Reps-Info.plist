@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Reps</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array><string>en</string></array>
+    <key>CFBundleShortVersionString</key>
+    <string>1.3.3</string>
+    <key>CFBundleVersion</key>
+    <string>99</string>
+    <key>CFBundleIcons</key>
+    <dict><key>CFBundlePrimaryIcon</key><dict>
+        <key>CFBundleIconFiles</key><array><string>RepsIcon60x60</string></array>
+        <key>CFBundleIconName</key><string>RepsIcon</string>
+    </dict></dict>
+    <key>NSSupportsLiveActivities</key><true/>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Reps uses Face ID to unlock your private photos and videos.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Reps uses the camera to add a photo to your private vault.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Reps saves copies to Photos when you choose to export them from the vault.</string>
+    <key>CFBundleURLTypes</key>
+    <array><dict>
+        <key>CFBundleURLName</key><string>com.raaaton.sport.workout</string>
+        <key>CFBundleURLSchemes</key><array><string>reps</string><string>sport</string></array>
+    </dict></array>
+    <key>UIDeviceFamily</key>
+    <array><integer>1</integer></array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+</dict>
+</plist>

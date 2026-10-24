@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect the real unsigned Sport app; never signs or deploys it."""
+"""Inspect the real unsigned Reps app; never signs or deploys it."""
 
 import json
 import plistlib
@@ -40,17 +40,17 @@ def inspect_binary(executable):
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    bundle = Path(sys.argv[1]) if len(sys.argv) > 1 else root / "xtool/Sport.app"
+    bundle = Path(sys.argv[1]) if len(sys.argv) > 1 else root / "xtool/Reps.app"
     with (bundle / "Info.plist").open("rb") as stream:
         info = plistlib.load(stream)
 
     expected = {
         "CFBundleIdentifier": "com.raaaton.sport",
-        "CFBundleDisplayName": "Sport",
-        "CFBundleExecutable": "Sport",
+        "CFBundleDisplayName": "Reps",
+        "CFBundleExecutable": "Reps",
         "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": "1.3.2",
-        "CFBundleVersion": "98",
+        "CFBundleShortVersionString": "1.3.3",
+        "CFBundleVersion": "99",
         "MinimumOSVersion": "26.0",
         "UIDeviceFamily": [1],
         "CFBundleDevelopmentRegion": "en",
@@ -60,17 +60,17 @@ def main():
     require(info.get("CFBundleSupportedPlatforms") == ["iPhoneOS"], "Not an iPhoneOS bundle")
     require("UILaunchScreen" in info, "Missing native launch-screen configuration")
     require({key for key in info if "UsageDescription" in key} == {"NSFaceIDUsageDescription", "NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription"}, "Unexpected privacy permission")
-    require(info["NSFaceIDUsageDescription"] == "Sport uses Face ID to unlock your private photos and videos.", "Unexpected Face ID purpose string")
+    require(info["NSFaceIDUsageDescription"] == "Reps uses Face ID to unlock your private photos and videos.", "Unexpected Face ID purpose string")
     require(not info.get("UTExportedTypeDeclarations"), "Unexpected prototype file type")
     require(not info.get("UIBackgroundModes"), "Unexpected background mode")
     require(info.get("NSSupportsLiveActivities") is True, "Missing Live Activities declaration")
-    require(info.get("CFBundleURLTypes", [{}])[0].get("CFBundleURLSchemes") == ["sport"], "Unexpected workout URL scheme")
-    extension = bundle / "PlugIns/SportRestWidget.appex"
+    require(info.get("CFBundleURLTypes", [{}])[0].get("CFBundleURLSchemes") == ["reps", "sport"], "Unexpected workout URL scheme")
+    extension = bundle / "PlugIns/RepsRestWidget.appex"
     require(list((bundle / "PlugIns").iterdir()) == [extension], "Unexpected embedded extension")
     child = plistlib.loads((extension / "Info.plist").read_bytes())
     for key, value in {"CFBundleIdentifier": "com.raaaton.sport.rest-widget",
-                       "CFBundleShortVersionString": "1.3.2", "CFBundleVersion": "98",
-                       "MinimumOSVersion": "26.0", "CFBundleExecutable": "SportRestWidget",
+                       "CFBundleShortVersionString": "1.3.3", "CFBundleVersion": "99",
+                       "MinimumOSVersion": "26.0", "CFBundleExecutable": "RepsRestWidget",
                        "CFBundlePackageType": "XPC!"}.items():
         require(child.get(key) == value, f"Unexpected extension {key}")
     require(child.get("NSExtension", {}).get("NSExtensionPointIdentifier") == "com.apple.widgetkit-extension", "Not a WidgetKit extension")
@@ -95,26 +95,26 @@ def main():
     require(not (bundle / "embedded.mobileprovision").exists(), "Expected an unprovisioned build")
     require(not (bundle / "_CodeSignature").exists(), "Expected an unsigned build")
 
-    resource = bundle / "Sport_Sport.bundle" / "RestComplete.wav"
-    require(resource.read_bytes() == (root / "Sources/Sport/Resources/RestComplete.wav").read_bytes(), "Bundled rest sound differs or is missing")
+    resource = bundle / "Reps_Sport.bundle" / "RestComplete.wav"
+    require(resource.read_bytes() == (root / "Sources/Reps/Resources/RestComplete.wav").read_bytes(), "Bundled rest sound differs or is missing")
     with wave.open(str(resource), "rb") as sound:
         require(sound.getnchannels() == 1 and sound.getsampwidth() == 2, "Unsupported sound format")
         require(sound.getframerate() == 22050 and sound.getnframes() == 6600, "Unexpected sound duration")
 
     icon = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {})
-    require(icon.get("CFBundleIconName") == "SportIcon", "Missing Sport app icon")
-    require(icon.get("CFBundleIconFiles") == ["SportIcon60x60"], "Unexpected icon file declaration")
-    for name in ["Assets.car", "SportIcon60x60@2x.png"]:
+    require(icon.get("CFBundleIconName") == "RepsIcon", "Missing Reps app icon")
+    require(icon.get("CFBundleIconFiles") == ["RepsIcon60x60"], "Unexpected icon file declaration")
+    for name in ["Assets.car", "RepsIcon60x60@2x.png"]:
         require((bundle / name).read_bytes() == (root / ".build/app-icon" / name).read_bytes(), "Compiled icon differs or is missing from app root")
 
     require((bundle / "PHOSPHOR-LICENSE.txt").read_bytes() == (root / "Resources/IconSources/PHOSPHOR-LICENSE.txt").read_bytes(), "Missing Phosphor license")
 
-    inspect_binary(bundle / "Sport")
-    inspect_binary(extension / "SportRestWidget")
-    print("PASS: Sport 1.3.2 (98), com.raaaton.sport, arm64 iPhoneOS 26.0, English, unsigned.")
+    inspect_binary(bundle / "Reps")
+    inspect_binary(extension / "RepsRestWidget")
+    print("PASS: Reps 1.3.3 (99), com.raaaton.sport, arm64 iPhoneOS 26.0, English, unsigned.")
     print("PASS: one WidgetKit extension, app and extension intent metadata; no profile; declared Face ID/camera/Photos add-only purposes, no broad Photos access.")
     print("PASS: SwiftPM bundled rest sound present, mono PCM WAV, 0.30 seconds.")
-    print("PASS: Sport layered icon present at app root and declared in Info.plist.")
+    print("PASS: Reps layered icon present at app root and declared in Info.plist.")
     print("This local bundle inspection does not validate iPhone rendering or behavior.")
 
 

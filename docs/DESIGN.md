@@ -1,4 +1,4 @@
-# Sport — design et interactions
+# Reps — design et interactions
 
 ## Corrections0.11.6
 
@@ -25,7 +25,7 @@ Grille d'assiduité : chaque jour est un Button SwiftUI avec cible ≥28pt (mini
 
 ## Référence permanente
 
-Sport doit sembler aussi familier et cohérent qu’une app Apple comme Santé, Fitness ou Sports. Les [Human Interface Guidelines Apple](https://developer.apple.com/design/human-interface-guidelines) sont la référence permanente demandée par l’utilisateur ; consulter les chapitres concernés à chaque retouche. La référence porte sur la qualité de l’expérience, pas une copie de leur marque.
+Reps doit sembler aussi familier et cohérent qu’une app Apple comme Santé, Fitness ou Repss. Les [Human Interface Guidelines Apple](https://developer.apple.com/design/human-interface-guidelines) sont la référence permanente demandée par l’utilisateur ; consulter les chapitres concernés à chaque retouche. La référence porte sur la qualité de l’expérience, pas une copie de leur marque.
 
 - TabView, NavigationStack, List, Section, Form, DatePicker et présentations système en priorité.
 - Typographie système avec styles sémantiques, SF Symbols, couleurs qui suivent les réglages iOS.
@@ -70,7 +70,7 @@ Historique : + en haut à droite, feuille Annuler/Enregistrer pour une séance d
 
 ## Finition HIG et décompte (0.3.3)
 
-Corrections 0.3.2 confirmées par l’utilisateur ; nouvelles retouches en recette. [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) guide regroupement, importance et détails secondaires ; [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) guide styles, libellés et feedback. Le choix du décompte et les valeurs d’espacement propres à Sport ne sont pas des prescriptions Apple.
+Corrections 0.3.2 confirmées par l’utilisateur ; nouvelles retouches en recette. [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) guide regroupement, importance et détails secondaires ; [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) guide styles, libellés et feedback. Le choix du décompte et les valeurs d’espacement propres à Reps ne sont pas des prescriptions Apple.
 
 - Aujourd’hui : résumé de séance active avant sa commande Reprendre, avec exercice et nombre de séries enregistrées ; Sections séparées et espacements natifs compacts. Préparer reste immédiatement après le repos ; suppression du texte explicatif générique.
 - Préparation : objectifs puis repos, et Commencer juste après, cohérent avec Aujourd’hui.
@@ -96,14 +96,14 @@ Jalons 1 et 2 validés sur iPhone, y compris les couleurs, + et suppression de l
 
 ## Prototype Live Activities (0.4.0)
 
-[HIG Live Activities](https://developer.apple.com/design/human-interface-guidelines/live-activities) consultées : informations essentielles et action simple. Choix Sport : REST/PAUSE en développé, icône seule en compact/minimal, compteur système, exercice et prochaine série. Écran verrouillé avec marge 14 points ; développé avec espace intérieur, couleurs système et un seul bouton Pause/Reprendre. Pas de Stop. Toucher le contenu ouvre la séance concernée par lien sport://workout/identifiant. L’état terminé affiche une coche et Repos terminé ; le bouton de pause disparaît.
+[HIG Live Activities](https://developer.apple.com/design/human-interface-guidelines/live-activities) consultées : informations essentielles et action simple. Choix Reps : REST/PAUSE en développé, icône seule en compact/minimal, compteur système, exercice et prochaine série. Écran verrouillé avec marge 14 points ; développé avec espace intérieur, couleurs système et un seul bouton Pause/Reprendre. Pas de Stop. Toucher le contenu ouvre la séance concernée par lien reps://workout/identifiant. L’état terminé affiche une coche et Repos terminé ; le bouton de pause disparaît.
 
-SQLite fournit identifiant et échéance absolue. Le widget n’a pas de minuterie propre ni accès à la base ; le LiveActivityIntent agit dans Sport. L’activité standard rend le repos ; une seconde présentation transitoire est programmée pour la fin par l’API iOS26. C’est une solution technique du prototype, pas une prescription HIG. En suspension, la fermeture exacte de l’activité standard reste une limite : elle est réconciliée au retour, et iOS contrôle la présentation/alerte de fin. Vérifier interactions, annulation, Always-On, accessibilité et rendu sur iPhone avant validation ; finition finale au jalon 6.
+SQLite fournit identifiant et échéance absolue. Le widget n’a pas de minuterie propre ni accès à la base ; le LiveActivityIntent agit dans Reps. L’activité standard rend le repos ; une seconde présentation transitoire est programmée pour la fin par l’API iOS26. C’est une solution technique du prototype, pas une prescription HIG. En suspension, la fermeture exacte de l’activité standard reste une limite : elle est réconciliée au retour, et iOS contrôle la présentation/alerte de fin. Vérifier interactions, annulation, Always-On, accessibilité et rendu sur iPhone avant validation ; finition finale au jalon 6.
 
 
 ### Retouches iPhone 0.4.1
 
-En compact, supprimer la largeur52 et l’intervalle depuis epoch ; un label invisible dimensionne la largeur réelle minutes:secondes avec la même police monospacée, le compteur natif en overlay aligne ses chiffres à droite. Le placeholder seul est exclu de VoiceOver, le vrai compteur reste la présentation accessible à vérifier sur iPhone. En développé : inset latéral8 pour REST et timer, vertical4, timer ancré trailing. En Lock Screen : même compteur intrinsèque ancré par Spacer, padding14 conservé ; aucune autre retouche au contenu apprécié. Ces valeurs du développé sont un choix Sport, pas une exigence chiffrée Apple. Pause : correction de métadonnées de routage ; essai de reprise, persistance et annulation de l’ancienne alerte requis.
+En compact, supprimer la largeur52 et l’intervalle depuis epoch ; un label invisible dimensionne la largeur réelle minutes:secondes avec la même police monospacée, le compteur natif en overlay aligne ses chiffres à droite. Le placeholder seul est exclu de VoiceOver, le vrai compteur reste la présentation accessible à vérifier sur iPhone. En développé : inset latéral8 pour REST et timer, vertical4, timer ancré trailing. En Lock Screen : même compteur intrinsèque ancré par Spacer, padding14 conservé ; aucune autre retouche au contenu apprécié. Ces valeurs du développé sont un choix Reps, pas une exigence chiffrée Apple. Pause : correction de métadonnées de routage ; essai de reprise, persistance et annulation de l’ancienne alerte requis.
 
 ### Retour d’attente 0.4.2
 
@@ -116,7 +116,7 @@ Demande explicite : alertes système centrées pour toutes les confirmations act
 
 ## Historique, lest et progression (0.5.0)
 
-Jalon 4 et confirmations 0.4.3 confirmés par « parfait, on continue ». Les [listes](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables), [sélecteurs](https://developer.apple.com/design/human-interface-guidelines/pickers) et [alertes](https://developer.apple.com/design/human-interface-guidelines/alerts) guident navigation, sélection et confirmations ; règles de progression et seuils propres à Sport.
+Jalon 4 et confirmations 0.4.3 confirmés par « parfait, on continue ». Les [listes](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables), [sélecteurs](https://developer.apple.com/design/human-interface-guidelines/pickers) et [alertes](https://developer.apple.com/design/human-interface-guidelines/alerts) guident navigation, sélection et confirmations ; règles de progression et seuils propres à Reps.
 
 Historique : contrôle segmenté Séances/Exercices, listes natives par date, performances réelles et liens vers la séance. Modifier ouvre un formulaire prérempli Annuler/Enregistrer ; ancien snapshot de l’exercice conservé, même archivé. Date, séries, charge et Feeling modifiables sans changer le statut ni les autres séances. Brouillon local ; refus explicite si la séance a changé ou disparu. Une composition connue se déplie dans le détail ; une charge positive sans provenance indique Composition non renseignée.
 
@@ -128,11 +128,11 @@ Date de classement authoritative conservée indépendamment des timestamps origi
 
 ## Rappels et Live Activities (0.6.0)
 
-HIG Notifications consultées : « Avoid sending multiple notifications for the same thing » et contenu concis sans informations privées. Les [Notifications Apple](https://developer.apple.com/design/human-interface-guidelines/notifications) guident la permission contextuelle et la sobriété ; horizon28jours et heures choisies sont règles Sport, pas prescriptions HIG.
+HIG Notifications consultées : « Avoid sending multiple notifications for the same thing » et contenu concis sans informations privées. Les [Notifications Apple](https://developer.apple.com/design/human-interface-guidelines/notifications) guident la permission contextuelle et la sobriété ; horizon28jours et heures choisies sont règles Reps, pas prescriptions HIG.
 
 Réglages → Notifications : formulaire natif avec autorisation actuelle, opt-in séances et rendez-vous mensuel, DatePicker système, accès Planning pour les heures individuelles, nombre de rappels programmés et Resynchroniser. Réponse refusée : état explicite et accès aux réglages iOS, aucun nouveau prompt automatique. Les préférences restent sauvegardées même si iOS bloque les notifications. Deux opt-ins désactivés initialement ; photo06:00 modifiable, coffre non encore disponible clairement indiqué. L’autorisation n’est jamais demandée par le lancement, le retour ou la resynchronisation.
 
-Les taps par défaut ouvrent Aujourd’hui ou Progression, jamais une photo ni une action destructive. Delegate installé avant fin du lancement, destination en attente consommée par TabView à froid. Au premier plan : banner/list sans son ni badge, conformément à la spécification Sport. Hors app : son système facultatif selon réglages iOS ; aucune interruption critique ou Time Sensitive.
+Les taps par défaut ouvrent Aujourd’hui ou Progression, jamais une photo ni une action destructive. Delegate installé avant fin du lancement, destination en attente consommée par TabView à froid. Au premier plan : banner/list sans son ni badge, conformément à la spécification Reps. Hors app : son système facultatif selon réglages iOS ; aucune interruption critique ou Time Sensitive.
 
 Live Activities conservent les marges et alignements validés. Demande additionnelle utilisateur : retire la coche du timer à droite en état terminé ; la coche de statut à gauche est conservée en compact/minimal. Aucun faux timer ajouté. La pause expose une valeur VoiceOver minutes/secondes, la politique de retrait élimine anciens repos, completions à mauvaise échéance, pauses et doublons ; retry au foreground. iOS garde le contrôle de latence, terminaison en suspension et présentation coordonnée des deux activités. Coche, annonces et fin sur appareil à confirmer.
 
@@ -142,11 +142,11 @@ Suppression demandée de la ligne permanente Autorisation iOS : ce n’est plus 
 
 ## Organisation des futurs jalons, 12 octobre 2026
 
-Progression guidée/visualisation au jalon 7, coffre au 8 (ancien 7), harmonisation Animations/haptics au 9, sauvegarde complète et finition au 10 (ancien 8). Le périmètre et la recette de chaque étape sont dans PLAN-SPORT-NATIF.md ; détails fonctionnels retenus dans PROJECT.md §21. Les principes Apple natifs/accessibilité s’appliquent à chaque étape ; le jalon 9 ne justifie pas une UI brute ou des comportements inaccessibles avant lui. Aucun nouveau flux, écran, animation ou retour tactile implémenté par ce changement de documents. Les rapports 0.6.x conservent leurs références historiques ; la recette du jalon 6 reste à confirmer sur iPhone.
+Progression guidée/visualisation au jalon 7, coffre au 8 (ancien 7), harmonisation Animations/haptics au 9, sauvegarde complète et finition au 10 (ancien 8). Le périmètre et la recette de chaque étape sont dans PLAN-REPS-NATIF.md ; détails fonctionnels retenus dans PROJECT.md §21. Les principes Apple natifs/accessibilité s’appliquent à chaque étape ; le jalon 9 ne justifie pas une UI brute ou des comportements inaccessibles avant lui. Aucun nouveau flux, écran, animation ou retour tactile implémenté par ce changement de documents. Les rapports 0.6.x conservent leurs références historiques ; la recette du jalon 6 reste à confirmer sur iPhone.
 
 ## Progression guidée (0.7.0)
 
-Références consultées : [Charts](https://developer.apple.com/design/human-interface-guidelines/charts) et [Swift Charts](https://developer.apple.com/documentation/charts). Les HIG guident lisibilité, contexte et accès aux valeurs ; les règles <8, un ajout de répétition et les13semaines sont des choix Sport.
+Références consultées : [Charts](https://developer.apple.com/design/human-interface-guidelines/charts) et [Swift Charts](https://developer.apple.com/documentation/charts). Les HIG guident lisibilité, contexte et accès aux valeurs ; les règles <8, un ajout de répétition et les13semaines sont des choix Reps.
 
 Quatre onglets conservés. Progression affiche l’assiduité puis les exercices, avec une destination Photos privées explicitement indisponible. Objectif dans un formulaire système Annuler/Enregistrer, proposition expliquée et adoption volontaire. Aucun changement de séance en cours après adoption. Sac et composants se déplient ; un lest ponctuel n’écrase pas l’objectif. Résultat précédent visible, confirmation du nombre ciblé explicite ; aucun résultat préenregistré.
 
@@ -172,7 +172,7 @@ L’affirmationancienne « résultatsbrutspar série sans marqueursderepos/nombr
 
 ## Informations au glissement et volume par séance (0.7.3)
 
-[HIG Charting data](https://developer.apple.com/design/human-interface-guidelines/charting-data) : « Keep a chart simple, letting people choose when they want details. » Application Sport : petite annotation native Swift Charts près du point sélectionné, date et valeur ; débordement ajusté aux limites du graphique. La ligne, le point sélectionné et les détails complets restent accessibles ; l’annotation est exclue de VoiceOver pour ne pas doubler les marques déjà nommées. Résumé « Dernière séance » stable pendant glissement, unités/titres « par séance » explicites. Débordement/gestes/grand texte/VoiceOver à vérifier physiquement.
+[HIG Charting data](https://developer.apple.com/design/human-interface-guidelines/charting-data) : « Keep a chart simple, letting people choose when they want details. » Application Reps : petite annotation native Swift Charts près du point sélectionné, date et valeur ; débordement ajusté aux limites du graphique. La ligne, le point sélectionné et les détails complets restent accessibles ; l’annotation est exclue de VoiceOver pour ne pas doubler les marques déjà nommées. Résumé « Dernière séance » stable pendant glissement, unités/titres « par séance » explicites. Débordement/gestes/grand texte/VoiceOver à vérifier physiquement.
 
 Volume / Répétitions / Lest pour exercices répétitions, Volume par défaut. Volume de lest = somme réelle répétitions×lest de chaque série, toutes charges admises, poids du corps exclu et0 expliqué. Ce n’est pas un indicateur de force estimée. Durée : total de travail par séance tous lests par défaut, filtre uniforme facultatif, repos exclu. Conditions historiques conservées. Aucun changement de recommandations, haptics/animations, média ou format de transfert.
 
@@ -191,7 +191,7 @@ Le résumé est stable pendant le glissement, les valeurs VoiceOver corresponden
 
 ## Animations et haptics — 0.9.0
 
-Jalon avancé le 13 octobre avant le coffre. Choix Sport suivant HIG Motion / Playing haptics : transitions de contenu courtes (0,25 s, ressort smooth sans rebond), coches de séries SF Symbols, 3–2–1 numérique, états de séance/exercice, objectif adopté et bilan en fondu. Les chiffres du chrono actif/repos restent stables ; aucun compteur artificiel de résultat, zoom, confetti ou cascade. Les vues de navigation, feuilles et contrôles restent natives. Les changements de filtres Progression animent l’arrivée du contenu ; aucun mouvement retardé du point sous le doigt ni interpolation de résultats entre unités.
+Jalon avancé le 13 octobre avant le coffre. Choix Reps suivant HIG Motion / Playing haptics : transitions de contenu courtes (0,25 s, ressort smooth sans rebond), coches de séries SF Symbols, 3–2–1 numérique, états de séance/exercice, objectif adopté et bilan en fondu. Les chiffres du chrono actif/repos restent stables ; aucun compteur artificiel de résultat, zoom, confetti ou cascade. Les vues de navigation, feuilles et contrôles restent natives. Les changements de filtres Progression animent l’arrivée du contenu ; aucun mouvement retardé du point sous le doigt ni interpolation de résultats entre unités.
 
 Retours système : succès à l’enregistrement d’une série, fin de séance, objectif réellement modifié ; sélection au démarrage/passage d’exercice, pause/reprise/skip et changement de point du graphique ou jour de grille. Décompte et expiration existants centralisés, sans doublon. Sélection limitée à 80 ms entre taps sans file d’attente. Pas de retour pour une actualisation passive, annulation, correction de valeurs ou simple ouverture d’un historique. Feedback après lecture du commit SQLite et avant réconciliation ActivityKit ; état initial de l’action capturé et événements dédupliqués.
 
@@ -234,7 +234,7 @@ Retouche demandée/approuvée après validation0.10.0. Galerie : une pile datée
 
 Comparer utilise les sélecteurs natifs de pose et de deux photos prises à des dates différentes ; images côte à côte sans recadrage ni transformation. Choix initial ancien/récent, ou photo ouverte et une autre date. Doublons restent sélectionnables par numéro à leur date. Vue scrollable et labels adaptatifs, pas de hauteur fixe des contrôles ; masque immédiat commun et état privé vidé à la fermeture. Pas de surimpression morphologique, mesure corporelle ou alignement artificiel. Contrôles/rendu/grand texte/VoiceOver à tester physiquement.
 
-Aujourd’hui/préparation : nom de l’exercice, libellé secondaire Objectif, résumé compact4×10·+6kg et chevron ouvrant les détails ; la plage du programme n’est plus affichée en doublon. Écran objectif : cible actuelle, proposition seulement si différente, adoption explicite ; Personnaliser ouvre lest et cibles par série. Pas d’adoption automatique ni nouvelle règle de coaching. Plage configurée visible sous Programme. Reset du coffre rouge avec arrow.counterclockwise et confirmation centrée conservée. Ce sont des choix Sport s’appuyant sur les recommandations HIG de hiérarchie/divulgation progressive et boutons destructifs, pas des mises en page imposées par Apple.
+Aujourd’hui/préparation : nom de l’exercice, libellé secondaire Objectif, résumé compact4×10·+6kg et chevron ouvrant les détails ; la plage du programme n’est plus affichée en doublon. Écran objectif : cible actuelle, proposition seulement si différente, adoption explicite ; Personnaliser ouvre lest et cibles par série. Pas d’adoption automatique ni nouvelle règle de coaching. Plage configurée visible sous Programme. Reset du coffre rouge avec arrow.counterclockwise et confirmation centrée conservée. Ce sont des choix Reps s’appuyant sur les recommandations HIG de hiérarchie/divulgation progressive et boutons destructifs, pas des mises en page imposées par Apple.
 
 
 ## Comparaison agrandie — 0.10.2
@@ -267,7 +267,7 @@ SF Play explicitement blanc dans le bouton Préparer bleu. Catégorie et renvois
 
 Choix explicite utilisateur : anglais et SF Symbols avant sauvegarde complète. Today/History/Progress/Settings, Workouts/Exercises/Set/Rest/Added Weight, Feeling conservé. Interface, erreurs applicatives, notifications/Live Activities, prompts explicatifs et VoiceOver traduits ; noms personnels et contenus persistés restent tels quels. Dates affichées en anglais, nombres et saisie gardent la région appareil ; dates techniques/CSV inchangés. Les textes fournis par iOS suivent ses propres réglages.
 
-Toolbars : Save/Done → checkmark, Edit → pencil, Cancel/Close → xmark, Button nommé et iconOnly ; menus/alertes et grandes actions gardent un libellé pour éviter l’ambiguïté. Contrôles natifs, rôles/disabled/confirmation inchangés. Play blanc conservé, aucune animation ajoutée. About/Rest/Notifications deviennent factuels au lieu d’annoncer des fonctions déjà livrées comme futures. Ce sont des choix Sport fondés sur HIG Writing/Buttons/SF Symbols ; compréhension, VoiceOver et grand texte à constater sur iPhone.
+Toolbars : Save/Done → checkmark, Edit → pencil, Cancel/Close → xmark, Button nommé et iconOnly ; menus/alertes et grandes actions gardent un libellé pour éviter l’ambiguïté. Contrôles natifs, rôles/disabled/confirmation inchangés. Play blanc conservé, aucune animation ajoutée. About/Rest/Notifications deviennent factuels au lieu d’annoncer des fonctions déjà livrées comme futures. Ce sont des choix Reps fondés sur HIG Writing/Buttons/SF Symbols ; compréhension, VoiceOver et grand texte à constater sur iPhone.
 
 
 ## Preuve de sauvegarde portable — 0.11.1
@@ -291,9 +291,9 @@ La previewcard est maintenant dans chartOverlay et non dans l'annotation du Poin
 
 15 octobre — retour 0.11.8 : foregroundStyle sur les boutons ne donne pas le blanc attendu sur l’iPhone. 0.11.9 remplace ce style par tint(.white) sur les contrôles de toolbar eux-mêmes ; déclencheurs Menu également, sans changement des coches. Recette physique nécessaire.
 
-15 octobre — prototype 0.11.10 : icône exacte de Kavi en couches menthe/anthracite installée temporairement dans Sport à la demande utilisateur, pour comparaison physique du rendu Linux. Ce n’est pas l’icône finale de Sport. Pas de SF Symbol copié comme logo, ni d’aplatissement arbitraire du catalogue ; sources Icon Composer conservées et compilées par actool Linux existant.
+15 octobre — prototype 0.11.10 : icône exacte de Kavi en couches menthe/anthracite installée temporairement dans Reps à la demande utilisateur, pour comparaison physique du rendu Linux. Ce n’est pas l’icône finale de Reps. Pas de SF Symbol copié comme logo, ni d’aplatissement arbitraire du catalogue ; sources Icon Composer conservées et compilées par actool Linux existant.
 
-15 octobre — icône Sport 0.11.11 : haltère Phosphor plein, adapté en corps Icy Cyan et poids extérieurs argentés, incliné −32°. Fond et paramètres de verre du prototype Kavi confirmé. Couches SVG natives 1024 px, sans texte, compilées par actool Linux. Aperçu PNG réel inspecté après correction de taille ; rendu Home Screen sombre/teinté à confirmer sur iPhone. Sources/licence MIT conservées et licence embarquée ; aucune dépendance d’exécution.
+15 octobre — icône Reps 0.11.11 : haltère Phosphor plein, adapté en corps Icy Cyan et poids extérieurs argentés, incliné −32°. Fond et paramètres de verre du prototype Kavi confirmé. Couches SVG natives 1024 px, sans texte, compilées par actool Linux. Aperçu PNG réel inspecté après correction de taille ; rendu Home Screen sombre/teinté à confirmer sur iPhone. Sources/licence MIT conservées et licence embarquée ; aucune dépendance d’exécution.
 
 15 octobre — 0.11.12 : icône sur trois plans avec vrais recouvrements. Poignée arrière séparée, poids argentés intermédiaires, poids cyan devant ; recouvrement de 16 unités entre chaque paire, transparence/ombre de groupe ajustées, fin liseré clair sur les formes. Le masque et la bordure extérieure restent système. Fond, inclinaison et cadrage conservés. Aperçu compilé inspecté, effet natif à confirmer sur iPhone.
 
@@ -336,21 +336,21 @@ Correction65 : Total Work Time affiche le cumul des séries isométriques des s�
 
 ## Séries par workout — 1.0.6 (66)
 
-Sets se règle dans Settings → Workouts, sous chaque exercice affecté, avec un Stepper natif et un libellé VoiceOver nommant l'exercice. Le catalogue conserve les répétitions/durée par série, sans champ ni résumé d'un nombre global de séries. Today et préparation présentent les objectifs propres au workout ; Progress et l'historique donnent accès aux objectifs par workout, en gardant l'historique de l'exercice unifié. Un changement de workout à minuit recharge son contexte. Les séries conservées gardent leurs cibles ; les séries ajoutées reprennent le minimum configuré. Les séances déjà commencées et les instantanés historiques ne changent pas. Cette organisation est un choix Sport ; composants natifs, lisibilité et accessibilité suivent les références HIG. Rendu et interactions à confirmer sur iPhone.
+Sets se règle dans Settings → Workouts, sous chaque exercice affecté, avec un Stepper natif et un libellé VoiceOver nommant l'exercice. Le catalogue conserve les répétitions/durée par série, sans champ ni résumé d'un nombre global de séries. Today et préparation présentent les objectifs propres au workout ; Progress et l'historique donnent accès aux objectifs par workout, en gardant l'historique de l'exercice unifié. Un changement de workout à minuit recharge son contexte. Les séries conservées gardent leurs cibles ; les séries ajoutées reprennent le minimum configuré. Les séances déjà commencées et les instantanés historiques ne changent pas. Cette organisation est un choix Reps ; composants natifs, lisibilité et accessibilité suivent les références HIG. Rendu et interactions à confirmer sur iPhone.
 
 
 ## Sélection compacte des séries — 1.0.6 (67)
 
 Après capture et accord utilisateur, le Stepper de66 est remplacé par un menu natif affichant 4 sets, avec nom d'exercice et métrique brève. Picker intégré au menu :1...8 en ordre, sélection cochée et valeur personnalisée conservée ; Custom… ouvre la saisie numérique1...1000 avec Cancel/Apply. Le brouillon ne change qu'après sélection/application. Le footer et la ligne Sets redondants sont retirés. ViewThatFits replie la ligne pour largeur insuffisante ; les tailles d'accessibilité empilent d'emblée nom/métrique/commande, avec libellés VoiceOver et contrôle44pt.
 
-Références : [Pop-up buttons](https://developer.apple.com/design/human-interface-guidelines/pop-up-buttons) (« If necessary, offer Custom » dans le guide local), [Menus](https://developer.apple.com/design/human-interface-guidelines/menus) pour sélection/ellipse, [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) pour adaptation. Presets et composition sont des choix Sport. Aucun fond décoratif ou faux verre. Revue statique sans défaut concret ; rendu menu/alerte/tailles/édition à confirmer physiquement.
+Références : [Pop-up buttons](https://developer.apple.com/design/human-interface-guidelines/pop-up-buttons) (« If necessary, offer Custom » dans le guide local), [Menus](https://developer.apple.com/design/human-interface-guidelines/menus) pour sélection/ellipse, [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) pour adaptation. Presets et composition sont des choix Reps. Aucun fond décoratif ou faux verre. Revue statique sans défaut concret ; rendu menu/alerte/tailles/édition à confirmer physiquement.
 
 
 ## Body Weight — 1.1.0 (68)
 
 Chaque surface a été confrontée aux références Apple : [Lists and tables](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables) pour l'entrée Progress et l'historique ; [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) et [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) pour hiérarchie/actions ; [Charts](https://developer.apple.com/design/human-interface-guidelines/charts) pour dates réelles, points accessibles, inspection facultative et axeY dynamique ; [Segmented controls](https://developer.apple.com/design/human-interface-guidelines/segmented-controls)/[Pickers](https://developer.apple.com/design/human-interface-guidelines/pickers) pour3périodes et menu adaptatif ; [Entering data](https://developer.apple.com/design/human-interface-guidelines/entering-data)/[Text fields](https://developer.apple.com/design/human-interface-guidelines/text-fields) pour saisie étiquetée/validation ; [Settings](https://developer.apple.com/design/human-interface-guidelines/settings)/[Notifications](https://developer.apple.com/design/human-interface-guidelines/notifications) pour le rappel opt-in avec choix explicites.
 
-Ligne Body Weight après Consistency, dernier poids/date, NavigationStack et+ natifs ; détail période/dernière mesure/delta/graphe/historique. Formulaire date+kg, clavier décimal, virgule/point, Cancel/Save, date occupée→édition explicite. Graphique linéaire sans interpolation lissée, vraies dates surX, bornesY adaptées pour voir les variations ; marge minimale0.5kg/15% de l'étendue et fenêtres3/6/12 sont des choix Sport, pas des valeurs imposées Apple. Courbe absente avec un seul point, état vide explicite. Texte système/DynamicType, points VoiceOver, pas de verre ou cartes décoratives.
+Ligne Body Weight après Consistency, dernier poids/date, NavigationStack et+ natifs ; détail période/dernière mesure/delta/graphe/historique. Formulaire date+kg, clavier décimal, virgule/point, Cancel/Save, date occupée→édition explicite. Graphique linéaire sans interpolation lissée, vraies dates surX, bornesY adaptées pour voir les variations ; marge minimale0.5kg/15% de l'étendue et fenêtres3/6/12 sont des choix Reps, pas des valeurs imposées Apple. Courbe absente avec un seul point, état vide explicite. Texte système/DynamicType, points VoiceOver, pas de verre ou cartes décoratives.
 
 Rappel : section Body Weight dans Notifications, toggle et configuration native ; jour à choisir, heure confirmée dans DatePicker. Permission uniquement au Save explicite, erreur actionnable si refus, aucune mesure dans la notification. Le rendu, le scrub, les feuilles, le grand texte et VoiceOver restent à valider physiquement.
 
@@ -359,31 +359,31 @@ Rappel : section Body Weight dans Notifications, toggle et configuration native 
 
 Progress retains its native navigation row and existing compact GoalDescription (Dynamic Type subheadline, accessible full repetition/load description). It now chooses the workout goal with the highest total target: sum of repetitions × added grams for weighted repetition goals, sum of repetitions for bodyweight goals, sets × seconds for isometrics. Weighted repetition goals take priority over bodyweight ones by explicit user choice. This identifies the main workout; the subtitle shows its original goal, not the score. Equal totals or untimed goals retain workout order; missing/incompatible goals are skipped. Configured workouts, including disabled workouts, remain in the same candidate scope as before. No goal is adopted or changed.
 
-HIG Lists and tables: “Keep item text succinct.” Typography: “Consider using the built-in text styles.” Existing native row, text style and accessibility are preserved. Ranking and tie rules are Sport product choices, not Apple recommendations. Physical rendering remains to be checked.
+HIG Lists and tables: “Keep item text succinct.” Typography: “Consider using the built-in text styles.” Existing native row, text style and accessibility are preserved. Ranking and tie rules are Reps product choices, not Apple recommendations. Physical rendering remains to be checked.
 
 
 ## Accepted exercise changes and review status — build70
 
 Saving an exercise accepts its new definition for all saved future goals. Each workout keeps its own set count and exact load composition. Repetition targets are clamped only when the configured range changes; otherwise retained, with the minimum for newly required targets. Duration/type changes use the new definition without a second confirmation. Existing mismatches are reconciled during migration13 and restore preview. Saved/active workouts remain unchanged. An unavailable load is never silently replaced by another composition.
 
-Progress prioritizes the concise Review needed subtitle when any assigned goal needs review. Details say Review needed: load unavailable and explain that the saved composition must be selected again. Existing native list text, subheadline/caption styles, semantic secondary color and VoiceOver text remain. This applies the HIG Lists and tables preference for succinct item text and built-in text styles from Typography; automatic goal reconciliation is the user's Sport product rule. Device verification remains required.
+Progress prioritizes the concise Review needed subtitle when any assigned goal needs review. Details say Review needed: load unavailable and explain that the saved composition must be selected again. Existing native list text, subheadline/caption styles, semantic secondary color and VoiceOver text remain. This applies the HIG Lists and tables preference for succinct item text and built-in text styles from Typography; automatic goal reconciliation is the user's Reps product rule. Device verification remains required.
 
 
 ## Per-set curves and latest exercise goals — build71
 
-A point still represents one completed workout, positioned using its average per actual working set for volume, repetitions and duration. Maximum added weight is unchanged. Titles, axes/context and VoiceOver distinguish averages from exact workout totals; drag callout retains the latter with `• N sets`. Details include the set count and individual recorded results. Period totals retain exact integer sums and stay stable during selection. Delta text compares per-set values. This normalization is a Sport product rule; HIG Charts guidance supports clear descriptions, units and accessible exact details.
+A point still represents one completed workout, positioned using its average per actual working set for volume, repetitions and duration. Maximum added weight is unchanged. Titles, axes/context and VoiceOver distinguish averages from exact workout totals; drag callout retains the latter with `• N sets`. Details include the set count and individual recorded results. Period totals retain exact integer sums and stay stable during selection. Delta text compares per-set values. This normalization is a Reps product rule; HIG Charts guidance supports clear descriptions, units and accessible exact details.
 
 Goals follow the latest completed exercise across all workouts. Actual ordered repetitions and hold durations refresh on completion; assignment counts remain independent and extra sets repeat the last target. Timed goals render compact adjacent groups at tenth-second precision, including per-set target before/during a hold and first-set warm-up derivation. Learned timed goals can be edited per set or cleared together to untimed. Explicit changes to a different load retain associated targets. At unchanged load, refusing an increase still refreshes the actual performance baseline. New assignments seed from the same latest reference. Physical drag/layout/VoiceOver checks remain required after installation.
 
 
 ## Ceiling-average learned targets — build72
 
-Learned goals show one repeated whole-number ceiling-average target instead of ordered per-set values. Compute from actual sets at the highest load in the latest completed exercise session, across workouts; repeat for each assignment's count. Rep ceiling and second ceiling are calculated once after averaging, never per input set. This is the user's Sport rule; no new visual control. Preserve tenth-second historical results, chart projections, manual per-set customization, exact saved load composition and explicit different-load decisions. Schema15 refreshes existing future goals once; no changes to active/historical snapshots.
+Learned goals show one repeated whole-number ceiling-average target instead of ordered per-set values. Compute from actual sets at the highest load in the latest completed exercise session, across workouts; repeat for each assignment's count. Rep ceiling and second ceiling are calculated once after averaging, never per input set. This is the user's Reps rule; no new visual control. Preserve tenth-second historical results, chart projections, manual per-set customization, exact saved load composition and explicit different-load decisions. Schema15 refreshes existing future goals once; no changes to active/historical snapshots.
 
 
 ## Global Stretching — build 73
 
-Settings → Training adds a native Stretching switch, enabled by default, without a description beneath it (removed at the user’s request in build 74). The saved SQLite preference removes the preparation stretch section and stretch steps from every newly started workout when off. Warm-ups and rests keep their rules; final Feeling says Finish Workout and completes the session. Existing active/history snapshots are unchanged. The switch is disabled during saving and reports errors without showing an unsaved value. HIG reference: Toggles (“Use a toggle for two opposing values that affect the state of content or a view.”); native List/Toggle, system typography and VoiceOver state. This scope and future-only behavior are Sport product choices. Physical Dynamic Type, VoiceOver and flow validation pending.
+Settings → Training adds a native Stretching switch, enabled by default, without a description beneath it (removed at the user’s request in build 74). The saved SQLite preference removes the preparation stretch section and stretch steps from every newly started workout when off. Warm-ups and rests keep their rules; final Feeling says Finish Workout and completes the session. Existing active/history snapshots are unchanged. The switch is disabled during saving and reports errors without showing an unsaved value. HIG reference: Toggles (“Use a toggle for two opposing values that affect the state of content or a view.”); native List/Toggle, system typography and VoiceOver state. This scope and future-only behavior are Reps product choices. Physical Dynamic Type, VoiceOver and flow validation pending.
 
 ## Audit corrections — build 75
 
@@ -401,7 +401,7 @@ Progress → Skills uses native lists, detail navigation and forms, preserving t
 
 Workout Skills form an ordered group before strength by default, optionally after strength and before stretches. Each practice shows its own preparation; existing strength warm-ups remain. During an active workout, adjustments apply only to that snapshot. Free Practice avoids interaction between attempts; detailed holds/repetitions use actual results and persisted rests. Ending a practice pauses elapsed time before optional result entry. Practice time and declared best hold have separate labels. Source demonstrations open externally only when selected.
 
-HIG references consulted: Lists and tables (text and concise row content), Entering data (choices and defaults), Onboarding (postpone nonessential setup), Accessibility/Typography and Designing for iOS. The roadmap, placement and tracking policies are Sport choices. No new visual media or network service. Physical iPhone validation is pending.
+HIG references consulted: Lists and tables (text and concise row content), Entering data (choices and defaults), Onboarding (postpone nonessential setup), Accessibility/Typography and Designing for iOS. The roadmap, placement and tracking policies are Reps choices. No new visual media or network service. Physical iPhone validation is pending.
 
 ## Skills interface refinement — 1.2.0 (79)
 
@@ -429,17 +429,17 @@ ChatGPT import tolerates copied Markdown hard breaks and encoded/nonbreaking ind
 
 ## Accent content symbols — 1.2.3 (85)
 
-SF Symbols beside normal content/action text use Sport's adaptive blue accent through a shared native LabelStyle; titles retain their existing style. Applied inside each tab's content only. Native tab icons/selection, standalone toolbar glyphs, destructive red ink and contrasting ink on filled buttons remain distinct. Hand-built roadmap symbol rows follow the same accent rule; numeric step markers retain their status styling.
+SF Symbols beside normal content/action text use Reps's adaptive blue accent through a shared native LabelStyle; titles retain their existing style. Applied inside each tab's content only. Native tab icons/selection, standalone toolbar glyphs, destructive red ink and contrasting ink on filled buttons remain distinct. Hand-built roadmap symbol rows follow the same accent rule; numeric step markers retain their status styling.
 
 ## Native Skills menu symbols — 1.2.4 (86)
 
-Device feedback shows native menu entries ignore the global template LabelStyle. Ordinary Skills menu/context-menu labels use original UIKit SF Symbol images precolored with Sport's adaptive accent, following the already-working destructive symbol rendering. Title text stays primary; toolbar plus/ellipsis stay white; destructive labels/images retain red. Other content styling and native tabs remain unchanged.
+Device feedback shows native menu entries ignore the global template LabelStyle. Ordinary Skills menu/context-menu labels use original UIKit SF Symbol images precolored with Reps's adaptive accent, following the already-working destructive symbol rendering. Title text stays primary; toolbar plus/ellipsis stay white; destructive labels/images retain red. Other content styling and native tabs remain unchanged.
 
 ## Consistency photo days — 1.2.5 (87)
 
 Remove the entire Filled/Dot/week legend. Missed scheduled workouts use xmark. Dates containing progress photos use camera.fill; completed-workout dates keep the accent background and contrasting ink. Other photo dates use the accent camera on a neutral background. Photo presence never completes a workout. The grid and day list include photo-only dates; their natural range starts at the earliest completed workout or indexed photo date. Current missed-day rules, fillers and horizontal navigation remain.
 
-Day detail displays the photo count without loading media or bypassing Private Photos. VoiceOver/list summaries include both workout state and photo count when applicable. A short temporary message explains that older photo days require one normal vault unlock; generic activity-read errors expose no private details. Vault Settings explains that dates/counts are visible outside Face ID while images remain encrypted. camera.fill is Sport's product choice using a familiar system symbol, not an Apple-prescribed attendance metaphor. Physical small-cell readability, Dynamic Type and appearance checks remain required.
+Day detail displays the photo count without loading media or bypassing Private Photos. VoiceOver/list summaries include both workout state and photo count when applicable. A short temporary message explains that older photo days require one normal vault unlock; generic activity-read errors expose no private details. Vault Settings explains that dates/counts are visible outside Face ID while images remain encrypted. camera.fill is Reps's product choice using a familiar system symbol, not an Apple-prescribed attendance metaphor. Physical small-cell readability, Dynamic Type and appearance checks remain required.
 
 ## White photo-day camera — 1.2.6 (88)
 
@@ -461,7 +461,7 @@ Progress→Private Vault retains the four native tabs and existing full-screen F
 
 Movement details show dated native rows with lazy thumbnails and durations; import is a system PhotosPicker restricted to video, followed by an editable progression date and explicit Save. One video uses AVPlayerViewController. Comparison preserves the original aspect ratios in two equal columns, with dates, native sliders,1/0.5/0.25xpicker, Link Playback and shared/separate controls. Manual seek establishes each gesture offset; shared start uses the same host clock, and a boundary/end callback pauses both at the first end. Comparison is muted. Secondary actions use native menus with original UIKit accent glyphs; destructive actions remain red. Dynamic Type and VoiceOver labels are present; visual/touch acceptance remains physical.
 
-Apple HIG Playing video recommends the system player and original aspect ratio; Segmented controls supports related subviews. The two vault categories, limits, movement grouping and paired alignment policy are Sport choices. No custom glass/card system or decorative animation is introduced.
+Apple HIG Playing video recommends the system player and original aspect ratio; Segmented controls supports related subviews. The two vault categories, limits, movement grouping and paired alignment policy are Reps choices. No custom glass/card system or decorative animation is introduced.
 
 ### Vault movement video corrections
 

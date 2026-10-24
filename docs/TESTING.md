@@ -1,10 +1,10 @@
-# What Sport's tests prove
+# What Reps's tests prove
 
 An assertion is the final check, not the whole test. Its value depends on the setup and actions that happen before it.
 
 ## Real scenarios
 
-The host package builds the same `SportCore` and SQLite sources as the iPhone app. Tests use temporary or in-memory databases, not personal on-device data.
+The host package builds the same `RepsCore` and SQLite sources as the iPhone app. Tests use temporary or in-memory databases, not personal on-device data.
 
 | Scenario | What actually runs | What the assertion checks |
 | --- | --- | --- |
@@ -17,7 +17,7 @@ The host package builds the same `SportCore` and SQLite sources as the iPhone ap
 | Clock regression | Complete a warm-up, move time backward, try cancellation | Inconsistent end dates are rejected and exports remain usable |
 | CSV round trip | Export actual repository records, parse them, import into a fresh database | Results, loads, goals and auxiliary stages are preserved |
 
-Examples are in [WorkoutSupportTests](../Tests/Host/Tests/SportCoreTests/WorkoutSupportTests.swift), [WorkoutTests](../Tests/Host/Tests/SportCoreTests/WorkoutTests.swift), [RestActivityTests](../Tests/Host/Tests/SportCoreTests/RestActivityTests.swift), and [TrainingTransferTests](../Tests/Host/Tests/SportCoreTests/TrainingTransferTests.swift).
+Examples are in [WorkoutSupportTests](../Tests/Host/Tests/RepsCoreTests/WorkoutSupportTests.swift), [WorkoutTests](../Tests/Host/Tests/RepsCoreTests/WorkoutTests.swift), [RestActivityTests](../Tests/Host/Tests/RepsCoreTests/RestActivityTests.swift), and [TrainingTransferTests](../Tests/Host/Tests/RepsCoreTests/TrainingTransferTests.swift).
 
 Checking `restored == original` after all those operations is useful: it verifies a complete persisted snapshot, not merely a hand-written constant. However, a test can still be weak if the expected value just repeats the implementation, or if it never exercises failure and boundary cases.
 
@@ -46,7 +46,7 @@ swift format lint --strict --recursive Package.swift Sources Tests/Host/Package.
 
 These tests never require the user's private photos or real training database.
 
-The stretch deadline is persisted and reconciled to the exact target after suspension. The foreground app uses its existing completion sound. Background sound at the deadline is not scheduled by a new notification or Live Activity and is not guaranteed while iOS suspends Sport.
+The stretch deadline is persisted and reconciled to the exact target after suspension. The foreground app uses its existing completion sound. Background sound at the deadline is not scheduled by a new notification or Live Activity and is not guaranteed while iOS suspends Reps.
 
 1.0.3: attendance tests cover no completed history, current day, rest days, cancellation, completed off-schedule days, first workout outside the window and Paris DST. iPhone checks: missed-day dot and labels, no Partial, native Cancel neutral in both appearances, destructive action still red, confirmation dismisses on vault lock/background.
 
@@ -112,7 +112,7 @@ Device checklist: Progress shows Pike4×12 and L-sit4×18s for the reported data
 
 281 host tests pass (7.122 s), including six added scenarios: persisted flag across reopen and toggling without rewriting active snapshots; every schedule; JSONv5 restore/legacy v4 default/CSV preference preservation; schema15→16 preservation; one/two warm-up-only support validation; warm-up/rest → working sets → last Feeling completion with CSV/JSON round trip. Two lifecycle/validation tests first failed with six assertions/errors; the transfer test failed before JSON shape/restore support. Legacy migration fixtures now include their original preferences table or remove the new column before simulated downgrade. Strict lint and six metadata tests pass. Independent review found a fixture downgrade issue, corrected; no production findings.
 
-Device checklist: Settings → Training → Stretching off; prepare a workout (warm-up visible, stretch selector absent); complete it (Finish Workout after final Feeling, normal summary). Reopen Sport and check off persists; enable again and verify stretch selection/flow returns. A workout already started keeps its original stages. Check large text, VoiceOver state and light/dark rendering. Host tests/build/install do not establish these physical results.
+Device checklist: Settings → Training → Stretching off; prepare a workout (warm-up visible, stretch selector absent); complete it (Finish Workout after final Feeling, normal summary). Reopen Reps and check off persists; enable again and verify stretch selection/flow returns. A workout already started keeps its original stages. Check large text, VoiceOver state and light/dark rendering. Host tests/build/install do not establish these physical results.
 ## Audit corrections — build 75
 
 290 host tests pass. Nine new HistoryGoalReconciliationTests cover latest manual history, edited/deleted sources, removal of the final source, personalized targets, active snapshot preservation, preserved/invalidated explicit decisions, forced SQL rollback, historical set-count corrections, catalogue renaming and an unprojectable exact load. Original six scenarios failed with 11 assertions before implementation; three additional reviewer cases were reproduced before correction. Legacy history/goal tests now expect an automatically inherited baseline while retaining their stale-command, persistence and schedule-structure checks.
@@ -137,19 +137,19 @@ Physical checklist: discover all four roadmaps and their extensions; create/dupl
 
 328 host tests pass, including progression forward/backward reconciliation, completion waiting for secondary goals, reset/future-block volume preservation, distinct archive/delete lifecycle, deletion across mixed and independent history with active guards, both workout-assignment model paths surviving a real SQLite reopen, preset spelling/video display compatibility, and strict generated JSON validation/single draft save. Nine Python metadata/style checks guard centralized controls and root-owned block presentation. Final xtool and unsigned bundle inspector pass.
 
-YouTube selections: GMB's current author pages link handstand `d6_lcWtQDxw`, planche fundamentals `8mnNpNZ88Oo`, straddle `6snDOgFBBFA`, advanced/full `wYWlie_g_js`, press `SfLaCKaljU4`, HSPU `nk-bjYYZVaE`, L-sit `BbAkWxDZKIM` (chapters135/202/235/268/306 seconds). FitnessFAQs demonstrates planche push-ups `TZ63httkob4`, front lever progression `AGhb8V8M758`, and rows/pulls `dze1Dpi3CKk`; Stretch To Strength demonstrates L-sit/V-sit progression `0pkTDnbRe8Q`. Author descriptions and progression contents were checked through web sources. Direct web fetching failed for some videos; all selected URLs subsequently opened a YouTube player in the in-app browser, with loaded durations. Some players showed advertisements; this is not proof of complete uninterrupted playback or a frame-by-frame technique audit. No video is embedded/downloaded into Sport.
+YouTube selections: GMB's current author pages link handstand `d6_lcWtQDxw`, planche fundamentals `8mnNpNZ88Oo`, straddle `6snDOgFBBFA`, advanced/full `wYWlie_g_js`, press `SfLaCKaljU4`, HSPU `nk-bjYYZVaE`, L-sit `BbAkWxDZKIM` (chapters135/202/235/268/306 seconds). FitnessFAQs demonstrates planche push-ups `TZ63httkob4`, front lever progression `AGhb8V8M758`, and rows/pulls `dze1Dpi3CKk`; Stretch To Strength demonstrates L-sit/V-sit progression `0pkTDnbRe8Q`. Author descriptions and progression contents were checked through web sources. Direct web fetching failed for some videos; all selected URLs subsequently opened a YouTube player in the in-app browser, with loaded durations. Some players showed advertisements; this is not proof of complete uninterrupted playback or a frame-by-frame technique audit. No video is embedded/downloaded into Reps.
 
 Physical checks still required on iPhone: independently perform Skills→Add to Workout→Save→reopen; Settings→Workouts→Edit→Add Skill→configure→Save block→Save workout→reopen (the intermediate block must stay presented). Check all Skills forms and menus in light/dark and large text/VoiceOver. Complete the main goal while secondary goals remain incomplete, finish the last secondary goal, regress, reset, archive and permanently delete. Generate via an installed provider, paste its real response, retry invalid JSON, inspect preview, save once and reopen. UIKit/SwiftUI modal lifecycles and external-provider app behavior cannot be automated by the host-domain tests on Linux. Independent reviewer stopped at its account usage limit after identifying the swipe-contrast issue; that finding was fixed, but no full independent review of the expanded scope was completed.
 
 ## Kavi creation and Skills controls — build 81
 
-331 host tests pass with zero failures (7.69s); three new cases cover fenced/prose-wrapped AI responses and rejection of ambiguous multiple roadmaps. Two cases were observed failing before the parser change. Nine metadata/style checks, strict Swift lint, diff whitespace checks and the real xtool build pass. Final app/widget inspection confirms 1.2.0(81); provider assets are bundled. Logs are in /tmp/sport-skills-kavi-followup/.
+331 host tests pass with zero failures (7.69s); three new cases cover fenced/prose-wrapped AI responses and rejection of ambiguous multiple roadmaps. Two cases were observed failing before the parser change. Nine metadata/style checks, strict Swift lint, diff whitespace checks and the real xtool build pass. Final app/widget inspection confirms 1.2.0(81); provider assets are bundled. Logs are in /tmp/reps-skills-kavi-followup/.
 
 Physical checks: centered title, white plus/cancel symbols, archive below Completed, icon-only archive swipe and whole-row long press. For AI creation test name→provider, installed app opening, return/paste→editable review, edit→back→Continue Reviewing, save once and reopen; invalid or empty clipboard must show an alert. Also check accessibility text sizes and cancel in manual creation. The actual response associated with the user's “nothing happens” report was not provided: wrapped-response rejection is reproduced, but its causal link to that particular response remains unconfirmed. Linux tests/build do not establish native navigation or handoff acceptance.
 
 ## Physical corrections — build83
 
-332 host tests pass, including independent achievement updates and a video-research prompt regression first observed red. Nine metadata/style checks and strict lint pass. Physical checks: AI/manual cancel has a single native glass boundary; all three provider logos visible; Archived Skills permanent-delete glyph red in detail menu and long-press menu; marking a later step Consistent retains current and leaves other achievements unchanged; provider response contains actual verified video links when web search is available. Exact rejected ChatGPT response requested, not yet received: no claim of fixing that specific parser failure. Evidence: /tmp/sport-skills-123/.
+332 host tests pass, including independent achievement updates and a video-research prompt regression first observed red. Nine metadata/style checks and strict lint pass. Physical checks: AI/manual cancel has a single native glass boundary; all three provider logos visible; Archived Skills permanent-delete glyph red in detail menu and long-press menu; marking a later step Consistent retains current and leaves other achievements unchanged; provider response contains actual verified video links when web search is available. Exact rejected ChatGPT response requested, not yet received: no claim of fixing that specific parser failure. Evidence: /tmp/reps-skills-123/.
 
 ChatGPT follow-up: supplied response shows Markdown backslash hard breaks and encoded indentation. Regression reproduces that formatting rejection, then passes with string-aware normalization. Valid escapes and literal entities inside instruction strings are preserved; malformed escapes and ambiguous roadmaps remain rejected.334 host tests/zero failures(7.548s), nine metadata/style checks and strict lint pass. Physical re-paste of the original response remains required because the chat transport itself may contribute formatting.
 

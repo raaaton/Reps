@@ -1,6 +1,6 @@
 # Brainstorm — Progression, assiduité et sauvegardes
 
-Statut : brainstorming du12 octobre, décisions retenues intégrées au plan global sur demande explicite d’ajouter deux jalons. **Aucune implémentation commencée pour ces fonctionnalités.** Ce document conserve aussi les propositions rejetées ou encore ouvertes ; les périmètres d’exécution de référence sont maintenant PLAN-SPORT-NATIF.md et docs/ROADMAP.md. Ordre restant :6 Rappels/Live Activities→7 Progression→8 Coffre→9 Animations/haptics→10 Sauvegarde/finitions.
+Statut : brainstorming du12 octobre, décisions retenues intégrées au plan global sur demande explicite d’ajouter deux jalons. **Aucune implémentation commencée pour ces fonctionnalités.** Ce document conserve aussi les propositions rejetées ou encore ouvertes ; les périmètres d’exécution de référence sont maintenant PLAN-REPS-NATIF.md et docs/ROADMAP.md. Ordre restant :6 Rappels/Live Activities→7 Progression→8 Coffre→9 Animations/haptics→10 Sauvegarde/finitions.
 
 ## Choix exprimés après la deuxième proposition
 
@@ -74,11 +74,11 @@ L’utilisateur confirme qu’il souhaite un objectif précis proposé pour la p
 ### Pistes prioritaires proposées
 
 1. **Lest déjà choisi, saisie minimale** : préparer le choix depuis l’objectif adopté, puis conserver la charge réelle de la série précédente dans l’exercice, en laissant changer la composition. Repères de dernière performance à côté des champs plutôt qu’un historique qu’il faut ouvrir. Répétitions et Feeling ne deviennent jamais des performances sauvegardées sans validation. Action explicite « Objectif réalisé » éventuellement proposée, avec Autre résultat à portée.
-2. **Préparation du sac avant la séance** : liste des objets nécessaires pour les charges prévues, compositions et modifications à effectuer entre exercices. Équipement manquant ce jour = choix contextuel, sans désactiver globalement l’inventaire ni inventer une charge. Utile pour le matériel réel de Sport (sac/livres).
+2. **Préparation du sac avant la séance** : liste des objets nécessaires pour les charges prévues, compositions et modifications à effectuer entre exercices. Équipement manquant ce jour = choix contextuel, sans désactiver globalement l’inventaire ni inventer une charge. Utile pour le matériel réel de Reps (sac/livres).
 3. **Correction immédiate d’une série** : corriger répétitions/lest pendant le repos sans terminer la séance ou retrouver un éditeur d’historique. Ne pas relancer le chrono/repos en corrigeant un nombre. Les propositions futures utilisent les données corrigées.
 4. **Feeling plus cohérent** : repères descriptifs courts sur l’échelle (subjective), et dernier Feeling avec sa charge pour comparaison. Ne pas convertir cette note en mesure clinique, RIR ou diagnostic. Ne pas ajouter un questionnaire avant chaque exercice.
 
-La réduction de saisie et les valeurs raisonnables préremplies sont des principes d’interface Apple : [Entering data](https://developer.apple.com/design/human-interface-guidelines/entering-data). Présenter les informations utiles dans leur contexte plutôt que des alertes répétées correspond à [Feedback](https://developer.apple.com/design/human-interface-guidelines/feedback). Le détail Sport reste un choix de produit, non une règle Apple sur l’entraînement.
+La réduction de saisie et les valeurs raisonnables préremplies sont des principes d’interface Apple : [Entering data](https://developer.apple.com/design/human-interface-guidelines/entering-data). Présenter les informations utiles dans leur contexte plutôt que des alertes répétées correspond à [Feedback](https://developer.apple.com/design/human-interface-guidelines/feedback). Le détail Reps reste un choix de produit, non une règle Apple sur l’entraînement.
 
 ### Pistes complémentaires à évaluer
 
@@ -100,7 +100,7 @@ Le code actuel contient déjà des haptics pour le décompte/départ des séries
 - Décompte et fin de repos : conserver/rationaliser les événements existants ; aucune vibration à chaque seconde du repos ou du chrono.
 - Haptics désactivables, aucune information uniquement tactile. Pas de promesse de vibration background/Live Activity avant prototype/essai iPhone.
 
-Référence : [Apple Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics), patterns système selon signification, événements courts et cohérents, usage modéré et optionnel. Ce n’est pas un motif pour ajouter des haptics partout. L’emplacement exact de chaque retour reste un choix de Sport à confirmer lors de la conception.
+Référence : [Apple Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics), patterns système selon signification, événements courts et cohérents, usage modéré et optionnel. Ce n’est pas un motif pour ajouter des haptics partout. L’emplacement exact de chaque retour reste un choix de Reps à confirmer lors de la conception.
 
 ## Animations — fluidité globale sobre
 

@@ -4,7 +4,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SKILLS = ROOT / 'Sources/Sport/Features/Skills'
+SKILLS = ROOT / 'Sources/Reps/Features/Skills'
 
 class SkillStyleTests(unittest.TestCase):
     def test_form_toolbar_actions_use_shared_semantic_controls(self):
@@ -27,7 +27,7 @@ class SkillStyleTests(unittest.TestCase):
         section = (SKILLS / 'SkillBlockEditor.swift').read_text().split('struct ScheduleSkillSection: View')[1]
         self.assertNotIn('.sheet(', section)
         self.assertNotIn('schedule.skills.append', section)
-        editor = (ROOT / 'Sources/Sport/Features/Settings/PlanningView.swift').read_text()
+        editor = (ROOT / 'Sources/Reps/Features/Settings/PlanningView.swift').read_text()
         self.assertIn('.sheet(item: $skillDraft)', editor)
 
 if __name__ == '__main__':

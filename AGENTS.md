@@ -1,10 +1,12 @@
-# Sport — instructions du projet natif
+# Reps — instructions du projet natif
+
+Reps est le nouveau nom de Sport depuis1.3.3. La même identité installée et l’autorisation de livraison existante sont conservées ; ce renommage ne constitue pas une première installation.
 
 ## Produit et expérience
 
-Sport est une application personnelle iPhone, locale et hors ligne, en Swift/SwiftUI. La demande du 11 octobre 2026 remplace Expo/React Native/TypeScript, dont les instructions sont conservées dans docs/archive/AGENTS-expo.md.
+Reps est une application personnelle iPhone, locale et hors ligne, en Swift/SwiftUI. La demande du 11 octobre 2026 remplace Expo/React Native/TypeScript, dont les instructions sont conservées dans docs/archive/AGENTS-expo.md.
 
-**Priorité permanente : l’expérience qu’aurait une app Apple dédiée à ce besoin.** Respecter au maximum les [Human Interface Guidelines Apple](https://developer.apple.com/design/human-interface-guidelines), référence explicite demandée par l’utilisateur. Consulter les chapitres concernés avant toute décision UI ; distinguer leurs recommandations des choix propres à Sport. Utiliser composants natifs, hiérarchie sobre et interactions familières. SwiftUI ne suffit pas : vérifier le résultat sur iPhone à chaque jalon. Respecter Dynamic Type, VoiceOver, zones sûres, apparences système, SF Symbols, gestes et transitions standard. Aucun faux verre, dégradé gratuit ou carte décorative répétée.
+**Priorité permanente : l’expérience qu’aurait une app Apple dédiée à ce besoin.** Respecter au maximum les [Human Interface Guidelines Apple](https://developer.apple.com/design/human-interface-guidelines), référence explicite demandée par l’utilisateur. Consulter les chapitres concernés avant toute décision UI ; distinguer leurs recommandations des choix propres à Reps. Utiliser composants natifs, hiérarchie sobre et interactions familières. SwiftUI ne suffit pas : vérifier le résultat sur iPhone à chaque jalon. Respecter Dynamic Type, VoiceOver, zones sûres, apparences système, SF Symbols, gestes et transitions standard. Aucun faux verre, dégradé gratuit ou carte décorative répétée.
 
 Évaluer les idées de manière critique ; signaler les solutions inutiles ou disproportionnées. Préserver vocabulaire et règles métier ; ne pas changer silencieusement le périmètre.
 
@@ -17,16 +19,16 @@ Règle de couleur des libellés : dans le contenu et les actions, les SF Symbols
 - Conserver/adopter Package.swift, xtool.yml et Sources/. Pas de projet Xcode comme build principal, npm, Expo, React Native, CocoaPods, CI macOS ou SideStore.
 - Utiliser le SDK déjà enregistré, sans réinstallation ; SDKSettings.json indique actuellement iPhoneOS 27.1.
 - Limiter les dépendances ; vérifier toute nouvelle dépendance contre le SDK et xtool.
-- Nom affiché Sport ; identifiant configuré stable com.raaaton.sport. Contrôler l’identifiant effectif après provisioning xtool.
+- Nom affiché Reps ; identifiant configuré stable com.raaaton.sport. Contrôler l’identifiant effectif après provisioning xtool.
 - Vues petites, organisation par fonctionnalité, logique hors des écrans, transitions explicites et concurrence Swift 6 maîtrisée.
 
 ## Travail par jalon
 
-1. Lire les documents Sport et l’ExecPlan avant édition ; les validations historiques ne prouvent pas l’état Swift.
+1. Lire les documents Reps et l’ExecPlan avant édition ; les validations historiques ne prouvent pas l’état Swift.
 2. Implémenter uniquement le jalon validé. Suivre .agents/PLANS.md ; nouveaux ExecPlans dans docs/exec-plans/, car .agents/ est en lecture seule dans ce workspace.
 3. Exécuter lint Swift, tests applicables et **xtool dev build**. Conserver les caches et rapporter les résultats réels.
-4. Avant installation, vérifier identité, capacités et effets de provisioning. **Avant la première installation Sport, demander confirmation de la suppression de HelloSport sur l’iPhone. Jamais de suppression de son code local.**
-5. Utiliser ~/omarchy-apple-dev/device-run.sh depuis Sport quand les conditions sont réunies. En cas d’erreur de signature/provisioning, arrêter et rapporter le message exact ; ne pas révoquer/remplacer certificats ou profils pour contourner l’erreur.
+4. Avant installation, vérifier identité, capacités et effets de provisioning. **Avant la première installation Reps, demander confirmation de la suppression de HelloSport sur l’iPhone. Jamais de suppression de son code local.**
+5. Utiliser ~/omarchy-apple-dev/device-run.sh depuis Reps quand les conditions sont réunies. En cas d’erreur de signature/provisioning, arrêter et rapporter le message exact ; ne pas révoquer/remplacer certificats ou profils pour contourner l’erreur.
 6. Installer chaque build prête à tester sur l’iPhone avant de demander une review utilisateur (instruction explicite du 11 octobre 2026). L’autorisation de ce workflow persiste : ne pas redemander une permission d’installation à chaque jalon, sauf effet inattendu ou blocage de signature. Rapporter modifications, vérifications, limites et checklist appareil ; attendre le retour explicite sur iPhone avant le jalon suivant. Une compilation n’est pas une validation iPhone.
 
 En mode auto_review, soumettre directement les escalades nécessaires au reviewer après un blocage réel du sandbox. Ne pas changer le mode de permission. Ne pas réinitialiser le dépôt, supprimer des données ou nettoyer les caches.

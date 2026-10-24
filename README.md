@@ -2,15 +2,15 @@
 
 
 <p align="center">
-  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Sport" />
-  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Sport" />
-  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Sport" />
-  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Sport" />
+  <img alt="release" src="https://img.shields.io/github/v/release/raaaton/Reps" />
+  <img alt="stars" src="https://img.shields.io/github/stars/raaaton/Reps" />
+  <img alt="forks" src="https://img.shields.io/github/forks/raaaton/Reps" />
+  <img alt="issues" src="https://img.shields.io/github/issues/raaaton/Reps" />
 </p>
 
-# Sport
+# Reps
 
-**Sport** is a native, local-first iPhone workout app built for focused training, clear progression, and full ownership of your data.
+**Reps** is a native, local-first iPhone workout app built for focused training, clear progression, and full ownership of your data.
 
 It is written with **SwiftUI**, **SQLite**, and Apple system APIs. There is no account, backend, analytics, advertising, or in-app runtime network dependency.
 
@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). Version 1.3.2 (98) is installed on the owner’s iPhone with added-weight choices spaced by at least 0.5 kg and the preceding private-video corrections. Physical acceptance and public release remain pending.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. The latest renamed build is 1.3.3 (99); delivery and verification are tracked in [the rename plan](docs/exec-plans/2026-10-24-reps-rename.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -133,13 +133,13 @@ The vault uses a device-bound key protected by the current biometric enrollment.
 - Explicit camera, Face ID, and photo-export permissions.
 - Private photos excluded from training transfers and system backups.
 
-Sport itself does not upload your data or contact a server. Training data may be included in iOS device backups according to your system settings; the private vault is explicitly excluded. Exports and saving a photo to Photos are user-controlled. The source repository and release IPAs contain no on-device history, private photos, signing keys, or personal provisioning profiles.
+Reps itself does not upload your data or contact a server. Training data may be included in iOS device backups according to your system settings; the private vault is explicitly excluded. Exports and saving a photo to Photos are user-controlled. The source repository and release IPAs contain no on-device history, private photos, signing keys, or personal provisioning profiles.
 
 ---
 
 ## Design
 
-Sport favors native iOS components, familiar navigation, system typography, SF Symbols, restrained haptics, and useful animations.
+Reps favors native iOS components, familiar navigation, system typography, SF Symbols, restrained haptics, and useful animations.
 
 Its visual identity uses **Icy Cyan `#4DD9E8`** with neutral system surfaces. The layered `.icon` app icon gives iOS the foreground shapes and material settings needed for native depth and glass rendering.
 
@@ -167,8 +167,8 @@ The interface is currently **English**. Exercise names and other personal conten
 The development workflow uses Linux and an already-configured Swift Apple SDK and xtool installation. No macOS build runner or Xcode project is required.
 
 ```sh
-git clone https://github.com/raaaton/Sport.git
-cd Sport
+git clone https://github.com/raaaton/Reps.git
+cd Reps
 bash scripts/release-local.sh
 ```
 
@@ -190,12 +190,12 @@ These checks do **not** run SwiftUI or prove Face ID, notifications, haptics, or
 
 ```text
 Sources/
-├── Sport/                 # App, native views and platform services
-├── SportCore/             # Domain, SQLite and transitions
-├── SportLiveSupport/      # Shared activity state and adapters
-├── SportRestWidget/       # WidgetKit extension
+├── Reps/                 # App, native views and platform services
+├── RepsCore/             # Domain, SQLite and transitions
+├── RepsLiveSupport/      # Shared activity state and adapters
+├── RepsRestWidget/       # WidgetKit extension
 └── CSQLite/               # System SQLite module
-Resources/SportIcon.icon/  # Editable vector icon layers
+Resources/RepsIcon.icon/  # Editable vector icon layers
 Tests/Host/                # Linux domain and persistence tests
 Tests/Metadata/            # App Intents metadata regression tests
 scripts/                   # Local build, metadata and release verification
@@ -211,4 +211,9 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 
 ---
 
-<p align="center"><strong>Sport</strong><br />Native. Offline. Focused.</p>
+<p align="center"><strong>Reps</strong><br />Native. Offline. Focused.</p>
+
+
+### Existing installations and backups
+
+Reps updates the same installed app. Its technical bundle/keychain identity and backup markers intentionally retain the legacy name, preserving local training, Face ID vault access, reminders and existing exports. The `sport://` workout-link alias remains supported alongside `reps://`.

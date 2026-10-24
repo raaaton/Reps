@@ -1,4 +1,4 @@
-# Sport — sécurité
+# Reps — sécurité
 
 ## État au 13 octobre 2026 — audit global
 
@@ -23,12 +23,12 @@ Aucune photo n’est stockée ; aucune permission sensible, authentification ou 
 - CryptoKit AES-256-GCM, clé aléatoire ; originaux et miniatures chiffrés dans le conteneur privé.
 - Keychain protégé pour cet appareil et le jeu biométrique courant ; Face ID natif et NSFaceIDUsageDescription lors de l’intégration. Pas de demande au lancement général.
 - Échec fermé si authentification/clé inaccessible ; aucune substitution ou régénération automatique.
-- Nettoyer références/état déchiffrés au verrouillage, invalider les opérations asynchrones périmées ; protection iOS et suppression des fichiers temporaires contrôlés par Sport.
+- Nettoyer références/état déchiffrés au verrouillage, invalider les opérations asynchrones périmées ; protection iOS et suppression des fichiers temporaires contrôlés par Reps.
 - Import Photos/caméra explicite et copie indépendante ; ne pas supprimer les originaux. Export confirmé avec permission d’ajout ; copie exportée hors coffre.
 - Aucune clé, photo, miniature en clair, chemin privé ou résultat biométrique dans les logs, notifications ou captures générées.
 - Réinitialisation et suppression globale exclusivement sur confirmation explicite.
 
-Décision utilisateur du 13 octobre : verrouillage immédiat à la sortie du coffre ou au background, aperçu masqué dès inactive ; aucun délai de session 1/5min. La protection concerne le coffre seulement, pas un masque général sur Sport. Rendu de l’aperçu à vérifier physiquement, sans promettre le blocage des screenshots iOS. Ne pas changer les biométries personnelles pour un test sans accord spécifique.
+Décision utilisateur du 13 octobre : verrouillage immédiat à la sortie du coffre ou au background, aperçu masqué dès inactive ; aucun délai de session 1/5min. La protection concerne le coffre seulement, pas un masque général sur Reps. Rendu de l’aperçu à vérifier physiquement, sans promettre le blocage des screenshots iOS. Ne pas changer les biométries personnelles pour un test sans accord spécifique.
 
 ## Vérifications requises
 
@@ -36,17 +36,17 @@ Revue indépendante, tests chiffrement/corruption/transitions/erreurs, compilati
 
 ## Signature
 
-Le build sans --sign ne provisionne pas. La suppression de HelloSport sur iPhone a été confirmée et Sport installé au jalon 1 ; son code local reste intact. Les déploiements suivants doivent mettre à jour la même identité effective xtool. Ne pas afficher les secrets, révoquer ou remplacer un certificat pour contourner une erreur ; vérifier la validité du certificat existant avant d’appeler le script de déploiement.
+Le build sans --sign ne provisionne pas. La suppression de HelloSport sur iPhone a été confirmée et Reps installé au jalon 1 ; son code local reste intact. Les déploiements suivants doivent mettre à jour la même identité effective xtool. Ne pas afficher les secrets, révoquer ou remplacer un certificat pour contourner une erreur ; vérifier la validité du certificat existant avant d’appeler le script de déploiement.
 
 
 ## Prototype ActivityKit
 
-RestPauseIntent est compilé dans app et widget, avec métadonnées issues des vrais outputs Swift. LiveActivityIntent est destiné à l’exécution dans le processus app. SportRuntime refuse l’accès SQLite si Bundle.main est un .appex, avant de créer un fichier ; aucune base parallèle silencieuse ni App Group. Une action valide écrit en transaction avant la mise à jour ActivityKit ; identifiant du repos et ancienne échéance/durée protègent des actions périmées. La projection ActivityKit lit SQLite sans consommer les événements de feedback de l’app.
+RestPauseIntent est compilé dans app et widget, avec métadonnées issues des vrais outputs Swift. LiveActivityIntent est destiné à l’exécution dans le processus app. RepsRuntime refuse l’accès SQLite si Bundle.main est un .appex, avant de créer un fichier ; aucune base parallèle silencieuse ni App Group. Une action valide écrit en transaction avant la mise à jour ActivityKit ; identifiant du repos et ancienne échéance/durée protègent des actions périmées. La projection ActivityKit lit SQLite sans consommer les événements de feedback de l’app.
 
 Le nom d’exercice, la prochaine série et le repos sont volontairement visibles sur écran verrouillé/Dynamic Island ; aucune photo ni donnée du futur coffre. Seuls les instantanés utiles sont remis au widget. Aucun certificat nouveau attendu ; un profil enfant WidgetKit est nécessaire. Vérifier les deux profils et le même certificat après installation. Aucun changement cryptographique dans ce jalon.
 
 
-Postflight0.4.0 exécuté : même identité Sport, profils app/enfant valides et CMS vérifiés ; tous deux utilisent le certificat contrôlé au préflight, certificat local inchangé. Aucun App Group/push détecté. Ces contrôles ne valident pas l’exécution physique des intents.
+Postflight0.4.0 exécuté : même identité Reps, profils app/enfant valides et CMS vérifiés ; tous deux utilisent le certificat contrôlé au préflight, certificat local inchangé. Aucun App Group/push détecté. Ces contrôles ne valident pas l’exécution physique des intents.
 
 
 Correction0.4.1 : seul le script du projet est adapté pour sérialiser le marqueur SessionStarting confirmé dans les sorties Xcode de référence. Il requiert la conformité compilée réelle et refuse les champs inconnus. Le garde d’accès depuis extension reste présent ; aucun App Group, entitlement, certificat ou stockage supplémentaire. Essai iPhone du routage requis avant validation.
@@ -93,7 +93,7 @@ CSV et JSON entraînement excluent photos/miniatures/clés/autorisationssystème
 
 Blocagelevé sansbypass :107tests réels sans échec, notamment rollbackSQL après insertioncopie et écriture partielle, conflits/idempotence, payloadprivé/version rejetés, snapshots/charges/Feelingexact/repriseannulée/size/date. BuildiOSfinal et lintstrict réussis. Aucun scénarioFaceID/coffre ajouté ou prétendu testé.
 
-Postflight0.7.1 réussi : même identité Sport/widget, profilsvalides CMSvérifiés,même certificatpréflight etlocalinchangé, aucune permission sensible/AppGroup/push. L’agent n’a importé aucune donnée de test surl’iPhone ; l’importdemande unaperçu et actionutilisateur. Recette sécuritédonnées/rollback/récupération suriPhone encore attendue, coffreabsent.
+Postflight0.7.1 réussi : même identité Reps/widget, profilsvalides CMSvérifiés,même certificatpréflight etlocalinchangé, aucune permission sensible/AppGroup/push. L’agent n’a importé aucune donnée de test surl’iPhone ; l’importdemande unaperçu et actionutilisateur. Recette sécuritédonnées/rollback/récupération suriPhone encore attendue, coffreabsent.
 
 0.7.2 : correctiondevisualisation uniquement, aucuneécriture/migrationdansstatistiques, pasderestprésumépourmanuals,pasdeclé/photo/permission exposée. FormatsCSVJSONconservés etphotosexclues. Postflightversion18mêmeapp/widget,mêmescertificats,profilsvalidesCMSvérifiés,aucunAppGroup/push/permission. Publicationdeprojection aprèsfiltre protégée parcancellation/keyedrequest ; runtimeUIphysiqueencoreàtester.
 
@@ -149,7 +149,7 @@ Clé aléatoire de production dans un namespace distinct du prototype, Keychain 
 
 Sortie/background révoquent le lease et effacent les références déchiffrées ; inactive masque toutes les surfaces du coffre sans animation, y compris feuilles/caméra. Callbacks épinglés à un UUID de session : une ancienne sélection ne peut entrer dans une session nouvelle. Vérifications avant/après lectures et avant publication. Pas de promesse d’effacement forensic de la mémoire, ni de blocage des screenshots iOS.
 
-Import PhotosPicker : copie système dont la durée de vie est limitée à la closure FileRepresentation, taille contrôlée avant allocation ; aucune copie disque en clair créée par Sport. Caméra native photo uniquement, conversion en mémoire et retrait d’un temporaire reçu appartenant à tmp deSport ; aucun original externe supprimé, aucune sauvegarde Photos automatique. Les caches/fichiers internes d’iOS restent sous contrôle du système. JPEG/PNG/HEIC/HEIF, limite24MiB/64Mpx/1000photos, miniature500px, aperçu2400px et cache64images. Live Photos : image fixe seulement ; RAW/GIF/vidéo hors périmètre.
+Import PhotosPicker : copie système dont la durée de vie est limitée à la closure FileRepresentation, taille contrôlée avant allocation ; aucune copie disque en clair créée par Reps. Caméra native photo uniquement, conversion en mémoire et retrait d’un temporaire reçu appartenant à tmp deReps ; aucun original externe supprimé, aucune sauvegarde Photos automatique. Les caches/fichiers internes d’iOS restent sous contrôle du système. JPEG/PNG/HEIC/HEIF, limite24MiB/64Mpx/1000photos, miniature500px, aperçu2400px et cache64images. Live Photos : image fixe seulement ; RAW/GIF/vidéo hors périmètre.
 
 Export original confirmé vers Photos, avertissement copie hors coffre/synchronisation éventuelle ; permission add-only uniquement à ce moment. Un export accepté par Photos ou un commit chiffré commencé peut finir pendant lock sans publier d’image/résultat dans une session périmée. Pas de logs, captures ou fixtures de médias privés. 137 tests hôte, lint/xtool et revue indépendante sans constat ; contrôles identité/profils/certificat postinstallation réussis. Le runtime des nouveaux parcours/temporaires et le masquage physique restent à tester sur iPhone avec un média non privé. Voir l’ExecPlan pour les preuves et limites exactes.
 
@@ -180,7 +180,7 @@ Exception explicitement demandée à la conservation historique : « Effacer aus
 Le zoom commun dans les deux surfaces privées garde UIImage centralisée et démontage UIKit, masque/session inchangés. Vue représentable fixée par GeometryReader, aucune réapplication de zoom dans layoutSubviews. Revue indépendante sans constat actionable ; masquage et ancrage runtime à confirmer sur iPhone. Pas de nouveau droit/clé/migration/format.
 
 
-0.10.5 : diagnostic limité aux deux rapports de crash Sport sur l’iPhone, en lecture seule sans effacement ; aucune photo personnelle ni opération de purge de données exécutée par l’agent. Contournement de List, couleur Play et pluriel uniquement ; sécurité du coffre, capacités et déclarations sensibles inchangées.
+0.10.5 : diagnostic limité aux deux rapports de crash Reps sur l’iPhone, en lecture seule sans effacement ; aucune photo personnelle ni opération de purge de données exécutée par l’agent. Contournement de List, couleur Play et pluriel uniquement ; sécurité du coffre, capacités et déclarations sensibles inchangées.
 
 
 0.11.0 : traduction et symboles uniquement. Fichiers VaultCryptography/VaultKeychain, schéma/seed et CSV de démonstration comparés identiques à0.10.5 ; aucune migration, clé, AAD, format, ACL ou capacité nouvelle. Buts des permissions anglais, mêmes permissions. Revue indépendante des changements persistants/cryptographiques sans constat ; quatre omissions de copie corrigées. Aucun média réel lu, importé ou supprimé par l’agent. La sauvegarde portable chiffrée n’est pas implémentée par cette finition.
@@ -188,12 +188,12 @@ Le zoom commun dans les deux surfaces privées garde UIImage centralisée et dé
 
 ## Preuve portable10B — 0.11.1
 
-Seul échantillon constant, sans accès aux repositories/clé biométrique/photos. CommonCrypto PBKDF2-HMACSHA256600000, salt16bytes aléatoire Security, clé32bytes en mémoire ; AES-GCM nonce généré par CryptoKit et header36bytes commeAAD. Framing distinct SPORTP01/.sporttest, version/KDF fixes/longueurs/suffixes bornés avant dérivation ; limite65600bytes du prototype, pas une limite annoncée pour la future sauvegarde complète. Mot de passe UTF8 exact (confirmationcomparelesoctets), non persisté, références effacées au lancement/inactive/sortie ; pas de garantie forensic de purge mémoire/KDF instantanément interrompu. Aucun secret/path/image/résultat biométrique loggé.
+Seul échantillon constant, sans accès aux repositories/clé biométrique/photos. CommonCrypto PBKDF2-HMACSHA256600000, salt16bytes aléatoire Security, clé32bytes en mémoire ; AES-GCM nonce généré par CryptoKit et header36bytes commeAAD. Framing distinct REPSP01/.repstest, version/KDF fixes/longueurs/suffixes bornés avant dérivation ; limite65600bytes du prototype, pas une limite annoncée pour la future sauvegarde complète. Mot de passe UTF8 exact (confirmationcomparelesoctets), non persisté, références effacées au lancement/inactive/sortie ; pas de garantie forensic de purge mémoire/KDF instantanément interrompu. Aucun secret/path/image/résultat biométrique loggé.
 
 Lectures Fichiers explicitement choisies, security-scope/release, FileHandle borné/chunké/fermé, contrôle de framing avant KDF. Revue indépendante a trouvé un callback Files hors garde ; corrigé via host/requestUUID immutable et gatevisible/active/token invalidéavantmutation. Trois régressions hôte RED(typeabsent) puis GREEN et revue corrective sans autre constat étayé. L’échantillon exporté est exclusivement chiffré et déclaré test ; aucun entraînement ou coffre remplacé. CryptoKit/CommonCrypto compilés mais tests natifs du vecteurRFC, roundtrip/nonce/PW/tag/AAD s’exécutent uniquement au tap sur l’iPhone, pas simulés sous Linux.
 
 
-0.11.2 : prototype refusé par l’utilisateur et archivé hors app/tests, déclaration.sporttest retirée. Aucun test natif de cette preuve n’est déclaré validé. Transferts CSV/JSON publics inchangés : photos/clés exclues, aperçu puis confirmation, transaction/rollback/copieavantimport conservés. Accès à cette copie sous Export to Files ; données personnelles et sécurité du coffre jamais modifiées par la simplification. Pas de nouvelle permission/clé/entitlement et aucun transfert réel effectué par l’agent.
+0.11.2 : prototype refusé par l’utilisateur et archivé hors app/tests, déclaration.repstest retirée. Aucun test natif de cette preuve n’est déclaré validé. Transferts CSV/JSON publics inchangés : photos/clés exclues, aperçu puis confirmation, transaction/rollback/copieavantimport conservés. Accès à cette copie sous Export to Files ; données personnelles et sécurité du coffre jamais modifiées par la simplification. Pas de nouvelle permission/clé/entitlement et aucun transfert réel effectué par l’agent.
 
 
 ## Préférence d'accent — 0.11.4
@@ -220,13 +220,13 @@ Build61: training schema9 adds only operational workout_goal_decisions(exercise_
 19 octobre — séries par workout : migration11 additive et transactionnelle des affectations, initialisée avec les nombres/objectifs existants. Aucun changement du coffre, de la clé, des permissions, capacités ou intégrations réseau. JSONv2 conserve ces réglages et continue d'exclure photos/clés ; anciens JSONv1 validés contre les doublons avant conversion. Historique et séances actives restent indépendants des affectations.
 
 
-19octobre — Body Weight : mesures stockées en clair dans la base d'entraînement privée de l'app, comme l'historique sportif, distinctes du coffre. Migration12 additive/transactionnelle, aucune modification des clés/biométries/chiffrement. ArchiveJSONv3 inclut pesées/préférences, exclut toujours photos/clés ; anciens formats conservent les données absentes. Les notifications poids contiennent du texte générique, aucune valeur. PermissionUserNotifications existante, opt-in explicite ; aucune nouvelle capacité/dépendance/requête réseau. Annuler les formulaires ne modifie rien ; corrections/suppressions/imports utilisent transactions et gardes périmées.
+19octobre — Body Weight : mesures stockées en clair dans la base d'entraînement privée de l'app, comme l'historique repsif, distinctes du coffre. Migration12 additive/transactionnelle, aucune modification des clés/biométries/chiffrement. ArchiveJSONv3 inclut pesées/préférences, exclut toujours photos/clés ; anciens formats conservent les données absentes. Les notifications poids contiennent du texte générique, aucune valeur. PermissionUserNotifications existante, opt-in explicite ; aucune nouvelle capacité/dépendance/requête réseau. Annuler les formulaires ne modifie rien ; corrections/suppressions/imports utilisent transactions et gardes périmées.
 
 
 Build70: future-goal reconciliation is a transactional training-database change (schema13), including upgrade of previously accepted exercise changes. It retains load compositions, active/history snapshots and transfer recovery data. No vault, biometric, cryptographic, notification payload or app-capability change.
 
 
-Build71: schema14 transactionally refreshes future training goals from existing completed exercise history and captures explicit goal decisions as training payloads. Historical/active snapshots are untouched; forced propagation and migration failures roll back. Per-set duration targets are non-vault training data and travel only in the versioned training JSON. No vault media/key, permission, capability or logging change. Device checks read only Sport app/profile metadata, never personal training or photos.
+Build71: schema14 transactionally refreshes future training goals from existing completed exercise history and captures explicit goal decisions as training payloads. Historical/active snapshots are untouched; forced propagation and migration failures roll back. Per-set duration targets are non-vault training data and travel only in the versioned training JSON. No vault media/key, permission, capability or logging change. Device checks read only Reps app/profile metadata, never personal training or photos.
 
 
 Build72: schema15updates future training goal payloads only, using existing history inside the migration transaction. No schema columns, backup-format, personal-device data export, vault, permission, identity or capability changes. Historical/active snapshots stay intact.
@@ -241,11 +241,11 @@ Camera cancellation remains silent; encoding/temporary-file-cleanup failures ret
 
 ## Skills content and links — 1.2.0 — build 78
 
-Skills add only local training text, configuration and results; no new permissions, private media, vault keys or authentication changes. Built-in text is available offline. An explicit demonstration action opens an HTTPS source in the external browser, which may make its own network requests; Sport does not prefetch links or embed third-party video. Custom source URLs are validated before storage/import. JSON transfer remains closed to unknown fields and excludes private photos.
+Skills add only local training text, configuration and results; no new permissions, private media, vault keys or authentication changes. Built-in text is available offline. An explicit demonstration action opens an HTTPS source in the external browser, which may make its own network requests; Reps does not prefetch links or embed third-party video. Custom source URLs are validated before storage/import. JSON transfer remains closed to unknown fields and excludes private photos.
 
 ## Skills AI handoff — build 80
 
-On explicit Generate, Sport copies only the prepared roadmap prompt and requested skill name to the system clipboard and asks iOS to open the chosen provider app. No training history, photos, keys or private records are included. Sport makes no model API call and embeds no secret. Website fallback is an explicit user action. Clipboard response is read only on Paste Response. Bounded JSON validation rejects unknown keys, malformed fields, unsafe/non-YouTube links, duplicate step names and inconsistent goal ordering before any storage write. Generated guidance needs user review; model claims or link availability are not independently verified at generation time.
+On explicit Generate, Reps copies only the prepared roadmap prompt and requested skill name to the system clipboard and asks iOS to open the chosen provider app. No training history, photos, keys or private records are included. Reps makes no model API call and embeds no secret. Website fallback is an explicit user action. Clipboard response is read only on Paste Response. Bounded JSON validation rejects unknown keys, malformed fields, unsafe/non-YouTube links, duplicate step names and inconsistent goal ordering before any storage write. Generated guidance needs user review; model claims or link availability are not independently verified at generation time.
 
 ## Public photo activity — 1.2.5 (87), 24 October
 
@@ -263,9 +263,9 @@ The white glyph and current streak use existing public attendance metadata only.
 
 Vault schema2→3adds encrypted movements, encrypted video metadata/thumbnail and1MiBAES-GCMchunks. Existing photo ciphertext and biometric Keychain namespace/key are retained. AAD separates movement metadata, video metadata, thumbnail and each video ID/chunk index. The encrypted manifest authenticates total byte count/type/duration/movement; repository checks sizes, positions, complete chunk set and ownership before atomic publication. Unpublished imports are removed after interruption/reopen; revoked sessions may clean only their own unpublished rows. Reset cascades all media but Delete All Photos remains photo-only.
 
-Photos-provider clear URLs are consumed only within FileRepresentation. Sport writes only encrypted temporary staging under a fresh ephemeral key in a complete-protection, backup-excluded temporary folder. Each block is authenticated and reencrypted under the existing vault key before publication. Player loaders request encrypted SQLite chunks, decrypt in bounded memory and never write a clear video file. Lock revokes leases, cancels requests, pauses/replaces player items, clears references and closes readers. PiP and external playback are disabled. No new Keychain namespace, broad Photos/microphone permission, entitlement, remote media service or dependency is introduced.
+Photos-provider clear URLs are consumed only within FileRepresentation. Reps writes only encrypted temporary staging under a fresh ephemeral key in a complete-protection, backup-excluded temporary folder. Each block is authenticated and reencrypted under the existing vault key before publication. Player loaders request encrypted SQLite chunks, decrypt in bounded memory and never write a clear video file. Lock revokes leases, cancels requests, pauses/replaces player items, clears references and closes readers. PiP and external playback are disabled. No new Keychain namespace, broad Photos/microphone permission, entitlement, remote media service or dependency is introduced.
 
-Movement names, source Skill IDs and video dates stay encrypted and are absent from Consistency and training CSV/JSON. The existing public photo-day index remains photo-only. System-managed Photos copies and user-owned originals are outside Sport's control. Sport does not promise to prevent OS screenshots. An inaccessible biometric key remains fail-closed and is never regenerated automatically.
+Movement names, source Skill IDs and video dates stay encrypted and are absent from Consistency and training CSV/JSON. The existing public photo-day index remains photo-only. System-managed Photos copies and user-owned originals are outside Reps's control. Reps does not promise to prevent OS screenshots. An inaccessible biometric key remains fail-closed and is never regenerated automatically.
 
 Independent review identified reset confirmation scope and inactive navigation-title exposure; both are corrected. Native synthetic build91actually verified AES-GCM tamper/reorder rejection, two encrypted AVPlayers, seeking,0.5xplayback and lease revocation, using a random non-Keychain test key and generated test pattern. Readback verified the unique run token/build and accessed only the fixed synthetic report. No private media or biometric enrollment was inspected/changed. Personal Photos import, Face ID interruptions, app-switcher masking and controls remain physical acceptance checks after final delivery.
 
@@ -273,4 +273,9 @@ Independent review identified reset confirmation scope and inactive navigation-t
 
 The privacy mask keeps system Photos/AVKit presenters mounted during temporary inactivity; it never begins authentication or recreates a lease on return. A non-key, noninteractive opaque window covers native full-screen video and private navigation bars; background still invalidates the lease, loaders and playback. Comparators cancel pending preparation when covered.
 
-Permanent audio removal is being validated using AVAssetReader compressed video samples and AVAssetWriter segmented output into an AES-GCM sink, with no Sport-owned plaintext output URL. Input segments are capped at8MiB between sync samples (oversized/unsupported sources fail safely), output callbacks at16MiB, and sink buffering at1MiB. Existing encrypted originals remain published until validated replacements commit in a lease-checked transaction with source-metadata comparison. Native95 and96synthetic validation passed, including actual provider capability capture, encrypted-source remux and encrypted-candidate orientation/duration/seek validation. Audio removal runs after explicit Face ID; failure or interruption retains unconverted encrypted originals and retries on a later unlock. All playback stays muted during conversion. At the5000-video limit, one source-checked incomplete replacement is allowed without increasing the published limit.
+Permanent audio removal is being validated using AVAssetReader compressed video samples and AVAssetWriter segmented output into an AES-GCM sink, with no Reps-owned plaintext output URL. Input segments are capped at8MiB between sync samples (oversized/unsupported sources fail safely), output callbacks at16MiB, and sink buffering at1MiB. Existing encrypted originals remain published until validated replacements commit in a lease-checked transaction with source-metadata comparison. Native95 and96synthetic validation passed, including actual provider capability capture, encrypted-source remux and encrypted-candidate orientation/duration/seek validation. Audio removal runs after explicit Face ID; failure or interruption retains unconverted encrypted originals and retries on a later unlock. All playback stays muted during conversion. At the5000-video limit, one source-checked incomplete replacement is allowed without increasing the published limit.
+
+
+## Reps rename compatibility —24 October 2026
+
+Reps keeps the installed app/widget identifiers com.raaaton.sport and com.raaaton.sport.rest-widget. Keychain services, vault Sport/vault/v1 AAD and Sport vault v1 verification bytes, database sport.sqlite, preference/reminder namespaces and JSON sport.training/CSV sport_csv_version are permanent compatibility identifiers, not display branding. Existing media, keys and training require no migration. Internal Swift modules Sport/SportRestWidget/SportLiveSupport also retain identity for system-serialized ActivityKit/AppIntent types; products, executables, folders and visible names use Reps. Both reps:// and legacy sport:// workout links are accepted. No certificate/capability/schema change or private-device-data read is part of this rename. Historical Git commits/tags and build artifacts retain their original bytes.

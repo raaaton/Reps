@@ -1,15 +1,15 @@
 version: 1
 bundleID: com.raaaton.sport
-product: Sport
-infoPath: Sport-Info.plist
+product: Reps
+infoPath: Reps-Info.plist
 resources:
   - .build/live-metadata/app/Metadata.appintents
   - .build/app-icon/Assets.car
-  - .build/app-icon/SportIcon60x60@2x.png
+  - .build/app-icon/RepsIcon60x60@2x.png
   - Resources/IconSources/PHOSPHOR-LICENSE.txt
 extensions:
-  - product: SportRestWidget
+  - product: RepsRestWidget
     bundleID: com.raaaton.sport.rest-widget
-    infoPath: SportRestWidget-Info.plist
+    infoPath: RepsRestWidget-Info.plist
     resources:
       - .build/live-metadata/widget/Metadata.appintents
