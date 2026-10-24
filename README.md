@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. The latest renamed build is 1.3.3 (99); delivery and verification are tracked in [the rename plan](docs/exec-plans/2026-10-24-reps-rename.md). Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.3.3 (99) is installed on the owner’s iPhone and the renamed source is published here; delivery and verification are tracked in [the rename plan](docs/exec-plans/2026-10-24-reps-rename.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 

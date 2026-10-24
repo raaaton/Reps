@@ -16,7 +16,7 @@ Keep com.raaaton.sport and .rest-widget, Keychain services, vault AAD/verificati
 ## Verification and progress
 - Clean checkout1fe63dd, feature branch exactly3commits ahead of origin/main, no divergence. GitHub raaaton/Reps does not exist. Existing profile/identity must be checked again before installation.
 - Current vault AAD uses literal Sport bytes; blind replacement would corrupt access. Exact baseline tests will protect these constants and persisted identifiers. No private device data needs to be read for rename verification.
-- Work pending; no external rename or new install claimed.
+- Implementation, iPhone delivery, GitHub repository/release rename, filesystem move and source publication completed as recorded below. Running Codex sidebar-label refresh and physical acceptance remain explicit user steps.
 
 ### Review findings and corrections
 - Metadata regressions were observed failing before rename, then passing. Twelve persistence baselines remain unchanged; VaultCryptography implementation is byte-identical except its module import.
@@ -42,3 +42,8 @@ Keep com.raaaton.sport and .rest-widget, Keychain services, vault AAD/verificati
 -The post-move host run exposed a duplicate Clang module cached under both alias paths. The entire prior host cache was preserved at .build/host-before-reps-directory-rename, and normal host outputs regenerated at Tests/Host/.build. No cache bytes were deleted; this is necessary relocation recovery rather than an unverified cache cleanup. Final result recorded below.
 -Final normal host run from the moved root passes378tests/zero failures7.878s;13metadata/compatibility tests, lint and unsigned bundle inspection also pass from the moved root. No remaining compile/test failure.
 -GitHub public verification confirms all23release/asset names, same repository ID, same tag names and same asset IDs/sizes/digests. Source fast-forward publication is the final authorized step; no new release binary.
+
+### Source publication confirmed
+- Rename commit7c303ccb56545761caaf6f3e54456b6c19401d11pushed as a fast-forward to raaaton/Reps main (old0af8352). GitHub API refSHA equals localHEAD exactly; clean checkout after push. No force push, history rewrite or new release binary.
+- Public README hero inspected directly: it is the unchanged cyan barbell icon with no old-name lettering, so no new artwork or image edit was necessary.
+- Remaining physical/user step: check iPhone label/About/Face ID after the update. The running Codex sidebar still caches its prior project label; refresh/reopen the project from the real Reps directory. Its compatibility path remains usable, and permission settings were not changed.
