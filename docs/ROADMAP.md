@@ -292,3 +292,7 @@ Ordinary Skills menu entries use original accent-colored SF Symbol images after 
 1.2.5(87) implements the approved grid refinement: no legend, missed-day crosses, camera symbols on progress-photo dates, completed-workout background retained. Photo-only dates/counts join the public calendar through an index in the existing encrypted vault database; originals/thumbnails remain protected by AES-GCM and Face ID. Earlier dates populate during the next normal vault unlock. Local tests/build/review pass; USB delivery and physical acceptance are tracked in the [ExecPlan](exec-plans/2026-10-24-attendance-photo-activity.md). Baseline1.2.4 was pushed first as4907c05 at the user's request; the verified refinement receives a separate versioned commit/push.
 
 USB delivery confirmed: device-run.sh exits0; installation/verification100%. Direct postflight verifies one Sport1.2.5(87), unchanged identity/signer/entitlements/exact existing certificate and valid CMS-verified app/widget profiles. Physical calendar, Face ID and media-viewing acceptance remains pending. No public IPA Release.
+
+## White photo-day camera — 1.2.6 (88)
+
+User-requested white camera.fill in Consistency, including completed dates. Visual-only retouch, separate versioned commit before the streak feature. Strict lint, nine metadata/style checks, real xtool build, regenerated/embedded App Intents metadata and unsigned app/widget inspection pass. Standard USB delivery tracked in the photo-activity ExecPlan; no new domain tests or private-data access. Physical rendering remains user validation.

@@ -43,11 +43,7 @@ struct AttendanceGrid: View {
                       if day.photoCount > 0 {
                         Image(systemName: "camera.fill")
                           .font(.system(size: cell * 0.55, weight: .semibold))
-                          .foregroundStyle(
-                            day.state == .completed
-                              ? SportAccentColors(accentChoice).ink
-                              : SportAccentColors(accentChoice).tint
-                          )
+                          .foregroundStyle(.white)
                           .accessibilityHidden(true)
                       } else if day.state == .missed || day.state == .completed {
                         Image(systemName: day.state == .completed ? "checkmark" : "xmark")

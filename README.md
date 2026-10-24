@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The current 1.2.5 update is awaiting iPhone feedback; its IPA has not been released.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The current 1.2.6 update is awaiting iPhone feedback; its IPA has not been released.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
