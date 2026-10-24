@@ -33,8 +33,6 @@ struct MaximumWeightObjectsEditor: View {
               ).labelsHidden()
             }
           }
-        } footer: {
-          Text("Choose 1 to 1,000 objects, excluding the backpack. Recorded compositions are kept.")
         }
       }
       .disabled(saving)

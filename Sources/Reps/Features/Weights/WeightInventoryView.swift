@@ -13,8 +13,6 @@ struct WeightInventoryView: View {
       List {
         Section {
           LabeledContent("Backpack", value: "3 kg")
-        } footer: {
-          Text("Fixed weight, added once to each weighted combination.")
         }
         Section {
           Button {
@@ -22,8 +20,6 @@ struct WeightInventoryView: View {
           } label: {
             LabeledContent("Maximum Objects", value: String(snapshot.maximumWeightObjects))
           }.buttonStyle(.plain)
-        } footer: {
-          Text("The backpack does not count toward this limit.")
         }
         Section("Items") {
           if snapshot.weightItems.isEmpty {
@@ -70,10 +66,6 @@ struct WeightInventoryView: View {
           }
         } header: {
           Text("Available Loads")
-        } footer: {
-          Text(
-            "Fewer objects take priority before the 0.5 kg spacing. Up to \(snapshot.maximumWeightObjects) objects plus the backpack."
-          )
         }
       }
       .disabled(busy)
@@ -163,10 +155,6 @@ private struct WeightItemEditor: View {
             }
           }
           Toggle("Include in Combinations", isOn: $item.isEnabled)
-        } footer: {
-          Text(
-            "Enter the weight of one copy and how many identical copies you have. The backpack is already included."
-          )
         }
       }.disabled(saving)
         .navigationTitle(item.grams == 0 ? "New Item" : "Edit Item")

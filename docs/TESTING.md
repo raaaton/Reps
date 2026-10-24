@@ -204,3 +204,7 @@ Nine new MinimumObjectLoadTests cases cover physical copies rather than grouped-
 ## Object-first filtering and saved maximum — 1.5.0 (102)
 
 Three WeightPriorityTests first fail four assertions against the old ascending-weight projection, then pass: heavier fewer-object candidates, conflicts on both sides, grouped physical counts, equal-count lighter ties, exact 500 g boundaries, reverse input and Int.max weight differences. Five WeightLimitPreferenceTests first fail on missing API, then pass: default and persisted maximum below/above 10, independent inventory quantities, exact feasibility, invalid/complex atomic rollback, active timed snapshot preservation after lowering the limit, JSON 8 restore/legacy 7 default, CSV retention and schema 18→19 migration. All 402 host tests pass (9.804 s), with strict lint and 13 metadata/style/branding checks. UI draft, keyboard, stepper, large text and actual item-priority choices need iPhone review.
+
+## Added Weight footer cleanup — 1.5.0 (104)
+
+No domain or persistence change from bb590a3 (verified byte-identical), so no new/full repeated host tests. Strict Swift lint, 13 metadata/style checks and real app/widget build/portrait inspection pass. Targeted independent review confirms exactly five footers removed while modal, field labels, values, validation, confirmations and errors remain. Physical screen whitespace/text and original modal require user review.

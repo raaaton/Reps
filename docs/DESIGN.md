@@ -490,3 +490,7 @@ Feasibility validation checks saved exact names/IDs/unit weights/enabled invento
 The user corrected the earlier same-weight-only interpretation. Rank exact compositions by physical copy count ascending, then grams ascending for ties. Process that order, retaining a candidate only when it is at least 500 g from every already accepted higher-priority choice. Finally display retained choices by ascending grams. Thus 10.2 kg with one object wins over 10 kg with five. The fixed backpack counts as zero added objects; bodyweight and the bag remain available. Existing feasible selected-load exceptions remain visible without changing snapshots.
 
 Settings → Added Weight → Maximum Objects opens a native saved-draft form with numeric field, adjacent stepper, Cancel and Save. Default 10; range 1–1,000, excluding the backpack. No persistence until Save; disabled while saving and errors remain visible. Apply the preference to all generated options, goal availability/review, selection validation and progression. Inventory quantities do not change when the maximum changes. Portrait remains locked.
+
+## Added Weight text cleanup — 1.5.0 (104)
+
+At the user’s request the approved Maximum Objects modal remains. Remove only five explanatory Section footers in Added Weight and its item/maximum editors: fixed backpack weight, excluded backpack, choice algorithm, unit-weight/quantity help and maximum-range help. Labels, values, empty states, confirmations and errors stay. No domain/persistence/selection/portrait behavior changes.
