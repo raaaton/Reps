@@ -43,6 +43,7 @@ struct VaultVideoDayView: View {
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                   Button("Delete", systemImage: "trash", role: .destructive) { deleting = video }
+                    .tint(.red)
                     .disabled(vault.busy)
                 }
             }

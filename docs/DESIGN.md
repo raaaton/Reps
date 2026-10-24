@@ -500,3 +500,7 @@ At the user’s request the approved Maximum Objects modal remains. Remove only 
 Backpack and Maximum Objects are two native rows in one List Section, giving one system-rounded group. Both open saved-draft native forms with Cancel/Save; Backpack uses the existing decimal kilogram parser (up to three decimal places), current weight and keyboard dismissal. Default 3 kg, strictly positive; disabled during save, clear errors, no explanatory footer restored. Physical grouping, keyboard, Dynamic Type and VoiceOver remain user review.
 
 The custom bag component is added once and remains excluded from object counts. Bodyweight0, configured object maximum and object-first filtering before500g are retained. Changing bag weight recalculates future choices; exact old goals become Review needed instead of silent substitution, and active/history snapshots retain their original bag weight.
+
+## Red deletion swipes — 1.5.2 (108)
+
+Every trailing-swipe delete control explicitly uses native red tint rather than inherited app accent, including workout history and implicit onDelete editors. Retain destructive roles, accessible labels, original deletion/confirmation rules and native Edit/reorder behavior. Skills use their existing red helper with white filled labels.

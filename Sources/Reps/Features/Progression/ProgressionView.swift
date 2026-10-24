@@ -83,7 +83,7 @@ struct ProgressionView: View {
                 if !snapshot.exercises.contains(where: { $0.id == exercise.id }) {
                   Button("Delete", systemImage: "trash", role: .destructive) {
                     deletingArchived = exercise
-                  }.labelStyle(.titleAndIcon)
+                  }.tint(.red).labelStyle(.titleAndIcon)
                 }
               }
               .contextMenu {

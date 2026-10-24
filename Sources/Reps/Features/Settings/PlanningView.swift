@@ -23,6 +23,7 @@ struct PlanningView: View {
             .buttonStyle(.plain)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               Button("Delete", systemImage: "trash", role: .destructive) { deleting = schedule }
+                .tint(.red)
                 .labelStyle(.titleAndIcon)
                 .buttonStyle(.automatic)
             }
@@ -147,7 +148,14 @@ struct ScheduleEditor: View {
               exercise: exercise,
               setCount: Binding(
                 get: { draft.setCounts[id] ?? 4 },
-                set: { draft.setCounts[id] = $0 }))
+                set: { draft.setCounts[id] = $0 })
+            )
+            .swipeActions(edge: .trailing) {
+              Button("Delete", systemImage: "trash", role: .destructive) {
+                draft.setCounts.removeValue(forKey: id)
+                draft.exerciseIDs.removeAll { $0 == id }
+              }.tint(.red).labelStyle(.titleAndIcon)
+            }
           }
         }
         .onMove { draft.exerciseIDs.move(fromOffsets: $0, toOffset: $1) }

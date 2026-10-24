@@ -45,6 +45,7 @@ struct HistoryView: View {
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               Button("Delete", systemImage: "trash", role: .destructive) { deleting = workout }
+                .tint(.red)
                 .labelStyle(.titleAndIcon)
             }
             .contextMenu {

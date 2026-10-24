@@ -10,7 +10,7 @@ Reps est une application personnelle iPhone, locale et hors ligne, en Swift/Swif
 
 Évaluer les idées de manière critique ; signaler les solutions inutiles ou disproportionnées. Préserver vocabulaire et règles métier ; ne pas changer silencieusement le périmètre.
 
-Règle de couleur des libellés : dans le contenu et les actions, les SF Symbols accompagnant le texte principal utilisent le bleu accent, avec le texte inchangé. Préserver le rouge destructif et le contraste des symboles sur fond accent ou destructif. Dans les menus natifs, utiliser des symboles UIKit précolorés en rendu original lorsque le style SwiftUI est ignoré. Les icônes seules conservent leur style. Garder les quatre onglets natifs, y compris leurs couleurs de sélection.
+Règle de couleur des libellés : dans le contenu et les actions, les SF Symbols accompagnant le texte principal utilisent le bleu accent, avec le texte inchangé. Préserver le rouge destructif et le contraste des symboles sur fond accent ou destructif. Dans les menus natifs, utiliser des symboles UIKit précolorés en rendu original lorsque le style SwiftUI est ignoré. Les icônes seules conservent leur style. Garder les quatre onglets natifs, y compris leurs couleurs de sélection. Toutes les suppressions par swipe ont un fond rouge explicite derrière la corbeille, y compris History et les éditeurs ; ne pas dépendre du tint accent hérité.
 
 ## Stack et environnement
 

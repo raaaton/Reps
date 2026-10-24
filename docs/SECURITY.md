@@ -295,3 +295,5 @@ Training schema 19 adds only preferences.maximum_weight_objects (default 10, SQL
 ## Editable backpack — 1.5.1 (107)
 
 SQLite20 adds preferences.backpack_weight_grams with default3000 and positive SQL constraint. JSON9 includes backpackWeightGrams;1…8default3000, unknown/private fields remain rejected, CSV retains current preference. Candidate generation/validation occurs before the transactional preference write, rejecting invalid/overflowing totals atomically. Legacy goal migration helpers read the default before the column exists. Snapshots retain original component grams; vault encryption, privacy, device identity/certificates/capabilities are unchanged. Public release packaging continues to reject profiles, signing credentials, private data and databases.
+
+1.5.2(108) only makes destructive swipe backgrounds explicitly red. Existing confirmation and busy-state protections, draft cleanup/last-step guards, storage, vault/keychain behavior, identity and capabilities are preserved.

@@ -1,0 +1,13 @@
+# Red deletion swipe backgrounds — 1.5.2 (108)
+
+User requires red backgrounds behind trash icons for every trailing deletion swipe, explicitly including workout history. Audit finds12swipe sites:10native destructive buttons lack explicit tint, while2Skills sites use SkillDestructiveButton whose leaf already uses red tint and white filled ink. App root supplies cyan tint, so specify red on each native destructive swipe button to override inherited accent. Preserve native swipe affordances, destructive roles, confirmations, allowsFullSwipe=false and original delete actions. No persistence/vault/security behavior changes.
+
+Small styling fix: patch1.5.2, build108. Lint,13metadata/style checks, real native app/widget build plus compiler metadata and portrait/bundle inspection; install with existing identity/certificates then independent inventory/CMS postflight. No domain rerun required for tint-only UI changes. Physical swipe appearance remains iPhone review. No new GitHub push requested for this change.
+
+Further audit finds3implicit onDelete swipes (skill steps, workout exercises, workout skill blocks). Add explicit red swipe buttons there while retaining onDelete/onMove for Edit mode, default full-swipe behavior, set-count cleanup and the last-step guard. Total15swipe sites now use explicit leaf red tint (11direct buttons,4Skills helper instances).
+
+## Red deletion swipe backgrounds — 1.5.2 (108)
+
+All15trailing-swipe deletion sites use explicit red tint:11native buttons and4instances of the existing red Skills helper. Includes workout history, recorded-workout exercise/set drafts, inventory, bodyweight, exercise/workout settings, archived results/Skills, private video rows and implicit skill-step/workout-assignment deletions. Keep onDelete/onMove for Edit mode, last-step protection, set-count cleanup, confirmation/busy states and existing full-swipe behavior.
+
+Strict Swift lint,13metadata/style tests, complete native app/widget build and compiler metadata, portrait-only unsigned bundle inspection and whitespace checks pass. Normal device-run.sh delivery exits0, installation/verification100%; direct postflight confirms exactly one Reps1.5.2(108), unchanged effective identity/signer/exact cached certificate/entitlements and CMS-valid app/widget profiles. No domain logic/schema/security change; no redundant domain test run for the UI tint fix. Rendered red backgrounds in light/dark appearances and all actual swipes remain physical user review. Local commit only; no new GitHub push/release requested. Evidence:/tmp/reps-152-{lint,build,metadata,tests,inspection,install}.log and /tmp/reps-152-{preflight,postflight}.json.

@@ -106,6 +106,11 @@ struct ScheduleSkillSection: View {
             .font(.subheadline).foregroundStyle(.secondary)
           }
         }
+        .swipeActions(edge: .trailing) {
+          SkillDestructiveButton(title: "Delete", filled: true) {
+            schedule.skills.removeAll { $0.id == block.id }
+          }
+        }
       }
       .onMove { schedule.skills.move(fromOffsets: $0, toOffset: $1) }
       .onDelete { schedule.skills.remove(atOffsets: $0) }

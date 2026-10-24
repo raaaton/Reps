@@ -128,7 +128,7 @@ struct ManualWorkoutEditor: View {
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button("Remove", systemImage: "trash", role: .destructive) {
                   exercises.removeAll { $0.id == exercise.id }
-                }.labelStyle(.titleAndIcon)
+                }.tint(.red).labelStyle(.titleAndIcon)
               }
             }
             Button("Add Exercises", systemImage: "plus") {
@@ -310,7 +310,7 @@ private struct HistoricalExerciseEditor: View {
               Button("Remove", systemImage: "trash", role: .destructive) {
                 focused = false
                 exercise.sets.removeAll { $0.id == set.id }
-              }.labelStyle(.titleAndIcon)
+              }.tint(.red).labelStyle(.titleAndIcon)
             }
         }
         Button("Add Set", systemImage: "plus") {

@@ -50,6 +50,11 @@ struct SkillEditor: View {
               ForEach(SkillFormat.allCases, id: \.self) { Text($0.name).tag($0) }
             }
           }
+          .swipeActions(edge: .trailing) {
+            SkillDestructiveButton(title: "Delete", filled: true) {
+              if draft.steps.count > 1 { draft.steps.removeAll { $0.id == step.id } }
+            }
+          }
         }
         .onMove { draft.steps.move(fromOffsets: $0, toOffset: $1) }
         .onDelete { indices in
