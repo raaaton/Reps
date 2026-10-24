@@ -240,7 +240,8 @@ struct FeelingForm: View {
             title: saving
               ? "Saving…"
               : workout.exercises.last?.id == exercise.id
-                ? (workout.support == nil ? "Finish Workout" : "Continue to Stretching")
+                ? (workout.support?.steps.contains { $0.kind == .stretch && $0.completedAt == nil }
+                  == true ? "Continue to Stretching" : "Finish Workout")
                 : "Next Exercise",
             systemImage: "checkmark", isWorking: saving
           )

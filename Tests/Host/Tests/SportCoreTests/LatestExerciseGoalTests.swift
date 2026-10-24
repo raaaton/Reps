@@ -65,6 +65,7 @@ final class LatestExerciseGoalTests: XCTestCase, @unchecked Sendable {
     let active = try await r.startWorkout(scheduleID: "push", now: now + 4 * 86_400_000)
     let db = try SQLiteDatabase(path: path)
     try db.execute("UPDATE schedule_exercises SET goal_payload=NULL WHERE exercise_id='push-ups'")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=13")
     let reopened = try SportRepository(path: path)
     let refreshed = try await reopened.goalContext(exerciseID: "push-ups", scheduleID: "push")
@@ -158,6 +159,7 @@ extension LatestExerciseGoalTests {
     let cancelled = try await r.startWorkout(scheduleID: "push", now: now + 4 * 86_400_000)
     try await r.cancelWorkout(id: cancelled.id, now: now + 4 * 86_400_000 + 1000)
     let db = try SQLiteDatabase(path: path)
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=13")
     let migrated = try SportRepository(path: path)
     let two = try await migrated.goalContext(exerciseID: "push-ups", scheduleID: "legs")
@@ -175,6 +177,7 @@ extension LatestExerciseGoalTests {
     try await finish(r)
     let db = try SQLiteDatabase(path: path)
     try db.execute("UPDATE schedule_exercises SET goal_payload=NULL WHERE exercise_id='push-ups'")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=13")
     try db.execute(
       """

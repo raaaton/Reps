@@ -26,6 +26,7 @@ extension SportRepository {
         let current = w.currentSupport, current.id == stepID, var support = w.support
       else { throw TrainingError.invalid("Return to the current warm-up or stretch.") }
       guard current.startedAt == nil else { return }
+      try validateChronology(w, now: now)
       guard now >= w.startedAt,
         now >= (support.steps.compactMap(\.completedAt).max() ?? w.startedAt),
         now >= (w.exercises.flatMap(\.sets).map(\.completedAt).max() ?? w.startedAt)
@@ -96,11 +97,6 @@ extension SportRepository {
       support.restAnchorID = anchor.id
     }
     try writeSupport(support, workoutID: workoutID)
-    if support.steps.allSatisfy({ $0.completedAt != nil }) {
-      try database.execute(
-        "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
-        [.integer(completedAt), .text(workoutID)])
-      try matchGoalsToCompletedWorkout(id: workoutID)
-    }
+    try completeWorkoutIfReady(id: workoutID, now: completedAt)
   }
 }

@@ -26,6 +26,7 @@ struct ExercisesView: View {
             .buttonStyle(.plain)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               Button("Delete", systemImage: "trash", role: .destructive) { deleting = exercise }
+                .labelStyle(.titleAndIcon)
                 .buttonStyle(.automatic)
             }
             .contextMenu {
@@ -54,7 +55,7 @@ struct ExercisesView: View {
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button("Delete", systemImage: "trash", role: .destructive) {
                   deletingArchived = exercise
-                }
+                }.labelStyle(.titleAndIcon)
               }
               .contextMenu {
                 SportDestructiveButton("Delete", systemImage: "trash") {

@@ -32,7 +32,8 @@ extension TrainingTransfer {
       let value = try object(
         raw,
         ["definition", "load", "repetitions"]
-          + (archiveVersion == 4 ? ["durationsMS"] : []))
+          + (archiveVersion == 4 || archiveVersion == 5 || archiveVersion == 6
+            ? ["durationsMS"] : []))
       try definition(value["definition"] ?? NSNull())
       let load = try object(value["load"] ?? NSNull(), ["grams", "components"])
       try components(load["components"])
@@ -41,10 +42,22 @@ extension TrainingTransfer {
       root, ["format", "version", "includesPrivatePhotos", "createdAt", "contents"])
     let contents = try object(
       envelope["contents"] ?? NSNull(),
-      ["configuration", "notifications", "workouts", "bodyWeights"])
+      ["configuration", "notifications", "workouts", "bodyWeights"]
+        + (archiveVersion == 6 ? ["skillSessions"] : []))
     let c = try object(
       contents["configuration"] ?? NSNull(),
-      ["exercises", "schedules", "restSeconds", "weightItems", "goals"])
+      ["exercises", "schedules", "restSeconds", "weightItems", "goals", "stretchingEnabled"]
+        + (archiveVersion == 6 ? ["skills", "skillProgress"] : []))
+    if archiveVersion == 5 || archiveVersion == 6, !(c["stretchingEnabled"] is Bool) {
+      throw invalid
+    }
+    if archiveVersion == 6 {
+      for raw in try array(c["skills"]) { try SkillTransfer.checkShape(definition: raw) }
+      for raw in try array(c["skillProgress"]) { try SkillTransfer.checkShape(progress: raw) }
+      for raw in try array(contents["skillSessions"]) {
+        try SkillTransfer.checkShape(practice: raw)
+      }
+    }
     for ex in try array(c["exercises"]) { try definition(ex) }
     for schedule in try array(c["schedules"]) {
       let value = try object(
@@ -52,7 +65,10 @@ extension TrainingTransfer {
         [
           "id", "name", "weekday", "isEnabled", "reminderMinutes", "exerciseIDs", "setCounts",
           "goals",
-        ])
+        ] + (archiveVersion == 6 ? ["skills", "skillPlacement"] : []))
+      if archiveVersion == 6 {
+        for block in try array(value["skills"]) { try SkillTransfer.checkShape(assignment: block) }
+      }
       if let goals = value["goals"] as? [String: Any] {
         for item in goals.values { try goal(item) }
       }
@@ -67,7 +83,9 @@ extension TrainingTransfer {
         "workoutsEnabled", "photosEnabled", "photoMinutes", "weightEnabled", "weightWeekday",
         "weightMinutes",
       ])
-    if archiveVersion == 3 || archiveVersion == 4 {
+    if archiveVersion == 3 || archiveVersion == 4 || archiveVersion == 5 || archiveVersion == 6
+      || archiveVersion == 6
+    {
       guard contents["bodyWeights"] is [Any], notifications["weightEnabled"] is Bool else {
         throw invalid
       }
@@ -81,7 +99,11 @@ extension TrainingTransfer {
         [
           "id", "scheduleID", "name", "dayKey", "startedAt", "endedAt", "status", "restSeconds",
           "exercises", "rest", "support",
-        ])
+        ] + (archiveVersion == 6 ? ["skills"] : []))
+      if let raw = w["skills"], !(raw is NSNull) { try SkillTransfer.checkShape(workout: raw) }
+      if let raw = w["rest"], !(raw is NSNull) {
+        _ = try object(raw, ["id", "exerciseID", "afterSet", "status", "deadline", "remainingMS"])
+      }
       if let raw = w["support"], !(raw is NSNull) {
         let support = try object(raw, ["steps", "restID", "restAnchorID"])
         let steps = try array(support["steps"])

@@ -64,11 +64,14 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
   public var exerciseIDs: [String]
   public var setCounts: [String: Int]
   public var goals: [String: ExerciseGoal]
+  public var skills: [SkillAssignment] = []
+  public var skillPlacement: SkillPlacement = .beforeForce
 
   public init(
     id: String, name: String, weekday: Int, isEnabled: Bool,
     reminderMinutes: Int?, exerciseIDs: [String], setCounts: [String: Int] = [:],
-    goals: [String: ExerciseGoal] = [:]
+    goals: [String: ExerciseGoal] = [:], skills: [SkillAssignment] = [],
+    skillPlacement: SkillPlacement = .beforeForce
   ) {
     self.id = id
     self.name = name
@@ -78,10 +81,13 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
     self.exerciseIDs = exerciseIDs
     self.setCounts = setCounts
     self.goals = goals
+    self.skills = skills
+    self.skillPlacement = skillPlacement
   }
 
   enum CodingKeys: String, CodingKey {
-    case id, name, weekday, isEnabled, reminderMinutes, exerciseIDs, setCounts, goals
+    case id, name, weekday, isEnabled, reminderMinutes, exerciseIDs, setCounts, goals, skills,
+      skillPlacement
   }
 
   public init(from decoder: Decoder) throws {
@@ -94,6 +100,9 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
     exerciseIDs = try c.decode([String].self, forKey: .exerciseIDs)
     setCounts = try c.decodeIfPresent([String: Int].self, forKey: .setCounts) ?? [:]
     goals = try c.decodeIfPresent([String: ExerciseGoal].self, forKey: .goals) ?? [:]
+    skills = try c.decodeIfPresent([SkillAssignment].self, forKey: .skills) ?? []
+    skillPlacement =
+      try c.decodeIfPresent(SkillPlacement.self, forKey: .skillPlacement) ?? .beforeForce
   }
 
 }
@@ -104,6 +113,42 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public var restSeconds: Int
   public var weightItems: [WeightItem] = []
   public var goals: [ExerciseGoal] = []
+  public var stretchingEnabled: Bool = true
+  public var skills: [SkillDefinition] = []
+  public var skillProgress: [SkillProgress] = []
+
+  public init(
+    exercises: [TrainingExercise], schedules: [TrainingSchedule], restSeconds: Int,
+    weightItems: [WeightItem] = [], goals: [ExerciseGoal] = [], stretchingEnabled: Bool = true,
+    skills: [SkillDefinition] = [], skillProgress: [SkillProgress] = []
+  ) {
+    self.exercises = exercises
+    self.schedules = schedules
+    self.restSeconds = restSeconds
+    self.weightItems = weightItems
+    self.goals = goals
+    self.stretchingEnabled = stretchingEnabled
+    self.skills = skills
+    self.skillProgress = skillProgress
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case exercises, schedules, restSeconds, weightItems, goals, stretchingEnabled, skills,
+      skillProgress
+  }
+
+  public init(from decoder: Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    exercises = try c.decode([TrainingExercise].self, forKey: .exercises)
+    schedules = try c.decode([TrainingSchedule].self, forKey: .schedules)
+    restSeconds = try c.decode(Int.self, forKey: .restSeconds)
+    weightItems = try c.decode([WeightItem].self, forKey: .weightItems)
+    goals = try c.decode([ExerciseGoal].self, forKey: .goals)
+    stretchingEnabled = try c.decodeIfPresent(Bool.self, forKey: .stretchingEnabled) ?? true
+    skills =
+      try c.decodeIfPresent([SkillDefinition].self, forKey: .skills) ?? SkillCatalogue.definitions
+    skillProgress = try c.decodeIfPresent([SkillProgress].self, forKey: .skillProgress) ?? []
+  }
 
   public func exercises(for schedule: TrainingSchedule) -> [TrainingExercise] {
     schedule.exerciseIDs.compactMap { id in

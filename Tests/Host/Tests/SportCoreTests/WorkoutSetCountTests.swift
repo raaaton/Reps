@@ -133,6 +133,7 @@ extension WorkoutSetCountTests {
     let active = try await r.startWorkout(scheduleID: "legs", now: tuesday, calendar: calendar)
     try db.execute("ALTER TABLE schedule_exercises DROP COLUMN goal_payload")
     try db.execute("ALTER TABLE schedule_exercises DROP COLUMN set_count")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=10")
     let reopened = try SportRepository(path: path)
     let migrated = try await reopened.snapshot()
@@ -168,7 +169,8 @@ extension WorkoutSetCountTests {
     configuration["schedules"] = schedules
     contents["configuration"] = configuration
     root["contents"] = contents
-    let decoded = try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root))
+    let decoded = try TrainingArchive.decode(
+      JSONSerialization.data(withJSONObject: removingNewSkillFields(root)))
     let target = try SportRepository(path: ":memory:")
     let preview = try await target.previewArchiveImport(decoded, now: tuesday)
     try await target.applyTrainingImport(preview, now: tuesday)

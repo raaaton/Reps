@@ -55,10 +55,38 @@ private struct WorkoutPreparationView: View {
     TrainingContent { snapshot in
       if let schedule = snapshot.schedules.first(where: { $0.id == scheduleID }) {
         List {
+          if !schedule.skills.isEmpty {
+            Section("Skills · " + schedule.skillPlacement.name) {
+              ForEach(schedule.skills) { block in
+                VStack(alignment: .leading, spacing: 4) {
+                  Text(snapshot.skills.first { $0.id == block.skillID }?.name ?? "Skill")
+                  Text(
+                    snapshot.skills.first { $0.id == block.skillID }?.steps.first {
+                      $0.id == block.stepID
+                    }?.name ?? "Step"
+                  )
+                  .font(.subheadline).foregroundStyle(.secondary)
+                  if let equipment = snapshot.skills.first(where: { $0.id == block.skillID })?.steps
+                    .first(where: { $0.id == block.stepID })?.equipment, !equipment.isEmpty
+                  {
+                    Text("Equipment: " + equipment).font(.subheadline).foregroundStyle(.secondary)
+                  }
+                  if let seconds = block.configuration.referenceSeconds,
+                    block.configuration.format == .freePractice
+                  {
+                    Text("Practice reference: \(WorkoutLabels.elapsed(seconds * 1000))").font(
+                      .caption
+                    ).foregroundStyle(.secondary)
+                  }
+                }
+              }
+            }
+          }
           if let first = snapshot.exercises(for: schedule).first {
             WorkoutSupportPreview(
               first: first, goal: schedule.goals[first.id],
               override: overrides[first.id], restSeconds: snapshot.restSeconds,
+              stretchingEnabled: snapshot.stretchingEnabled,
               stretch: $stretch, stretchSeconds: $stretchSeconds)
           }
           Section("Planned Exercises") {
@@ -149,6 +177,10 @@ struct WorkoutSessionView: View {
     Group {
       if let session {
         switch session.phase {
+        case .skills:
+          if let practice = session.currentSkill {
+            SkillPracticeContent(practice: practice).id(practice.id)
+          }
         case .support:
           WorkoutSupportFlowView(workout: session).id(session.currentSupport?.id)
         case .resting where session.isSupportRest:
@@ -239,7 +271,7 @@ struct WorkoutSessionView: View {
                 }
               case .feeling:
                 FeelingForm(workout: session, exercise: exercise).id(exercise.id)
-              case .support, .completed, .cancelled: EmptyView()
+              case .skills, .support, .completed, .cancelled: EmptyView()
               }
               Section("Reference") {
                 if !exercise.sets.isEmpty {
@@ -298,7 +330,7 @@ struct WorkoutSessionView: View {
     .navigationTitle(
       session?.phase == .completed
         ? "Workout Complete"
-        : session?.phase == .cancelled ? "Workout Cancelled" : session?.name ?? "Workout"
+        : session?.phase == .cancelled ? "Workout Canceled" : session?.name ?? "Workout"
     )
     .toolbar {
       ToolbarItemGroup(placement: .keyboard) {

@@ -8,6 +8,8 @@ Sport est une application personnelle iPhone, locale et hors ligne, en Swift/Swi
 
 Évaluer les idées de manière critique ; signaler les solutions inutiles ou disproportionnées. Préserver vocabulaire et règles métier ; ne pas changer silencieusement le périmètre.
 
+Règle de couleur des libellés : dans le contenu et les actions, les SF Symbols accompagnant le texte principal utilisent le bleu accent, avec le texte inchangé. Préserver le rouge destructif et le contraste des symboles sur fond accent ou destructif. Dans les menus natifs, utiliser des symboles UIKit précolorés en rendu original lorsque le style SwiftUI est ignoré. Les icônes seules conservent leur style. Garder les quatre onglets natifs, y compris leurs couleurs de sélection.
+
 ## Stack et environnement
 
 - Swift 6.4, SwiftUI, Swift Package Manager, xtool Linux ; iOS 26 minimum.
@@ -28,6 +30,13 @@ Sport est une application personnelle iPhone, locale et hors ligne, en Swift/Swi
 6. Installer chaque build prête à tester sur l’iPhone avant de demander une review utilisateur (instruction explicite du 11 octobre 2026). L’autorisation de ce workflow persiste : ne pas redemander une permission d’installation à chaque jalon, sauf effet inattendu ou blocage de signature. Rapporter modifications, vérifications, limites et checklist appareil ; attendre le retour explicite sur iPhone avant le jalon suivant. Une compilation n’est pas une validation iPhone.
 
 En mode auto_review, soumettre directement les escalades nécessaires au reviewer après un blocage réel du sandbox. Ne pas changer le mode de permission. Ne pas réinitialiser le dépôt, supprimer des données ou nettoyer les caches.
+
+## Versions
+
+- Correctif sans nouvelle fonctionnalité : incrémenter le patch (`X.Y.Z` → `X.Y.Z+1`).
+- Nouvelle fonctionnalité importante : incrémenter le minor et remettre le patch à zéro (`X.Y.Z` → `X.Y+1.0`).
+- Demander l’accord explicite de l’utilisateur avant toute version majeure (`X+1.0.0`).
+- Incrémenter le numéro de build indépendamment, à chaque nouvelle livraison iPhone. Garder les versions de l’app, du widget et de l’inspection cohérentes.
 
 ## Données et métier
 

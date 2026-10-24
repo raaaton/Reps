@@ -70,7 +70,7 @@ struct BodyWeightView: View {
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button("Delete", systemImage: "trash", role: .destructive) {
                   deleting = measurement
-                }
+                }.labelStyle(.titleAndIcon)
               }
               .contextMenu {
                 Button("Edit", systemImage: "pencil") {

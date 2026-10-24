@@ -23,7 +23,7 @@ Checking `restored == original` after all those operations is useful: it verifie
 
 ## Validation layers
 
-- **257 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
+- **284 host tests:** business rules, real SQLite persistence, migrations, transactions, timer state, progression and transfers.
 - **6 metadata tests:** compatibility and strictness of the App Intents metadata adapter, using recorded compiler fixtures.
 - **Swift lint:** formatting and source consistency, not functional correctness.
 - **xtool builds:** the app and extension compile against the configured iOS SDK.
@@ -106,3 +106,57 @@ Device checklist: compare2vs4sets at the same reps; curve means vs unchanged per
 275host tests/zero failures (6.801s), including five new scenarios first observed red with12assertions: screenshot Pike/L-sit values; exact mean seconds; unequal loads with lower-load reps excluded; large valid values without sum overflow; real Bulgarians live completion and14→15repair, history unchanged and manual customization retained on subsequent reopen. Existing latest-exercise expectations now reflect uniform mean targets; legacy Codable/manual-target tests retain exact values. Strictlint,6metadata, xtool28.68s plus metadata embedding2.37s, unsigned72inspection and independent targeted review pass.
 
 Device checklist: Progress shows Pike4×12 and L-sit4×18s for the reported data; Bulgarians latest mixed session gives11reps at7.5kg, repeated for each workout count. Newer2×10at7.5kg must supersede an older mixed session for that same exercise. Recorded history and graph details retain exact source values. Verify Today/preparation/goal detail and relaunch; physical results remain user validation.
+
+
+## Global Stretching — build 73
+
+281 host tests pass (7.122 s), including six added scenarios: persisted flag across reopen and toggling without rewriting active snapshots; every schedule; JSONv5 restore/legacy v4 default/CSV preference preservation; schema15→16 preservation; one/two warm-up-only support validation; warm-up/rest → working sets → last Feeling completion with CSV/JSON round trip. Two lifecycle/validation tests first failed with six assertions/errors; the transfer test failed before JSON shape/restore support. Legacy migration fixtures now include their original preferences table or remove the new column before simulated downgrade. Strict lint and six metadata tests pass. Independent review found a fixture downgrade issue, corrected; no production findings.
+
+Device checklist: Settings → Training → Stretching off; prepare a workout (warm-up visible, stretch selector absent); complete it (Finish Workout after final Feeling, normal summary). Reopen Sport and check off persists; enable again and verify stretch selection/flow returns. A workout already started keeps its original stages. Check large text, VoiceOver state and light/dark rendering. Host tests/build/install do not establish these physical results.
+## Audit corrections — build 75
+
+290 host tests pass. Nine new HistoryGoalReconciliationTests cover latest manual history, edited/deleted sources, removal of the final source, personalized targets, active snapshot preservation, preserved/invalidated explicit decisions, forced SQL rollback, historical set-count corrections, catalogue renaming and an unprojectable exact load. Original six scenarios failed with 11 assertions before implementation; three additional reviewer cases were reproduced before correction. Legacy history/goal tests now expect an automatically inherited baseline while retaining their stale-command, persistence and schedule-structure checks.
+
+The isolated actual-source probe also verifies 18,700 ms → 0:18.7 and 500 ms → 0:00.5 (localized decimal separator), new manual result 12 → next goal 12, and accepted 4,500 g → newly assigned goal 4,500 g after rename. The probe uses in-memory fictional data and the exact WorkoutLabels source, not SwiftUI rendering. Full lint, six metadata tests and real iOS compilation/bundle inspection pass. Physical checks: rename/edit history and reopen future targets; seconds/tenths across History and selected chart details; long history scroll and midnight refresh; largest text metric menu; camera import/cancel plus background/session locking. A cleanup failure requires injection on a test device to validate the error branch physically. No iPhone FPS or camera-encoding latency claim.
+
+## Selective revert — build 76
+
+284 host tests pass (7.184s). Restored baseline ExerciseGoalTests/HistoryEditingTests expectations were observed failing before the revert. Three HistoryDecisionTests cover history add/edit/delete leaving future goals unchanged, preservation of an explicit load decision after rename, and invalidation of a corrected performance decision for a new assignment without rewriting existing future goals. Strict lint, six metadata tests, xtool22.93s plus metadata embedding and unsigned app/widget inspection pass. Independent scoped review approved; device delivery currently awaits USB connection. Physical checklist: history correction preserves the existing future target, recorded sets display whole seconds, original Consistency scroll works, retained metric-menu/camera/Stretching behavior remains.
+
+## Skills — 1.2.0 — build 78
+
+New host coverage exercises catalogue seeding and reopening, personal-step validation/duplication/deletion, separate volumes and explicit adoption across workouts, free-practice pause accounting, persisted activity, countdown cancellation, actual repetitions, duplicate/stale commands, two repository connections, mixed-workout gating and completion, backward-clock cancellation, expired-rest skip, active JSON round trips, paused rest/countdown restoration, nested unknown fields, malformed content rejection, and CSV preservation with original-workout provenance. Existing migration assertions now target schema17/archive6; legacy fixtures omit fields unavailable in their historical formats.
+
+Physical checklist: discover all four roadmaps and their extensions; create/duplicate/reorder steps; configure the same skill differently in two workouts; test placement before/after force with Stretching on/off; practise freely without touching the phone between attempts; pause/background/relaunch; record holds and repetitions; skip/cancel without losing recorded attempts; inspect mixed/standalone history and separated metrics; export/restore a resumable archive; use links while offline; verify largest Dynamic Type, VoiceOver, safe areas and controls. Do not treat host tests or compilation as device validation.
+
+## Skills interface refinement — build 79
+
+315 host tests pass, including old preset US spelling presentation, untouched custom text/URLs and immutable original content. Six metadata tests and strict Swift lint pass. The first UI compilation exposed an unsupported NavigationLink overload; explicit native destination/label builders fix it, and xtool builds successfully. On iPhone check Progress ordering; roadmap/current marker; all four preset step details and extensions; Practice/Add to Workout; manual success/current-step adoption; More menu editing/archiving and red glyphs; large Dynamic Type and VoiceOver. Rendering and interaction acceptance remain physical checks.
+
+## Skills follow-up — build 80
+
+328 host tests pass, including progression forward/backward reconciliation, completion waiting for secondary goals, reset/future-block volume preservation, distinct archive/delete lifecycle, deletion across mixed and independent history with active guards, both workout-assignment model paths surviving a real SQLite reopen, preset spelling/video display compatibility, and strict generated JSON validation/single draft save. Nine Python metadata/style checks guard centralized controls and root-owned block presentation. Final xtool and unsigned bundle inspector pass.
+
+YouTube selections: GMB's current author pages link handstand `d6_lcWtQDxw`, planche fundamentals `8mnNpNZ88Oo`, straddle `6snDOgFBBFA`, advanced/full `wYWlie_g_js`, press `SfLaCKaljU4`, HSPU `nk-bjYYZVaE`, L-sit `BbAkWxDZKIM` (chapters135/202/235/268/306 seconds). FitnessFAQs demonstrates planche push-ups `TZ63httkob4`, front lever progression `AGhb8V8M758`, and rows/pulls `dze1Dpi3CKk`; Stretch To Strength demonstrates L-sit/V-sit progression `0pkTDnbRe8Q`. Author descriptions and progression contents were checked through web sources. Direct web fetching failed for some videos; all selected URLs subsequently opened a YouTube player in the in-app browser, with loaded durations. Some players showed advertisements; this is not proof of complete uninterrupted playback or a frame-by-frame technique audit. No video is embedded/downloaded into Sport.
+
+Physical checks still required on iPhone: independently perform Skills→Add to Workout→Save→reopen; Settings→Workouts→Edit→Add Skill→configure→Save block→Save workout→reopen (the intermediate block must stay presented). Check all Skills forms and menus in light/dark and large text/VoiceOver. Complete the main goal while secondary goals remain incomplete, finish the last secondary goal, regress, reset, archive and permanently delete. Generate via an installed provider, paste its real response, retry invalid JSON, inspect preview, save once and reopen. UIKit/SwiftUI modal lifecycles and external-provider app behavior cannot be automated by the host-domain tests on Linux. Independent reviewer stopped at its account usage limit after identifying the swipe-contrast issue; that finding was fixed, but no full independent review of the expanded scope was completed.
+
+## Kavi creation and Skills controls — build 81
+
+331 host tests pass with zero failures (7.69s); three new cases cover fenced/prose-wrapped AI responses and rejection of ambiguous multiple roadmaps. Two cases were observed failing before the parser change. Nine metadata/style checks, strict Swift lint, diff whitespace checks and the real xtool build pass. Final app/widget inspection confirms 1.2.0(81); provider assets are bundled. Logs are in /tmp/sport-skills-kavi-followup/.
+
+Physical checks: centered title, white plus/cancel symbols, archive below Completed, icon-only archive swipe and whole-row long press. For AI creation test name→provider, installed app opening, return/paste→editable review, edit→back→Continue Reviewing, save once and reopen; invalid or empty clipboard must show an alert. Also check accessibility text sizes and cancel in manual creation. The actual response associated with the user's “nothing happens” report was not provided: wrapped-response rejection is reproduced, but its causal link to that particular response remains unconfirmed. Linux tests/build do not establish native navigation or handoff acceptance.
+
+## Physical corrections — build83
+
+332 host tests pass, including independent achievement updates and a video-research prompt regression first observed red. Nine metadata/style checks and strict lint pass. Physical checks: AI/manual cancel has a single native glass boundary; all three provider logos visible; Archived Skills permanent-delete glyph red in detail menu and long-press menu; marking a later step Consistent retains current and leaves other achievements unchanged; provider response contains actual verified video links when web search is available. Exact rejected ChatGPT response requested, not yet received: no claim of fixing that specific parser failure. Evidence: /tmp/sport-skills-123/.
+
+ChatGPT follow-up: supplied response shows Markdown backslash hard breaks and encoded indentation. Regression reproduces that formatting rejection, then passes with string-aware normalization. Valid escapes and literal entities inside instruction strings are preserved; malformed escapes and ambiguous roadmaps remain rejected.334 host tests/zero failures(7.548s), nine metadata/style checks and strict lint pass. Physical re-paste of the original response remains required because the chat transport itself may contribute formatting.
+
+## Accent symbols — build85
+
+Visual-only shared LabelStyle, no domain changes. Check Settings navigation rows, Progress Skills/private-photo rows, Skills history/actions and secondary workout controls: normal text retains its style, accompanying symbol uses accent. Verify destructive context menus remain red, filled swipe action contrast and archive icon-only deletion, black symbols on accent-filled primary buttons, white standalone cross/plus symbols, and unchanged native tab icons in both appearances and large text. Run existing metadata/style checks, strict lint, real build and package inspection; physical rendering remains pending.
+
+## Native Skills menus — build86
+
+Physical checks: open Skills plus menu (AI/manual icons blue, titles primary); open preset More (duplicate blue, archive/reset red); open custom More (edit blue); long-press roadmap (current/first-success/consistent blue); check AI Other Options and workout Add Skill menus. Plus/ellipsis trigger glyphs stay white and archived deletion stays red. Linux lint/build/metadata checks cannot validate native menu image coloring. Original UIImage rendering mirrors the red technique the user confirmed working. No domain changes.

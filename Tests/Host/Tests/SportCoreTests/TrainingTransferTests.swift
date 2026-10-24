@@ -101,17 +101,17 @@ final class TrainingTransferTests: XCTestCase, @unchecked Sendable {
     XCTAssertThrowsError(try TrainingCSV.decode(Data(truncated)))
     XCTAssertThrowsError(try TrainingCSV.decode(Data("wrong,headers\n1,2".utf8)))
   }
-  func testActiveWorkoutAndPrivatePhotoManifestAreRefused() async throws {
+  func testActiveWorkoutExportsButRestoreAndPrivatePhotoManifestAreRefused() async throws {
     let r = try SportRepository(path: ":memory:")
     let empty = try await r.exportTraining(now: now)
     let csvPreview = try await r.previewCSVImport([], now: now)
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!
     _ = try await r.startWorkout(scheduleID: "pull-abs", now: now, calendar: calendar)
-    do {
-      _ = try await r.exportTraining(now: now)
-      XCTFail("Active export truncated")
-    } catch {}
+    let activeArchive = try await r.exportTraining(now: now)
+    XCTAssertEqual(activeArchive.contents.workouts.filter { $0.status == .active }.count, 1)
+    let decodedActive = try TrainingArchive.decode(activeArchive.encoded())
+    XCTAssertEqual(decodedActive.contents, activeArchive.contents)
     do {
       _ = try await r.previewArchiveImport(empty, now: now)
       XCTFail("Active restore accepted")

@@ -37,6 +37,7 @@ struct WeightInventoryView: View {
             }.buttonStyle(.plain)
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button("Delete", systemImage: "trash", role: .destructive) { deleting = item }
+                  .labelStyle(.titleAndIcon)
               }
               .contextMenu {
                 Button("Edit", systemImage: "pencil") { editing = item }

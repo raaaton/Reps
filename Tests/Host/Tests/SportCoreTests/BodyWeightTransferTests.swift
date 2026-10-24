@@ -38,13 +38,13 @@ final class BodyWeightTransferTests: XCTestCase, @unchecked Sendable {
       contents["configuration"] = config
     }
     root["contents"] = contents
-    return try JSONSerialization.data(withJSONObject: root)
+    return try JSONSerialization.data(withJSONObject: removingNewSkillFields(root))
   }
   func testVersionThreeRoundTripRestoresWeightsAndReminder() async throws {
     let r = try SportRepository(path: ":memory:")
     try await setup(r)
     let archive = try await r.exportTraining(now: now)
-    XCTAssertEqual(archive.version, 4)
+    XCTAssertEqual(archive.version, 6)
     let decoded = try TrainingArchive.decode(archive.encoded())
     let destination = try SportRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now)
@@ -137,6 +137,7 @@ final class BodyWeightTransferTests: XCTestCase, @unchecked Sendable {
     for column in ["weight_enabled", "weight_weekday", "weight_minutes"] {
       try db.execute("ALTER TABLE notification_preferences DROP COLUMN \(column)")
     }
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=11")
     let reopened = try SportRepository(path: path)
     let after = try await reopened.snapshot()

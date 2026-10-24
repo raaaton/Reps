@@ -2,7 +2,8 @@ import Foundation
 
 public enum WorkoutStatus: String, Codable, Sendable { case active, completed, cancelled }
 public enum WorkoutPhase: Equatable, Sendable {
-  case support, readySet, countdown, activeSet, completedSet, resting, feeling, completed, cancelled
+  case skills, support, readySet, countdown, activeSet, completedSet, resting, feeling, completed,
+    cancelled
 }
 public enum RestStatus: String, Codable, Sendable {
   case running, paused, finished, skipped, cancelled
@@ -89,8 +90,15 @@ public struct WorkoutSession: Codable, Identifiable, Equatable, Sendable {
   public let exercises: [WorkoutExercise]
   public let rest: WorkoutRest?
   public var support: WorkoutSupport? = nil
+  public var skills: WorkoutSkills? = nil
+  public var currentSkill: SkillPractice? {
+    guard let skills, skills.placement == .beforeForce || workFinished else { return nil }
+    return skills.blocks.first { !$0.state.isTerminal }
+  }
   public var workFinished: Bool { exercises.allSatisfy { $0.feelingTenths != nil } }
-  public var currentSupport: WorkoutSupportStep? { support?.current(workFinished: workFinished) }
+  public var currentSupport: WorkoutSupportStep? {
+    currentSkill == nil ? support?.current(workFinished: workFinished) : nil
+  }
   public var isSupportRest: Bool { rest != nil && support?.restID == rest?.id }
   public var restDestination: WorkoutExercise? {
     guard let rest, rest.status == .running || rest.status == .paused else { return nil }
@@ -111,6 +119,7 @@ public struct WorkoutSession: Codable, Identifiable, Equatable, Sendable {
   public func phase(at now: Int) -> WorkoutPhase {
     if status == .completed { return .completed }
     if status == .cancelled { return .cancelled }
+    if currentSkill != nil { return .skills }
     if isSupportRest, let rest, rest.status == .running || rest.status == .paused {
       return .resting
     }

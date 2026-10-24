@@ -38,7 +38,9 @@ extension TrainingTransfer {
       $0.offset == 4 || $0.offset == 7 || (48...57).contains($0.element)
     }
   }
-  static func workouts(_ records: [WorkoutSession], now: Int? = nil) throws {
+  static func workouts(_ records: [WorkoutSession], now: Int? = nil, allowActive: Bool = false)
+    throws
+  {
     guard records.count <= 10000, records.flatMap(\.exercises).count <= 100000,
       records.flatMap(\.exercises).flatMap(\.sets).count <= 100000
     else { throw invalid }
@@ -48,7 +50,10 @@ extension TrainingTransfer {
     for workout in records {
       try text(workout.name)
       try text(workout.scheduleID, limit: 256)
-      guard workout.status != .active, workout.rest == nil, let end = workout.endedAt,
+      let end = workout.endedAt ?? now ?? WorkoutClock.now
+      guard allowActive || workout.status != .active,
+        workout.status == .active ? workout.endedAt == nil : workout.endedAt != nil,
+        workout.status == .active || workout.rest == nil,
         end >= workout.startedAt, workout.restSeconds > 0,
         canonicalDate(workout.dayKey), TrainingAnalytics.date(for: workout.dayKey) != nil,
         now.map({ workout.dayKey <= WorkoutClock.dayKey($0) }) ?? true,
@@ -57,11 +62,21 @@ extension TrainingTransfer {
       try WorkoutClock.validate(workout.startedAt)
       try WorkoutClock.validate(end)
       try workout.support?.validate(workout: workout)
+      if let rest = workout.rest {
+        guard workout.status == .active,
+          workout.exercises.contains(where: { $0.id == rest.exerciseID }),
+          rest.status == .running || rest.status == .paused,
+          rest.status == .running
+            ? (rest.deadline != nil && rest.remainingMS == nil)
+            : (rest.deadline == nil && (rest.remainingMS ?? 0) > 0)
+        else { throw invalid }
+        if let deadline = rest.deadline { try WorkoutClock.validate(deadline) }
+      }
       try unique(workout.exercises.map { $0.definition.id })
       for exercise in workout.exercises {
         try definition(exercise.definition)
         guard exercise.definition.isEnabled,
-          exercise.feelingTenths.map({ (0...100).contains($0) }) ?? (workout.status == .cancelled),
+          exercise.feelingTenths.map({ (0...100).contains($0) }) ?? (workout.status != .completed),
           workout.status != .completed || !exercise.sets.isEmpty
         else { throw invalid }
         if workout.status == .completed {
@@ -141,6 +156,6 @@ extension TrainingTransfer {
       guard c.exercises.contains(where: { $0.id == goal.definition.id }) else { throw invalid }
     }
     _ = try data.notifications.validated()
-    try workouts(data.workouts)
+    try workouts(data.workouts, allowActive: true)
   }
 }

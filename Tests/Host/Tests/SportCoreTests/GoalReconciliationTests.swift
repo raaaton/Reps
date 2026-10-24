@@ -143,13 +143,14 @@ final class GoalReconciliationTests: XCTestCase, @unchecked Sendable {
     let active = try await r.startWorkout(scheduleID: "legs", now: now, calendar: calendar)
     let db = try SQLiteDatabase(path: path)
     try db.execute("UPDATE exercises SET minimum_reps=10,maximum_reps=11 WHERE id='bulgarians'")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=12")
     let reopened = try SportRepository(path: path)
     let c = try await reopened.goalContext(exerciseID: "bulgarians", scheduleID: "legs")
     XCTAssertTrue(c.isAvailable)
     XCTAssertEqual(c.adopted?.repetitions, [10, 10, 10, 11])
     XCTAssertEqual(c.adopted?.load, old.load)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 15)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 17)
     let unchanged = try await reopened.workout(id: active.id)
     XCTAssertEqual(unchanged, active)
   }
@@ -189,6 +190,7 @@ final class GoalReconciliationTests: XCTestCase, @unchecked Sendable {
     let old = try await adopt(r, id: "push-ups", workout: "push", reps: [8, 9, 10, 12])
     let db = try SQLiteDatabase(path: path)
     try db.execute("UPDATE exercises SET minimum_reps=10 WHERE id='push-ups'")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=12")
     try db.execute(
       "CREATE TRIGGER reject_migration BEFORE UPDATE OF goal_payload ON schedule_exercises BEGIN SELECT RAISE(ABORT,'test'); END"

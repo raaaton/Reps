@@ -81,6 +81,7 @@ public actor SportRepository {
             } ?? .null,
           ])
       }
+      try writeScheduleSkills(schedule)
       let added = Set(schedule.exerciseIDs).subtracting(old?.exerciseIDs ?? [])
       if !added.isEmpty {
         try LatestExerciseGoals.update(database, exerciseIDs: added, scheduleIDs: [schedule.id])
@@ -133,6 +134,13 @@ public actor SportRepository {
     try database.execute("UPDATE preferences SET rest_seconds=? WHERE id=1", [.integer(seconds)])
   }
 
+  public func saveStretching(enabled: Bool) throws {
+    try database.transaction {
+      try database.execute(
+        "UPDATE preferences SET stretching_enabled=? WHERE id=1", [.integer(enabled ? 1 : 0)])
+    }
+  }
+
   public func deleteSchedule(id: String) throws {
     try database.transaction {
       // Foreign keys remove this schedule's assignments, never the exercise catalogue.
@@ -170,16 +178,20 @@ public actor SportRepository {
           goals[try assignment.text("exercise_id")] = try ExerciseGoal.decode(payload)
         }
       }
+      let skillBlocks = try readScheduleSkills(id: id)
       return TrainingSchedule(
         id: id, name: try row.text("name"), weekday: try row.integer("weekday"),
         isEnabled: try row.integer("enabled") == 1,
         reminderMinutes: try row.optionalInteger("reminder_minutes"), exerciseIDs: exerciseIDs,
-        setCounts: setCounts, goals: goals)
+        setCounts: setCounts, goals: goals, skills: skillBlocks.blocks,
+        skillPlacement: skillBlocks.placement)
     }
-    guard let rest = try database.query("SELECT rest_seconds FROM preferences WHERE id=1").first
+    guard let rest = try database.query("SELECT * FROM preferences WHERE id=1").first
     else { throw TrainingError.storage }
     return TrainingSnapshot(
       exercises: exercises, schedules: schedules, restSeconds: try rest.integer("rest_seconds"),
-      weightItems: try readWeightItems(), goals: try readGoals())
+      weightItems: try readWeightItems(), goals: try readGoals(),
+      stretchingEnabled: try rest.integer("stretching_enabled") == 1,
+      skills: try readSkills(), skillProgress: try readSkillProgress())
   }
 }

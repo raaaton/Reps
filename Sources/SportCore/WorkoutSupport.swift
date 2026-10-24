@@ -64,9 +64,9 @@ public struct WorkoutSupport: Codable, Equatable, Sendable {
   }
   public static func make(
     first: WorkoutExercise, restSeconds: Int, stretch: StretchMovement,
-    stretchSeconds: Int
+    stretchSeconds: Int, stretchingEnabled: Bool = true
   ) throws -> Self {
-    guard restSeconds > 0, (5...600).contains(stretchSeconds) else {
+    guard restSeconds > 0, !stretchingEnabled || (5...600).contains(stretchSeconds) else {
       throw TrainingError.invalid("Choose a stretch duration from 5 to 600 seconds.")
     }
     let (restMS, overflow) = restSeconds.multipliedReportingOverflow(by: 1000)
@@ -89,7 +89,7 @@ public struct WorkoutSupport: Codable, Equatable, Sendable {
           ? targetMS.map { weighted ? $0 : max(1, $0 / 2) } : nil,
         restAfterMS: number == count ? restMS : restMS / 2)
     }
-    for number in 1...stretch.sides {
+    for number in stretchingEnabled ? Array(1...stretch.sides) : [] {
       steps.append(
         WorkoutSupportStep(
           id: UUID().uuidString, kind: .stretch, name: stretch.name,
@@ -101,13 +101,14 @@ public struct WorkoutSupport: Codable, Equatable, Sendable {
     return Self(steps: steps)
   }
   public func validate(workout: WorkoutSession) throws {
-    guard !workout.exercises.isEmpty, (2...4).contains(steps.count),
+    guard !workout.exercises.isEmpty, (1...4).contains(steps.count),
       Set(steps.map(\.id)).count == steps.count,
       (1...2).contains(steps.filter { $0.kind == .warmUp }.count),
-      (1...2).contains(steps.filter { $0.kind == .stretch }.count)
+      (0...2).contains(steps.filter { $0.kind == .stretch }.count)
     else { throw TrainingTransfer.invalid }
     for kind in [SupportKind.warmUp, .stretch] {
       let group = steps.filter { $0.kind == kind }
+      if group.isEmpty { continue }
       guard Set(group.map(\.name)).count == 1,
         group.enumerated().allSatisfy({
           $0.element.number == $0.offset + 1 && $0.element.count == group.count

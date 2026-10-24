@@ -142,13 +142,14 @@ final class WorkoutLoadGoalTests: XCTestCase, @unchecked Sendable {
     let before = try await r.snapshot()
     let db = try SQLiteDatabase(path: path)
     try db.execute("DROP TABLE workout_goal_decisions")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=8")
     let reopened = try SportRepository(path: path)
     let after = try await reopened.snapshot()
     let restored = try await reopened.workout(id: workout.id)
     XCTAssertEqual(before, after)
     XCTAssertEqual(restored, workout)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 15)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 17)
     XCTAssertEqual(
       try db.query("SELECT COUNT(*) AS n FROM workout_goal_decisions").first?.integer("n"), 0)
   }

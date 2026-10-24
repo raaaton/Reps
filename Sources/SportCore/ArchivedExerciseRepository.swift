@@ -3,7 +3,7 @@ extension SportRepository {
     try database.transaction {
       guard try database.query("SELECT id FROM exercises WHERE id=?", [.text(id)]).isEmpty else {
         throw TrainingError.invalid(
-          "This exercise is still in the catalogue. Remove it from Exercises first.")
+          "This exercise is still in the catalog. Remove it from Exercises first.")
       }
       guard
         try database.query(

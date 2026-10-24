@@ -31,7 +31,7 @@ struct TrainingTransferView: View {
       } footer: {
         VStack(alignment: .leading, spacing: 8) {
           Text(
-            "Exports include all workout history, exercises, schedule, inventory, goals and training settings. Private photos are excluded."
+            "Exports include workouts, skills and practice history, exercises, schedule, inventory, goals and training settings. Active state is preserved. Private photos are excluded."
           )
           if let message { Text(message) }
         }
@@ -168,7 +168,7 @@ private struct TrainingImportPreviewView: View {
             ).foregroundStyle(.secondary)
           } else {
             Text(
-              "This CSV will replace all workout history. Schedule, catalogue, inventory, goals and settings will be kept. A recovery copy will be kept in Sport. Private photos are excluded."
+              "This CSV will replace all workout history. Schedule, catalog, inventory, goals and settings will be kept. A recovery copy will be kept in Sport. Private photos are excluded."
             ).foregroundStyle(.secondary)
           }
         }
@@ -190,7 +190,7 @@ private struct TrainingImportPreviewView: View {
             VStack(alignment: .leading, spacing: 4) {
               Text(workout.name)
               Text(
-                "\(WorkoutLabels.day(workout.dayKey)) · \(workout.status == .completed ? "Completed" : "Cancelled")"
+                "\(WorkoutLabels.day(workout.dayKey)) · \(workout.status == .completed ? "Completed" : "Canceled")"
               ).font(.subheadline).foregroundStyle(.secondary)
             }
           }

@@ -23,6 +23,7 @@ struct PlanningView: View {
             .buttonStyle(.plain)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               Button("Delete", systemImage: "trash", role: .destructive) { deleting = schedule }
+                .labelStyle(.titleAndIcon)
                 .buttonStyle(.automatic)
             }
             .contextMenu {
@@ -113,6 +114,8 @@ struct ScheduleEditor: View {
   @State private var editMode: EditMode = .inactive
   @State private var reminderRequested: Bool
   @State private var choosingTime = false
+  @State private var skillDraft: SkillAssignment?
+  @State private var newSkillBlock = false
   @State private var chosenTime = Date()
   let snapshot: TrainingSnapshot
   let isNew: Bool
@@ -161,6 +164,10 @@ struct ScheduleEditor: View {
           EditButton().textCase(nil)
         }
       }
+      ScheduleSkillSection(schedule: $draft, definitions: snapshot.skills) { assignment, isNew in
+        newSkillBlock = isNew
+        skillDraft = assignment
+      }
       Section {
         Toggle("Add a Reminder", isOn: $reminderRequested)
         if reminderRequested, let minutes = draft.reminderMinutes {
@@ -199,6 +206,19 @@ struct ScheduleEditor: View {
       }
     }
     .interactiveDismissDisabled(saving)
+    .sheet(item: $skillDraft) { assignment in
+      NavigationStack {
+        SkillBlockEditor(assignment: assignment, definitions: snapshot.skills, isNew: newSkillBlock)
+        { saved in
+          if let index = draft.skills.firstIndex(where: { $0.id == saved.id }) {
+            draft.skills[index] = saved
+          } else {
+            draft.skills.append(saved)
+          }
+          skillDraft = nil
+        }
+      }.environment(\.editMode, .constant(.inactive))
+    }
     .sheet(isPresented: $selecting) {
       NavigationStack {
         List {

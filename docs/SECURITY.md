@@ -230,3 +230,19 @@ Build71: schema14 transactionally refreshes future training goals from existing 
 
 
 Build72: schema15updates future training goal payloads only, using existing history inside the migration transaction. No schema columns, backup-format, personal-device data export, vault, permission, identity or capability changes. Historical/active snapshots stay intact.
+
+
+## Global Stretching — build 73
+
+Transactional SQLite migration 15→16 adds stretching_enabled, default on. Only newly created workout support snapshots use it; active/history data are not rewritten. Training JSON v5 includes the flag; v1–4 decode with stretching enabled when absent. CSV imports preserve the current preference; recovery archives include it. Warm-up-only snapshots are valid in training exports/imports. No cryptographic, permission, capability, certificate or network-runtime change.
+## Audit corrections — 22 October, build 75
+
+Camera cancellation remains silent; encoding/temporary-file-cleanup failures return a generic import error only while the originating vault session remains valid. Cleanup failure still refuses import. No path or system error detail is displayed; no key, AES-GCM, file-protection policy, permission or export-policy change. Existing uncommitted Stretching work remains intact. Independent review covered the callback/session guards and found no remaining actionable issue; actual camera/lifecycle/masking/Face ID checks remain physical-device work. No private media or personal database was used by this audit or its tests.
+
+## Skills content and links — 1.2.0 — build 78
+
+Skills add only local training text, configuration and results; no new permissions, private media, vault keys or authentication changes. Built-in text is available offline. An explicit demonstration action opens an HTTPS source in the external browser, which may make its own network requests; Sport does not prefetch links or embed third-party video. Custom source URLs are validated before storage/import. JSON transfer remains closed to unknown fields and excludes private photos.
+
+## Skills AI handoff — build 80
+
+On explicit Generate, Sport copies only the prepared roadmap prompt and requested skill name to the system clipboard and asks iOS to open the chosen provider app. No training history, photos, keys or private records are included. Sport makes no model API call and embeds no secret. Website fallback is an explicit user action. Clipboard response is read only on Paste Response. Bounded JSON validation rejects unknown keys, malformed fields, unsafe/non-YouTube links, duplicate step names and inconsistent goal ordering before any storage write. Generated guidance needs user review; model claims or link availability are not independently verified at generation time.

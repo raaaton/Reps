@@ -53,6 +53,7 @@ final class DurationPrecisionTests: XCTestCase, @unchecked Sendable {
     try db.execute("DROP TRIGGER round_duration_insert")
     try db.execute("DROP TRIGGER round_duration_update")
     try db.execute("UPDATE workout_sets SET duration_ms=12356")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=9")
     let reopened = try SportRepository(path: path)
     let after = try await reopened.workout(id: "precision")
@@ -63,7 +64,7 @@ final class DurationPrecisionTests: XCTestCase, @unchecked Sendable {
     try db.execute("UPDATE workout_sets SET duration_ms=12344")
     XCTAssertEqual(
       try db.query("SELECT duration_ms FROM workout_sets")[0].integer("duration_ms"), 12300)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 15)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 17)
     _ = try SportRepository(path: path)
     XCTAssertEqual(
       try db.query("SELECT duration_ms FROM workout_sets")[0].integer("duration_ms"), 12300)
@@ -77,6 +78,7 @@ final class DurationPrecisionTests: XCTestCase, @unchecked Sendable {
     try db.execute("DROP TRIGGER round_duration_insert")
     try db.execute("DROP TRIGGER round_duration_update")
     try db.execute("UPDATE workout_sets SET duration_ms=12344")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=9")
     try db.execute(
       "CREATE TRIGGER reject_rounding BEFORE UPDATE ON workout_sets BEGIN SELECT RAISE(ABORT,'test'); END"

@@ -276,13 +276,19 @@ struct VaultImportView: View {
       .sheet(isPresented: $cameraOpen) {
         VaultPrivacySurface {
           if vault.allows(route.session) {
-            VaultCameraView { data in
+            VaultCameraView { result in
               cameraOpen = false
-              if let data {
+              guard vault.allows(route.session) else { return }
+              switch result {
+              case .success(let data):
                 Task {
                   await vault.importCamera(data, day: day, pose: pose, session: route.session)
                   if vault.allows(route.session), vault.error == nil { dismiss() }
                 }
+              case .failure(let error):
+                vault.error = error.localizedDescription
+              case nil:
+                break
               }
             }.ignoresSafeArea()
           }

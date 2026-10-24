@@ -17,6 +17,7 @@ private struct SportProminentButton: ViewModifier {
   func body(content: Content) -> some View {
     let colors = SportAccentColors(choice)
     content.buttonStyle(.borderedProminent).tint(colors.fill).foregroundStyle(colors.ink)
+      .labelStyle(.titleAndIcon)
   }
 }
 extension View {

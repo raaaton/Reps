@@ -11,22 +11,26 @@ struct SportTabView: View {
         NavigationStack {
           TodayView()
         }
+        .labelStyle(SportLabelStyle())
       }
 
       Tab("History", systemImage: "clock.arrow.circlepath", value: 1) {
         NavigationStack {
           HistoryView()
         }
+        .labelStyle(SportLabelStyle())
       }
 
       Tab("Progress", systemImage: "chart.line.uptrend.xyaxis", value: 2) {
         NavigationStack { ProgressionView() }
+          .labelStyle(SportLabelStyle())
       }
 
       Tab("Settings", systemImage: "gearshape", value: 3) {
         NavigationStack {
           SettingsView()
         }
+        .labelStyle(SportLabelStyle())
       }
     }
     .environment(\.locale, Locale(identifier: "en"))

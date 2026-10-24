@@ -31,6 +31,9 @@ struct ProgressionView: View {
             NavigationLink("View Days as a List") { AttendanceListView(days: days) }
           }
           Section {
+            SkillsNavigationRow()
+          }
+          Section {
             NavigationLink {
               BodyWeightView()
                 .onAppear { bodyWeightVisible = true }
@@ -72,7 +75,7 @@ struct ProgressionView: View {
                 if !snapshot.exercises.contains(where: { $0.id == exercise.id }) {
                   Button("Delete", systemImage: "trash", role: .destructive) {
                     deletingArchived = exercise
-                  }
+                  }.labelStyle(.titleAndIcon)
                 }
               }
               .contextMenu {
@@ -153,4 +156,14 @@ struct ProgressionView: View {
     bodyWeightOpen = true
   }
   private var summaries: [WorkoutSummary] { TrainingAnalytics.summaries(in: store.workouts) }
+}
+
+private struct SkillsNavigationRow: View {
+  var body: some View {
+    NavigationLink {
+      SkillsView()
+    } label: {
+      Label("Skills", systemImage: "figure.gymnastics")
+    }
+  }
 }

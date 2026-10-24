@@ -16,6 +16,7 @@ private struct TrendProjection: Sendable {
 }
 struct ExerciseProgressView: View {
   @EnvironmentObject private var store: TrainingStore
+  @Environment(\.dynamicTypeSize) private var typeSize
   let exercise: TrainingExercise
   @State private var period: ChartPeriod = .threeMonths
   @State private var metric: SessionTrendMetric
@@ -60,14 +61,14 @@ struct ExerciseProgressView: View {
     List {
       Section {
         ChartPeriodPicker(selection: $period)
-        Picker("Metric", selection: $metric) {
-          if exercise.tracking == .repetitions {
-            Text("Volume").tag(SessionTrendMetric.volume)
-          }
-          Text(exercise.tracking == .duration ? "Duration" : "Repetitions").tag(
-            exercise.tracking == .duration ? SessionTrendMetric.duration : .repetitions)
-          Text("Added Weight").tag(SessionTrendMetric.load)
-        }.pickerStyle(.segmented)
+        if typeSize >= .xxxLarge {
+          metricPicker.pickerStyle(.menu)
+        } else {
+          ViewThatFits(in: .horizontal) {
+            metricPicker.pickerStyle(.segmented).fixedSize(horizontal: true, vertical: false)
+            metricPicker.pickerStyle(.menu)
+          }.frame(maxWidth: .infinity)
+        }
       }.listRowBackground(Color.clear)
       if loading && projection == nil {
         Section { ProgressView("Loading workouts…") }
@@ -181,6 +182,16 @@ struct ExerciseProgressView: View {
       metric = mode == .duration ? .duration : .volume
     }
     .task(id: request) { await load() }
+  }
+  private var metricPicker: some View {
+    Picker("Metric", selection: $metric) {
+      if exercise.tracking == .repetitions {
+        Text("Volume").tag(SessionTrendMetric.volume)
+      }
+      Text(exercise.tracking == .duration ? "Duration" : "Repetitions").tag(
+        exercise.tracking == .duration ? SessionTrendMetric.duration : .repetitions)
+      Text("Added Weight").tag(SessionTrendMetric.load)
+    }
   }
   private func load() async {
     loading = true

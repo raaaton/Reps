@@ -104,7 +104,7 @@ struct AttendanceDayView: View {
             VStack(alignment: .leading, spacing: 4) {
               Text(workout.name).foregroundStyle(.primary)
               Text(
-                "\(workout.setCount) sets · \(workout.status == .completed ? "Completed" : "Cancelled")"
+                "\(workout.setCount) sets · \(workout.status == .completed ? "Completed" : "Canceled")"
               ).font(.subheadline).foregroundStyle(.secondary)
             }
           }

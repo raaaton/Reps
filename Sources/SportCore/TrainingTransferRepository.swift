@@ -2,16 +2,12 @@ import Foundation
 
 extension SportRepository {
   private func readTransferData() throws -> TrainingDataSet {
-    guard try database.query("SELECT id FROM workouts WHERE status='active'").isEmpty else {
-      throw TrainingError.invalid(
-        "Finish or cancel the active workout before importing or exporting. Recorded sets will be kept."
-      )
-    }
     return TrainingDataSet(
       configuration: try readSnapshot(), notifications: try readNotificationPreferences(),
       workouts: try database.query("SELECT id FROM workouts ORDER BY rowid").map {
         try readWorkout(id: $0.text("id"))
-      }, bodyWeights: try bodyWeightMeasurements())
+      }, bodyWeights: try bodyWeightMeasurements(),
+      skillSessions: try readIndependentSkillSessions())
   }
   public func exportTraining(now: Int) throws -> TrainingArchive {
     try database.transaction {
@@ -29,13 +25,15 @@ extension SportRepository {
     -> TrainingImportPreview
   {
     try database.transaction {
+      try requireNoActiveImport()
       try TrainingTransfer.workouts(records, now: now)
       let current = try readTransferData()
       let existing = Dictionary(uniqueKeysWithValues: current.workouts.map { ($0.id, $0) })
       let identical = records.filter { existing[$0.id] == $0 }.count
       let incoming = TrainingDataSet(
         configuration: current.configuration, notifications: current.notifications,
-        workouts: records, bodyWeights: current.bodyWeights)
+        workouts: records, bodyWeights: current.bodyWeights,
+        skillSessions: try detachedSkillsForCSV(current: current, incoming: records))
       _ = try TrainingArchive(createdAt: now, contents: incoming).encoded()
       return TrainingImportPreview(
         isRestoration: false, identicalCount: identical,
@@ -46,9 +44,10 @@ extension SportRepository {
     -> TrainingImportPreview
   {
     try database.transaction {
+      try requireNoActiveImport()
       try archive.validate()
       _ = try archive.encoded()
-      try TrainingTransfer.workouts(archive.contents.workouts, now: now)
+      try TrainingTransfer.workouts(archive.contents.workouts, now: now, allowActive: true)
       let current = try readTransferData()
       var incoming = archive.contents
       incoming.configuration = try incoming.configuration.reconcilingGoals()
@@ -66,6 +65,7 @@ extension SportRepository {
   }
   public func applyTrainingImport(_ preview: TrainingImportPreview, now: Int) throws {
     try database.transaction {
+      try requireNoActiveImport()
       let current = try readTransferData()
       guard current == preview.expected else {
         throw TrainingError.invalid(
@@ -73,7 +73,7 @@ extension SportRepository {
         )
       }
       try TrainingTransfer.validate(preview.incoming)
-      try TrainingTransfer.workouts(preview.incoming.workouts, now: now)
+      try TrainingTransfer.workouts(preview.incoming.workouts, now: now, allowActive: true)
       let final = preview.incoming
       _ = try TrainingArchive(createdAt: now, contents: final).encoded()
       if preview.isUnchanged { return }
@@ -82,11 +82,14 @@ extension SportRepository {
       try database.execute(
         "INSERT INTO import_recovery VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
         [.text(payload)])
+      try database.execute("DELETE FROM skill_sessions")
       for table in ["workout_rests", "workouts"] {
         try database.execute("DELETE FROM \(table)")
       }
       if preview.isRestoration {
-        for table in ["schedules", "exercises", "weight_items"] {
+        for table in [
+          "schedules", "exercises", "weight_items", "skill_progress", "skill_definitions",
+        ] {
           try database.execute("DELETE FROM \(table)")
         }
         try insertConfiguration(preview.incoming.configuration)
@@ -99,9 +102,16 @@ extension SportRepository {
         }
       }
       for workout in preview.incoming.workouts { try insertTransferredWorkout(workout) }
+      for practice in final.skillSessions { try writeSkillSession(practice) }
     }
   }
   private func insertConfiguration(_ c: TrainingSnapshot) throws {
+    for definition in c.skills {
+      try database.execute(
+        "INSERT INTO skill_definitions VALUES(?,?)",
+        [.text(definition.id), try SkillCoding.encode(definition)])
+    }
+    for progress in c.skillProgress { try writeSkillProgress(progress) }
     for (position, exercise) in c.exercises.enumerated() {
       try database.execute(
         "INSERT INTO exercises VALUES(?,?,?,?,?,?,?,?,?)",
@@ -130,6 +140,7 @@ extension SportRepository {
           ])
       }
     }
+    for schedule in c.schedules { try writeScheduleSkills(schedule) }
     for item in c.weightItems {
       try database.execute(
         "INSERT INTO weight_items VALUES(?,?,?,?)",
@@ -141,7 +152,8 @@ extension SportRepository {
         [.text(goal.definition.id), try ExerciseGoal.encode(goal)])
     }
     try database.execute(
-      "UPDATE preferences SET rest_seconds=? WHERE id=1", [.integer(c.restSeconds)])
+      "UPDATE preferences SET rest_seconds=?,stretching_enabled=? WHERE id=1",
+      [.integer(c.restSeconds), .integer(c.stretchingEnabled ? 1 : 0)])
   }
   private func insertTransferredWorkout(_ w: WorkoutSession) throws {
     try database.execute(
@@ -151,6 +163,7 @@ extension SportRepository {
         w.endedAt.map(SQLValue.integer) ?? .null, .text(w.status.rawValue), .integer(w.restSeconds),
       ])
     if let support = w.support { try writeSupport(support, workoutID: w.id) }
+    if let skills = w.skills { try writeWorkoutSkills(skills, id: w.id) }
     for (position, e) in w.exercises.enumerated() {
       let d = e.definition
       try database.execute(
@@ -176,6 +189,15 @@ extension SportRepository {
             .integer(set.completedAt), try WeightInventory.encode(set.components),
           ])
       }
+    }
+    if let rest = w.rest {
+      try database.execute(
+        "INSERT INTO workout_rests VALUES(?,?,?,?,?,?,?)",
+        [
+          .text(rest.id), .text(w.id), .text(rest.exerciseID), .integer(rest.afterSet),
+          .text(rest.status.rawValue), rest.deadline.map(SQLValue.integer) ?? .null,
+          rest.remainingMS.map(SQLValue.integer) ?? .null,
+        ])
     }
   }
 }

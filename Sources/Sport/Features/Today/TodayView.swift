@@ -6,16 +6,27 @@ struct TodayView: View {
   @Environment(\.sportAccent) private var accentChoice
   @EnvironmentObject private var store: TrainingStore
   @State private var route: WorkoutRoute?
+  @State private var skillPracticeID: String?
   @State private var restartScheduleID: String?
   var body: some View {
     TrainingContent { snapshot in
       TimelineView(.periodic(from: .now, by: 60)) { context in
         List {
+          if let practice = store.activeSkillPractice {
+            Section("Practice in Progress") {
+              Button("Resume \(practice.definition.name)", systemImage: "play.fill") {
+                skillPracticeID = practice.id
+              }
+            }
+          }
           if let active = store.workouts.active {
             Section("Workout in Progress") {
               VStack(alignment: .leading, spacing: 4) {
                 Text(active.name).font(.headline)
-                if let step = active.currentSupport {
+                if let practice = active.currentSkill {
+                  Text("Skills · " + (practice.step?.name ?? practice.definition.name))
+                    .foregroundStyle(.secondary)
+                } else if let step = active.currentSupport {
                   Text("\(step.kind == .warmUp ? "Warm-up" : "Stretch") · \(step.name)")
                     .foregroundStyle(.secondary)
                 } else if let exercise = active.currentExercise {
@@ -58,7 +69,7 @@ struct TodayView: View {
                   .foregroundStyle(.primary)
               }
             }
-            if store.workouts.active == nil {
+            if store.workouts.active == nil && store.activeSkillPractice == nil {
               let completed = completedWorkout(scheduleID: schedule.id, date: context.date)
               Section {
                 if let completed {
@@ -122,6 +133,12 @@ struct TodayView: View {
     .onChange(of: store.isReady) { _, _ in openLinkedWorkout() }
     .onChange(of: store.workouts.active?.id) { _, _ in openLinkedWorkout() }
     .onChange(of: store.workouts.history) { _, _ in openLinkedWorkout() }
+    .sheet(
+      isPresented: Binding(
+        get: { skillPracticeID != nil }, set: { if !$0 { skillPracticeID = nil } })
+    ) {
+      if let id = skillPracticeID { NavigationStack { SkillPracticeView(practiceID: id) } }
+    }
     .fullScreenCover(item: $route) { WorkoutFlowView(route: $0) }
     .sportConfirmation(
       "Start Again?",

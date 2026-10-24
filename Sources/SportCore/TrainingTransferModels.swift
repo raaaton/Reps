@@ -5,28 +5,34 @@ public struct TrainingDataSet: Codable, Equatable, Sendable {
   public var notifications: NotificationPreferences
   public var workouts: [WorkoutSession]
   public var bodyWeights: [BodyWeightMeasurement] = []
+  public var skillSessions: [SkillPractice] = []
 
   public init(
     configuration: TrainingSnapshot, notifications: NotificationPreferences,
-    workouts: [WorkoutSession], bodyWeights: [BodyWeightMeasurement] = []
+    workouts: [WorkoutSession], bodyWeights: [BodyWeightMeasurement] = [],
+    skillSessions: [SkillPractice] = []
   ) {
     self.configuration = configuration
     self.notifications = notifications
     self.workouts = workouts
     self.bodyWeights = bodyWeights
+    self.skillSessions = skillSessions
   }
-  enum CodingKeys: String, CodingKey { case configuration, notifications, workouts, bodyWeights }
+  enum CodingKeys: String, CodingKey {
+    case configuration, notifications, workouts, bodyWeights, skillSessions
+  }
   public init(from decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     configuration = try c.decode(TrainingSnapshot.self, forKey: .configuration)
     notifications = try c.decode(NotificationPreferences.self, forKey: .notifications)
     workouts = try c.decode([WorkoutSession].self, forKey: .workouts)
+    skillSessions = try c.decodeIfPresent([SkillPractice].self, forKey: .skillSessions) ?? []
     bodyWeights = try c.decodeIfPresent([BodyWeightMeasurement].self, forKey: .bodyWeights) ?? []
   }
 }
 public struct TrainingArchive: Codable, Equatable, Sendable {
   public var format = "sport.training"
-  public var version = 4
+  public var version = 6
   public var includesPrivatePhotos = false
   public var createdAt: Int
   public var contents: TrainingDataSet
@@ -81,18 +87,21 @@ public struct TrainingArchive: Codable, Equatable, Sendable {
         value.version = 3
       }
       if value.version == 3 { value.version = 4 }
+      if value.version == 4 { value.version = 5 }
+      if value.version == 5 { value.version = 6 }
       try value.validate()
       return value
     } catch let error as TrainingError { throw error } catch { throw TrainingTransfer.invalid }
   }
   func validate() throws {
-    guard format == "sport.training", version == 4, !includesPrivatePhotos else {
+    guard format == "sport.training", version == 6, !includesPrivatePhotos else {
       throw TrainingError.invalid(
         "This is not a compatible Sport training backup. Private photos are not supported."
       )
     }
     try WorkoutClock.validate(createdAt)
     try TrainingTransfer.validate(contents)
+    try SkillTransfer.validate(contents, now: createdAt)
     for measurement in contents.bodyWeights { _ = try measurement.validated(now: createdAt) }
   }
 }
@@ -108,6 +117,7 @@ public struct TrainingImportPreview: Identifiable, Sendable {
   public var isUnchanged: Bool {
     if isRestoration { return incoming == expected }
     return incoming.bodyWeights == expected.bodyWeights
+      && incoming.skillSessions == expected.skillSessions
       && incoming.configuration == expected.configuration
       && incoming.notifications == expected.notifications
       && incoming.workouts.sorted { $0.id < $1.id } == expected.workouts.sorted { $0.id < $1.id }

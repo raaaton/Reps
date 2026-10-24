@@ -6,6 +6,7 @@ struct WorkoutSupportPreview: View {
   let goal: ExerciseGoal?
   let override: AvailableLoad?
   let restSeconds: Int
+  let stretchingEnabled: Bool
   @Binding var stretch: StretchMovement?
   @Binding var stretchSeconds: Int
   private var plan: WorkoutSupport? {
@@ -22,7 +23,8 @@ struct WorkoutSupportPreview: View {
     }
     return try? WorkoutSupport.make(
       first: exercise, restSeconds: restSeconds,
-      stretch: stretch ?? .suggested(firstID: first.id), stretchSeconds: stretchSeconds)
+      stretch: stretch ?? .suggested(firstID: first.id), stretchSeconds: stretchSeconds,
+      stretchingEnabled: stretchingEnabled)
   }
   var body: some View {
     Section("Warm-up") {
@@ -36,20 +38,22 @@ struct WorkoutSupportPreview: View {
         }
       }
     }
-    Section {
-      Picker("Movement", selection: $stretch) {
-        Text("Automatic").tag(StretchMovement?.none)
-        ForEach(StretchMovement.allCases, id: \.self) { Text($0.name).tag(Optional($0)) }
+    if stretchingEnabled {
+      Section {
+        Picker("Movement", selection: $stretch) {
+          Text("Automatic").tag(StretchMovement?.none)
+          ForEach(StretchMovement.allCases, id: \.self) { Text($0.name).tag(Optional($0)) }
+        }
+        let movement = stretch ?? .suggested(firstID: first.id)
+        Text(movement.name).foregroundStyle(.secondary)
+        Stepper(
+          "\(stretchSeconds) s\(movement.sides == 2 ? " per side" : "")", value: $stretchSeconds,
+          in: 5...600, step: 5)
+      } header: {
+        Text("Stretch After Workout")
+      } footer: {
+        Text("Warm-up and stretch results stay separate from your exercise progression.")
       }
-      let movement = stretch ?? .suggested(firstID: first.id)
-      Text(movement.name).foregroundStyle(.secondary)
-      Stepper(
-        "\(stretchSeconds) s\(movement.sides == 2 ? " per side" : "")", value: $stretchSeconds,
-        in: 5...600, step: 5)
-    } header: {
-      Text("Stretch After Workout")
-    } footer: {
-      Text("Warm-up and stretch results stay separate from your exercise progression.")
     }
   }
 }

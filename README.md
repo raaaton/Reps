@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-Download **Sport-1.1.0.ipa** from [Releases](https://github.com/raaaton/Sport/releases/latest).
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). The local 1.2.4 update is awaiting iPhone feedback and has not been published.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -54,6 +54,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Correct a recorded set without restarting the rest timer.
 - Resume a workout after leaving the app.
 - Finish with one timed stretch movement, selected in preparation; each hold stops automatically at its target duration.
+- Turn **Stretching** off in **Settings → Training** to skip stretches in every new workout while keeping warm-ups.
 - See the real total workout time, including rest and stretching.
 
 ### Rest without watching the app
@@ -69,6 +70,7 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 
 - Workout and exercise history, with manual entry and corrections.
 - Body-weight tracking in kg: one measurement per day, editable history, and a date-based chart.
+- Renaming a recorded workout preserves its explicit load decision.
 - Shared 3-month, 6-month, and 1-year chart periods.
 - Connected charts for average volume, repetitions and work time per set, plus maximum added weight.
 - Drag on charts to inspect individual session totals and set counts.
@@ -79,6 +81,17 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Choose **Update Goal** or **Keep Current Goal** for load changes; an explicitly chosen different load keeps its associated targets.
 - At completion, future goals follow the latest session containing that exercise across all workouts, including actual per-set hold durations. Each workout keeps its set count. Targets use the ceiling-average repetitions or seconds at the highest load actually used in that session. At the same load, recorded performance refreshes the target even when a load increase is declined.
 - Warm-up and stretch results remain separate from working-set progression.
+
+### Learn calisthenics skills
+
+- Follow Handstand, L-sit, Planche and Front Lever roadmaps, including optional advanced goals.
+- Read offline instructions and open optional demonstration sources in your browser.
+- Create your own skills and steps, or duplicate a built-in roadmap.
+- Add independent skill blocks to each workout, before strength by default or afterward.
+- Practice independently with free practice, timed holds or repetitions; pause and resume saved activity.
+- Record attempts, optional notes and declared best holds separately from strength statistics.
+- Choose your current step and mark first success or consistent performance yourself.
+- Preserve skill configuration, results and active state in JSON backups; CSV replacement keeps skill practices.
 
 ### Keep photos private
 
@@ -94,7 +107,7 @@ The vault uses a device-bound key protected by the current biometric enrollment.
 ### Own your training data
 
 - **Import from Files** and **Export to Files**. Export directly saves one JSON file containing current training data and settings, without format choices.
-- The JSON archive preserves workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals, body-weight measurements and training settings. Legacy CSV import remains supported.
+- The JSON archive includes calisthenics skills, personal roadmaps, practice results and resumable active state, alongside workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals, body-weight measurements and training settings. Legacy CSV import remains supported.
 - CSV import replaces training history after preview and confirmation, preserving your configuration.
 - JSON restore replaces training data and settings after preview and confirmation.
 
@@ -157,7 +170,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **275 host tests** for the real Swift domain and SQLite code, plus **6 App Intents metadata tests**. Builds and package inspections also check the real app and widget.
+The current suite contains **334 host tests** for the real Swift domain and SQLite code, plus **9 metadata and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

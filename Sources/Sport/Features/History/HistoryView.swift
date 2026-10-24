@@ -18,6 +18,7 @@ struct HistoryView: View {
             Text("Exercises").tag(true)
           }.pickerStyle(.segmented)
         }.listRowBackground(Color.clear)
+        Section { NavigationLink("Skill Practices") { SkillHistoryView() } }
         if byExercise {
           ExerciseHistoryIndex()
         } else {
@@ -38,12 +39,13 @@ struct HistoryView: View {
                 Text("\(WorkoutLabels.day(workout.dayKey)) · \(workout.setCount) sets")
                   .font(.subheadline).foregroundStyle(.secondary)
                 if workout.status == .cancelled {
-                  Text("Cancelled").font(.caption).foregroundStyle(.secondary)
+                  Text("Canceled").font(.caption).foregroundStyle(.secondary)
                 }
               }
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               Button("Delete", systemImage: "trash", role: .destructive) { deleting = workout }
+                .labelStyle(.titleAndIcon)
             }
             .contextMenu {
               SportDestructiveButton("Delete", systemImage: "trash") { deleting = workout }
@@ -167,7 +169,7 @@ struct WorkoutSummaryList: View {
         LabeledContent(
           "Status",
           value: workout.status == .completed
-            ? "Completed" : workout.status == .cancelled ? "Cancelled" : "In Progress")
+            ? "Completed" : workout.status == .cancelled ? "Canceled" : "In Progress")
       }
       if let support = workout.support {
         ForEach([SupportKind.warmUp, .stretch], id: \.self) { kind in
@@ -187,6 +189,9 @@ struct WorkoutSummaryList: View {
             }
           }
         }
+      }
+      if let skills = workout.skills {
+        ForEach(skills.blocks) { SkillPracticeResultSections(practice: $0) }
       }
       ForEach(workout.exercises) { exercise in
         Section(exercise.definition.name) {

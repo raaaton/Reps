@@ -4,7 +4,7 @@ enum TrainingSchema {
   static func migrate(_ database: SQLiteDatabase) throws {
     try database.transaction {
       let version = try database.query("PRAGMA user_version").first?.integer("user_version") ?? 0
-      guard version <= 15 else { throw TrainingError.newerSchema }
+      guard version <= 17 else { throw TrainingError.newerSchema }
       if version == 0 {
         for statement in statements { try database.execute(statement) }
         try seed(database)
@@ -165,7 +165,13 @@ enum TrainingSchema {
         try LatestExerciseGoals.update(database)
         try database.execute("PRAGMA user_version=15")
       }
-
+      if version < 16 {
+        try database.execute(
+          "ALTER TABLE preferences ADD COLUMN stretching_enabled INTEGER NOT NULL DEFAULT 1 CHECK(stretching_enabled IN (0,1))"
+        )
+        try database.execute("PRAGMA user_version=16")
+      }
+      if version < 17 { try SkillSchema.migrate(database) }
     }
   }
 

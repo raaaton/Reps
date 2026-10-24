@@ -28,6 +28,10 @@ struct SettingsView: View {
         } label: {
           Label("Rest", systemImage: "timer")
         }
+
+        TrainingContent { snapshot in
+          StretchingSettingRow(enabled: snapshot.stretchingEnabled)
+        }
       }
 
       Section("Reminders and Privacy") {
@@ -72,5 +76,43 @@ struct SettingsView: View {
     }
     .navigationTitle("Settings")
     .scrollBounceBehavior(.basedOnSize)
+  }
+}
+
+private struct StretchingSettingRow: View {
+  @EnvironmentObject private var store: TrainingStore
+  let enabled: Bool
+  @State private var saving = false
+  @State private var error: String?
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Toggle(
+        "Stretching", systemImage: "figure.flexibility",
+        isOn: Binding(
+          get: { enabled },
+          set: { value in
+            guard !saving else { return }
+            saving = true
+            Task {
+              defer { saving = false }
+              do { try await store.saveStretching(enabled: value) } catch {
+                self.error = error.localizedDescription
+              }
+            }
+          })
+      )
+      .disabled(saving)
+    }
+    .alert(
+      "Unable to Save",
+      isPresented: Binding(
+        get: { error != nil }, set: { if !$0 { error = nil } }
+      )
+    ) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(error ?? "")
+    }
   }
 }

@@ -379,3 +379,58 @@ Goals follow the latest completed exercise across all workouts. Actual ordered r
 ## Ceiling-average learned targets — build72
 
 Learned goals show one repeated whole-number ceiling-average target instead of ordered per-set values. Compute from actual sets at the highest load in the latest completed exercise session, across workouts; repeat for each assignment's count. Rep ceiling and second ceiling are calculated once after averaging, never per input set. This is the user's Sport rule; no new visual control. Preserve tenth-second historical results, chart projections, manual per-set customization, exact saved load composition and explicit different-load decisions. Schema15 refreshes existing future goals once; no changes to active/historical snapshots.
+
+
+## Global Stretching — build 73
+
+Settings → Training adds a native Stretching switch, enabled by default, without a description beneath it (removed at the user’s request in build 74). The saved SQLite preference removes the preparation stretch section and stretch steps from every newly started workout when off. Warm-ups and rests keep their rules; final Feeling says Finish Workout and completes the session. Existing active/history snapshots are unchanged. The switch is disabled during saving and reports errors without showing an unsaved value. HIG reference: Toggles (“Use a toggle for two opposing values that affect the state of content or a view.”); native List/Toggle, system typography and VoiceOver state. This scope and future-only behavior are Sport product choices. Physical Dynamic Type, VoiceOver and flow validation pending.
+
+## Audit corrections — build 75
+
+Recorded-set labels retain tenths in minutes/seconds; rest timers retain whole seconds. The metric picker follows ChartPeriodPicker's native segmented/menu adaptation for width and text size. Consistency uses lazy week columns and a complete off-main projection keyed by history, schedule weekdays, local date and time zone; minute ticks retain it, and cancelled results never publish. Full historical range, gestures, day selection and native motion stay intact.
+
+History mutations refresh inherited automatic goals transactionally. Matching ignores only exercise name/enabled metadata and preserves separately personalized targets/loads. Source deletion clears an inherited goal only when no completed rated source remains; an unavailable exact load never becomes guessed bodyweight. Correcting actual set count uses an in-memory completed-source projection, preserving stored program/goal snapshots. Renaming or moving a historical date preserves unchanged exercise decisions; changing results/order/Feeling invalidates that exercise's former decision. Preexisting goals of unknown provenance are conservatively retained, not guessed or repaired retroactively. Physical layout/interaction review remains required.
+
+## Selective revert — build 76
+
+User explicitly reverted only three audit changes. Historical add/edit/delete no longer recalculate future goals; normal live-workout completion still learns its next targets. Recorded-result labels use the original whole-second formatter, while stored tenth-second results and chart totals stay unchanged. Consistency restores the original eager HStack and per-minute full-span calculation. Decision preservation, camera error handling, adaptive metric picker and global Stretching/schema16 remain. No personal-data reverse migration. This scope supersedes only those three parts of the build75 design.
+
+## Calisthenics Skills — 1.2.0 — build 78
+
+Progress → Skills uses native lists, detail navigation and forms, preserving the four tabs. Four built-in roadmaps can be duplicated; custom roadmaps require only a name and at least one named step. Direct starting-step selection does not mark earlier steps acquired. Manual First Success/Consistent states are reversible. Adoption of a new current step into selected future workouts is explicit and preserves each block's settings.
+
+Workout Skills form an ordered group before strength by default, optionally after strength and before stretches. Each practice shows its own preparation; existing strength warm-ups remain. During an active workout, adjustments apply only to that snapshot. Free Practice avoids interaction between attempts; detailed holds/repetitions use actual results and persisted rests. Ending a practice pauses elapsed time before optional result entry. Practice time and declared best hold have separate labels. Source demonstrations open externally only when selected.
+
+HIG references consulted: Lists and tables (text and concise row content), Entering data (choices and defaults), Onboarding (postpone nonessential setup), Accessibility/Typography and Designing for iOS. The roadmap, placement and tracking policies are Sport choices. No new visual media or network service. Physical iPhone validation is pending.
+
+## Skills interface refinement — 1.2.0 (79)
+
+Skills appears immediately below Consistency and above Body Weight. The overview prioritizes the current/default starting step with a prominent Practice action, a numbered native roadmap, and separate Beyond the Goal extensions. Each step opens a focused detail with labeled guidance and manual progress; browsing does not adopt a step. Edit/archive live in the More menu. Destructive icon buttons reuse explicit red glyph/text styling. App-owned text uses US English; older preset wording is adapted for display without rewriting custom text or history.
+
+## Skills lifecycle and creation — 1.2.0 (80)
+
+Skills-only controls in `SkillButtons.swift` centralize black ink on accent-filled primary/confirmation buttons (cancel corrected in build81), neutral white icon menus, semantic destructive roles and red ink, and contrasting native destructive swipe actions. System alert actions and EditButton remain native exceptions to icon lists. No other section adopts the Skills visual system.
+
+Add to Workout carries an immutable SkillAssignment in a typed sheet. The workout editor owns the block sheet and commits an isolated block draft only on Save. Context-menu progress actions reconcile ordered steps: predecessors become consistent; later consistency is demoted to first-success when moving back, preserving prior success evidence. All main and secondary steps must be consistent to enter Completed. Archive, confirmed permanent deletion, and confirmed progression reset remain distinct; reset also rewinds future blocks while retaining volumes and history. Recorded terminal practice deletion never removes strength results.
+
+Create with AI adapts Kavi's actual external handoff: name, copied prompt, chosen provider app, explicit response paste, strict validation, review and single save. No backend, API credential or model SDK. Manual creation/editing remains available.
+
+## Skills creation refinement — 1.2.0 (81)
+
+Skills uses the inline centered title shared with Body Weight. The plus and cancel buttons use neutral native glass with white SF Symbols; only confirmation buttons retain accent fill and black symbols. Archived Skills follows Completed. Archive swipe deletion shows only its symbol; the whole row supports a long-press menu with confirmed permanent deletion.
+
+The AI flow follows Kavi's NewDeckCreationFlow in iOS/Flashcards: name → provider → editable review. Bundled template provider logos reuse Kavi artwork. An opening/paste panel advances directly from an explicitly pasted response into the editor; parse/clipboard/opening errors use visible alerts. There is no raw JSON editor or inert separate Review Skill control. Back navigation preserves the edited draft with Continue Reviewing; saving closes the complete wizard. At accessibility text sizes the bottom panel joins the scrolling content. Parsing accepts prose-wrapped/fenced JSON while rejecting ambiguous distinct roadmaps and preserving strict field validation.
+
+## Physical refinements — 1.2.2 (83)
+
+Neutral Skills toolbar buttons now rely on native toolbar glass rather than nesting explicit glass styles. Provider logos resolve bundled PNG files directly. Destructive menu symbols carry original system-red image ink, retaining white contrast for filled destructive swipe actions. Achievement updates are independent of current-step selection and of other achievements; only explicit current selection uses ordered reconciliation. AI prompts explicitly request web research and verified demonstration URLs per step, with honest browsing limitations.
+
+ChatGPT import tolerates copied Markdown hard breaks and encoded/nonbreaking indentation outside JSON strings. It preserves instruction/URL content and valid escapes, retaining strict schema validation and explicit errors.
+
+## Accent content symbols — 1.2.3 (85)
+
+SF Symbols beside normal content/action text use Sport's adaptive blue accent through a shared native LabelStyle; titles retain their existing style. Applied inside each tab's content only. Native tab icons/selection, standalone toolbar glyphs, destructive red ink and contrasting ink on filled buttons remain distinct. Hand-built roadmap symbol rows follow the same accent rule; numeric step markers retain their status styling.
+
+## Native Skills menu symbols — 1.2.4 (86)
+
+Device feedback shows native menu entries ignore the global template LabelStyle. Ordinary Skills menu/context-menu labels use original UIKit SF Symbol images precolored with Sport's adaptive accent, following the already-working destructive symbol rendering. Title text stays primary; toolbar plus/ellipsis stay white; destructive labels/images retain red. Other content styling and native tabs remain unchanged.

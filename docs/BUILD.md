@@ -130,3 +130,59 @@ Build71 USB delivery confirmed: device-run.sh code0, installation/verification10
 Delivery blocked before installation: usbmuxd crashed withSIGABRT (`free(): invalid pointer`) while the phone remains visible inlsusb. xtool finished compilation2.39s, then waited for the device; the waiting attempt was stopped gracefully. No provisioning/signature error was reported, no certificate changed. Direct diagnostic confirms usbmuxd.service failed(core-dump); `sudo -n systemctl restart usbmuxd` returned `sudo: a password is required`. User must run `sudo systemctl restart usbmuxd`, then resume the standard USB delivery/postflight. Device last confirmedSport71; do not claim72installed.
 
 Build72 delivery confirmed after user restartedusbmuxd: standard device-run.sh code0, installation/verification100%, oneSport1.1.0(72) under same effective identity. Exact existing certificate and app/widget CMS profiles validated, capabilities unchanged.275host tests/6metadata/lint/build/inspection/review remain the local verification evidence; physical goals/screens await user feedback. No push/release.
+
+
+21 October — local1.1.0(73): global stretching preference, schema16/JSONv5. 281 host tests/zero failures, strict lint and6metadata pass; xtool16.90s then metadata embedding2.52s and unsigned app/widget inspection pass. Initial iOS compiler assertion was triggered by an unqualified error-state assignment inside catch; self.error resolves it, no toolchain change. Existing signing certificate checked locally (>24h validity) and present in Apple read-only certificate list. Installed72 identity confirmed before delivery. USB result and physical-review status recorded below.
+
+
+USB delivery confirmed: device-run.sh exited0 (final rebuild7.43s), install/verification100%. Direct device postflight confirms one Sport1.1.0(73), same effective identity, exact cached signing certificate unchanged, app/widget CMS profiles valid and ordinary entitlements retained (no App Group/push). Physical toggle/flow review awaits the user; no GitHub push or release.
+
+
+Build74: removed only the description beneath Stretching at the user’s request. Strict lint/6metadata, xtool10.99s+2.47s, unsigned inspection and USB install (code0, verification100%) pass. Device postflight confirms74, same identity/certificate and valid app/widget CMS profiles with retained capabilities. Physical rendering awaits user review.
+## Audit corrections — build 75, 22 October 2026
+
+290 host tests/zero failures (6.573 s), strict Swift lint, six App Intents metadata tests and actual unsigned app/widget inspection pass. Final reviewed xtool compilation 11.20 s, followed by regenerated compiler metadata and embedding. No SDK/dependency/cache reset. Preflight confirms one installed Sport 1.1.0 (74), its signer matches the existing cached certificate, valid over 24 hours. USB deployment/postflight results are recorded in `exec-plans/2026-10-22-audit-corrections.md`; compilation alone does not validate iPhone behavior.
+
+## Selective revert — build 76
+
+Only the three user-selected audit changes are reverted to fetched GitHub1.1.0 source behavior. Schema16/JSONv5 stay compatible; no database downgrade and no personal-data rewrite. 284 host tests/zero failures, strict lint, six metadata, real xtool22.93s and unsigned app/widget inspection pass. Delivery evidence is tracked in exec-plans/2026-10-22-selective-audit-revert.md. USB delivery now confirmed after transient lock/disconnection: device-run.sh code0, final rebuild2.40s, installation/verification100%. Direct postflight confirms one Sport1.1.0(76), unchanged identity/signer/exact certificate/entitlements and valid installed app/widget CMS profiles. Physical feedback pending; no GitHub publication.
+
+## Skills 1.2.0 — build 78
+
+The Skills milestone remains SwiftPM/xtool with no added dependency, entitlement or bundle identifier change. Training schema advances from16 to17 and JSON archive from5 to6. Preserve existing state and caches. Use the normal metadata regeneration, bundle inspection and device-run.sh workflow. No rollback to schema16 is part of this delivery. Device verification remains required; no public release is implied.
+
+Delivery 23 October: Sport **1.2.0 (78)** installed successfully using `device-run.sh` after an iPhone reboot resolved two stalled transfers. Direct installed-app postflight confirms one Sport app, unchanged effective identity, signer and entitlements, and validated profile. Physical Skills interaction review is pending. Evidence: `/tmp/sport-skills-120-install-reboot.log`, `/tmp/sport-skills-120-postflight.json`. No push or public release.
+
+## Skills follow-up — 1.2.0 (80)
+
+328 host tests pass; nine metadata/style checks and strict Swift lint pass. Real xtool build and final bundle inspection confirm 1.2.0(80) for both app and widget. No identity/capability/dependency change. Metadata regenerated and embedded. The automatic installation reviewer initially mistook the currently installed79 preflight for the new artifact; explicit source/app/widget plist80 checks resolved the rejection, and the normal helper was then approved and completed installation/verification100%, code0. Final installed-app postflight is tracked in exec-plans/2026-10-23-skills-interface-polish.md.
+
+## Skills Kavi flow — 1.2.0 (81)
+
+331 host tests, nine metadata/style checks and strict lint pass. Final real xtool build completes in9.72s; bundle inspection verifies app/widget1.2.0(81). Provider PNGs are processed by the existing SwiftPM resources configuration. No dependency, schema, entitlement or identity change. The iPhone preflight reports1.2.0(80), which is intentionally updated to81. USB postflight and physical-review status are recorded in the active Skills interface ExecPlan.
+
+USB delivery succeeds; direct postflight verifies one installed Sport1.2.0(81), unchanged identity/signer/entitlements and ProfileValidatedtrue. Physical interaction feedback is pending. Evidence: /tmp/sport-skills-kavi-followup/postflight.json.
+
+## Version correction — 1.2.1 (82)
+
+Latest corrective delivery receives patch1.2.1 and independent build82. App/widget source and packaged plists agree. Fresh strict lint, nine metadata/style checks, real xtool compilation and bundle inspection pass; App Intents metadata regenerated and embedded. Functional Swift sources are unchanged since the331-test build81 verification, so host domain tests were not repeated for metadata-only changes. Version policy is now recorded in AGENTS.md; major increments require explicit user approval. USB evidence: /tmp/sport-version-121/.
+
+Installed-app postflight confirms exactly one Sport1.2.1(82), unchanged identity/signer/entitlements and validated profile. USB helper exits0. No GitHub publication.
+
+## Skills physical corrections — 1.2.2 (83)
+
+332 host tests/zero failures, nine metadata/style checks, strict lint, real xtool compilation (11.31s) and final app/widget inspection pass. Metadata regenerated and embedded. Neutral toolbar styling, direct UIImage provider-logo loading, original destructive-symbol ink and independent achievement statuses are corrected. Prompt now requests actual video research. App/widget/plist inspector all target1.2.2(83); installed preflight is1.2.1(82). Device delivery logs and pending ChatGPT-response reproduction are in the active Skills interface ExecPlan. Evidence folder: /tmp/sport-skills-123/.
+
+Build83 USB delivery is pending: usbmuxd failed while the phone remained present. Restart requires the user's sudo password; user asked to restart the service. Stalled installer interrupted with SIGINT. No claim of installed83; last confirmed is1.2.1(82).
+
+Build83 delivery resumed after the user restarted usbmuxd. Includes the ChatGPT formatting correction,334 passing host tests, nine metadata/style checks, strict lint, real build12.41s and final inspection. Direct postflight confirms one installedSport1.2.2(83), unchanged identity/signer/entitlements and validated profile. Evidence: /tmp/sport-skills-123/install-resume.log and postflight.json. Physical acceptance pending; no GitHub publication.
+
+## Accent content labels — 1.2.3 (85)
+
+Shared native LabelStyle scopes accent symbols to tab navigation content, preserving native tabs, standalone icons and semantic destructive/prominent contrast. Nine metadata/style checks, strict lint, actual xtool build without warnings and final app/widget inspection pass; App Intents metadata regenerated/embedded. After intermediate84, final85 places the style on enclosing NavigationStacks for pushed/modal inheritance. USB helper exits0, install/verification100%; direct inventory verifies one installed1.2.3(85), same identity/signer/entitlements and validated profile. Domain suite not repeated for a visual-only change. Physical appearance acceptance pending; no push/release. Evidence: /tmp/sport-accent-labels-84/.
+
+## Skills native menu symbols — 1.2.4 (86)
+
+Visual-only correction based on iPhone feedback: ordinary native Skills menu entries use original UIKit SF Symbol images precolored with adaptive accent. Existing white menu triggers and confirmed red destructive entries unchanged. Nine metadata/style checks, strict lint and real xtool build without warnings pass; metadata regenerated/embedded and app/widget1.2.4(86) bundle inspection passes. Preflight confirms1.2.3(85); USB delivery and postflight tracked in the accent-labels ExecPlan. No domain suite rerun for visual-only changes. Evidence: /tmp/sport-menu-icons-86/.
+
+USB delivery complete: exactly one installedSport1.2.4(86), unchanged identity/signer/entitlements and validated profile. Native menu rendering awaits physical feedback. No push/release.

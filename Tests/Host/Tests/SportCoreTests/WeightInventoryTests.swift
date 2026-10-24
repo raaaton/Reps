@@ -18,9 +18,11 @@ final class WeightInventoryTests: XCTestCase, @unchecked Sendable {
     try db.execute("CREATE TABLE exercises(id TEXT PRIMARY KEY,set_count INTEGER)")
     try db.execute(
       "CREATE TABLE schedule_exercises(schedule_id TEXT,exercise_id TEXT,position INTEGER)")
+    try db.execute("CREATE TABLE preferences(id INTEGER PRIMARY KEY,rest_seconds INTEGER)")
+    try db.execute("INSERT INTO preferences VALUES(1,180)")
     try db.execute("PRAGMA user_version=3")
     _ = try SportRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 15)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 17)
     XCTAssertEqual(
       try db.query("SELECT weight_grams FROM workout_sets").first?.integer("weight_grams"), 2375)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM weight_items").first?.integer("n"), 3)

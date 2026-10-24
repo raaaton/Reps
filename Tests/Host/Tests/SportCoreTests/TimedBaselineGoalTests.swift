@@ -13,7 +13,8 @@ final class TimedBaselineGoalTests: XCTestCase, @unchecked Sendable {
       JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String: Any])
     object["durationsMS"] = [12300, 10700]
     let decoded = try JSONDecoder().decode(
-      ExerciseGoal.self, from: JSONSerialization.data(withJSONObject: object))
+      ExerciseGoal.self,
+      from: JSONSerialization.data(withJSONObject: removingNewSkillFields(object)))
     let validated = try decoded.validated()
     let roundTrip = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(validated)) as? [String: Any])
@@ -37,7 +38,8 @@ final class TimedBaselineGoalTests: XCTestCase, @unchecked Sendable {
         JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String: Any])
       object["durationsMS"] = values
       let decoded = try JSONDecoder().decode(
-        ExerciseGoal.self, from: JSONSerialization.data(withJSONObject: object))
+        ExerciseGoal.self,
+        from: JSONSerialization.data(withJSONObject: removingNewSkillFields(object)))
       XCTAssertThrowsError(try decoded.validated())
     }
   }
@@ -59,7 +61,7 @@ extension TimedBaselineGoalTests {
     try await r.saveGoal(goal, original: nil, scheduleID: "legs")
     let archive = try await r.exportTraining(now: now)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 4)
+    XCTAssertEqual(decoded.version, 6)
     let destination = try SportRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now)
     try await destination.applyTrainingImport(preview, now: now)
@@ -75,7 +77,8 @@ extension TimedBaselineGoalTests {
     var object = try XCTUnwrap(
       JSONSerialization.jsonObject(with: legacy.encoded()) as? [String: Any])
     object["version"] = 3
-    let v3 = try TrainingArchive.decode(JSONSerialization.data(withJSONObject: object))
+    let v3 = try TrainingArchive.decode(
+      JSONSerialization.data(withJSONObject: removingNewSkillFields(object)))
     XCTAssertEqual(v3.contents, legacy.contents)
   }
 }

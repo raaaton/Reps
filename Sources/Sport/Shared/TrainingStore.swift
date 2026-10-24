@@ -18,6 +18,10 @@ final class TrainingStore: ObservableObject {
   @Published private(set) var notificationPreferences = NotificationPreferences()
   @Published private(set) var bodyWeights: [BodyWeightMeasurement] = []
   @Published private(set) var bodyWeightEntryRequest: UUID?
+  @Published private(set) var skillHistory: [SkillPractice] = []
+  var activeSkillPractice: SkillPractice? {
+    skillHistory.first { $0.origin.workoutID == nil && !$0.state.isTerminal }
+  }
   @Published private(set) var workouts: WorkoutOverview = .empty
   @Published private(set) var workoutError: String?
   @Published private(set) var liveActivityMessage: String?
@@ -31,7 +35,7 @@ final class TrainingStore: ObservableObject {
   private var pendingRestFeedback = false
   private var workoutFeedback = WorkoutFeedbackTracker()
   private lazy var restFeedback = RestFeedback()
-  private var repository: SportRepository?
+  var repository: SportRepository?
   private var loading = false
   private var generation = 0
   private var workoutGeneration = 0
@@ -53,6 +57,7 @@ final class TrainingStore: ObservableObject {
       let snapshot = try await repository.snapshot()
       let preferences = try await repository.reminderContext().preferences
       let weights = try await repository.bodyWeightMeasurements()
+      let skills = try await repository.skillPractices()
       consumeFeedback(overview)
       if workoutGeneration == workoutRequest {
         workouts = overview
@@ -61,6 +66,7 @@ final class TrainingStore: ObservableObject {
       if generation == request {
         availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
         bodyWeights = weights
+        skillHistory = skills
         phase = .ready(snapshot)
         notificationPreferences = preferences
         if !overview.expiredStretchIDs.isEmpty { historyRevision += 1 }
@@ -93,6 +99,10 @@ final class TrainingStore: ObservableObject {
 
   func saveRest(seconds: Int) async throws {
     try await commit { try await $0.saveRest(seconds: seconds) }
+  }
+
+  func saveStretching(enabled: Bool) async throws {
+    try await commit { try await $0.saveStretching(enabled: enabled) }
   }
 
   func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws {
@@ -334,6 +344,7 @@ final class TrainingStore: ObservableObject {
       let configurationRequest = generation
       do {
         let overview = try await repository.workoutOverview(now: WorkoutClock.now)
+        let skills = try await repository.skillPractices()
         consumeFeedback(overview)
         if !overview.expiredStretchIDs.isEmpty {
           let snapshot = try await repository.snapshot()
@@ -345,6 +356,7 @@ final class TrainingStore: ObservableObject {
         }
         if workoutGeneration == request {
           workouts = overview
+          skillHistory = skills
           workoutError = nil
         }
         await refreshLiveActivity()
@@ -365,6 +377,7 @@ final class TrainingStore: ObservableObject {
     let snapshot = try await repository.snapshot()
     let preferences = try await repository.reminderContext().preferences
     let weights = try await repository.bodyWeightMeasurements()
+    let skills = try await repository.skillPractices()
     consumeFeedback(overview)
     var event = workoutFeedback.event(from: feedbackBaseline, to: overview)
     if workoutGeneration == workoutRequest {
@@ -380,6 +393,7 @@ final class TrainingStore: ObservableObject {
       }
       availableLoads = try WeightInventory.loads(items: snapshot.weightItems)
       bodyWeights = weights
+      skillHistory = skills
       phase = .ready(snapshot)
       notificationPreferences = preferences
       historyRevision += 1
@@ -415,7 +429,7 @@ final class TrainingStore: ObservableObject {
     }
   }
 
-  private func commit(_ operation: (SportRepository) async throws -> Void) async throws {
+  func commit(_ operation: (SportRepository) async throws -> Void) async throws {
     guard let repository else { throw TrainingError.storage }
     generation += 1
     workoutGeneration += 1

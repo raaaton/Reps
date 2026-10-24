@@ -61,6 +61,11 @@ extension SportRepository {
           "This workout has changed. Close the editor and open it again.")
       }
       let snapshot = try readSnapshot()
+      let decisions = try database.query(
+        """
+        SELECT d.* FROM workout_goal_decisions d JOIN workout_exercises e ON d.exercise_id=e.id
+        WHERE e.workout_id=?
+        """, [.text(draft.id)])
       let definitions = try draft.exercises.map { entry -> TrainingExercise in
         let definition =
           stored.exercises.first { $0.definition.id == entry.catalogueID }?.definition
@@ -119,6 +124,16 @@ extension SportRepository {
             entry.feelingTenths.map(SQLValue.integer) ?? .null,
           ])
         if let goal = prior?.goal { try writeWorkoutGoal(goal, exerciseID: exerciseID) }
+        if let prior, entry.preservesDecision(for: prior),
+          let decision = try decisions.first(where: { try $0.text("exercise_id") == prior.id })
+        {
+          try database.execute(
+            "INSERT INTO workout_goal_decisions(exercise_id,goal_payload) VALUES(?,?)",
+            [
+              .text(exerciseID),
+              try decision.optionalText("goal_payload").map(SQLValue.text) ?? .null,
+            ])
+        }
         for (index, set) in entry.sets.enumerated() {
           let previous = prior?.sets.first { $0.id == set.sourceID }
           let components = previous?.weightGrams == set.weightGrams ? previous?.components : nil
@@ -134,5 +149,16 @@ extension SportRepository {
         }
       }
     }
+  }
+}
+
+extension ManualWorkoutExercise {
+  fileprivate func preservesDecision(for prior: WorkoutExercise) -> Bool {
+    tracking == prior.definition.tracking && feelingTenths == prior.feelingTenths
+      && sets.count == prior.sets.count
+      && zip(sets, prior.sets).allSatisfy { proposed, stored in
+        proposed.sourceID == stored.id && proposed.repetitions == stored.repetitions
+          && proposed.durationMS == stored.durationMS && proposed.weightGrams == stored.weightGrams
+      }
   }
 }

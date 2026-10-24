@@ -19,5 +19,6 @@ struct SportDestructiveButton: View {
       }
     }
     .tint(.red)
+    .labelStyle(.titleAndIcon)
   }
 }

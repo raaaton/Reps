@@ -191,6 +191,7 @@ extension WorkoutSupportTests {
     let db = try SQLiteDatabase(path: path)
     try db.execute("DROP TABLE workout_goal_decisions")
     try db.execute("DROP TABLE workout_support")
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=7")
     let migrated = try SportRepository(path: path)
     let loaded = try await migrated.workout(id: legacy.id)

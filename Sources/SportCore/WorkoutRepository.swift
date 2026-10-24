@@ -8,6 +8,9 @@ extension SportRepository {
   ) throws -> WorkoutSession {
     try WorkoutClock.validate(now)
     return try database.transaction {
+      guard try activeSkillPracticeInTransaction() == nil else {
+        throw TrainingError.invalid("Resume or finish the active skill practice first.")
+      }
       if let active = try activeWorkoutID() { return try readWorkout(id: active) }
       let snapshot = try readSnapshot()
       guard let schedule = snapshot.schedule(on: WorkoutClock.date(now), calendar: calendar),
@@ -69,6 +72,7 @@ extension SportRepository {
           try writeWorkoutGoal(goal, exerciseID: exerciseID)
         }
       }
+      try freezeWorkoutSkills(schedule: schedule, workoutID: id, now: now)
       if includeSupport {
         let session = try readWorkout(id: id)
         if let first = session.exercises.first {
@@ -76,7 +80,8 @@ extension SportRepository {
             WorkoutSupport.make(
               first: first, restSeconds: session.restSeconds,
               stretch: stretch ?? StretchMovement.suggested(firstID: first.definition.id),
-              stretchSeconds: stretchSeconds), workoutID: id)
+              stretchSeconds: stretchSeconds, stretchingEnabled: snapshot.stretchingEnabled),
+            workoutID: id)
         }
       }
       return try readWorkout(id: id)
@@ -313,15 +318,12 @@ extension SportRepository {
     guard now >= (exercise.sets.last?.completedAt ?? workout.startedAt) else {
       throw invalidClock
     }
+    try validateChronology(workout, now: now)
     try database.execute(
       "UPDATE workout_exercises SET feeling_tenths=? WHERE id=?",
       [.integer(tenths), .text(exerciseID)])
-    if workout.exercises.last?.id == exerciseID, workout.support == nil {
-      try database.execute(
-        "UPDATE workouts SET status='completed',ended_at=? WHERE id=?",
-        [.integer(now), .text(workoutID)])
-      try matchGoalsToCompletedWorkout(id: workoutID)
-    }
+    try markSkillAvailability(workoutID: workoutID, now: now)
+    try completeWorkoutIfReady(id: workoutID, now: now)
   }
 
   public func changeRest(id: String, action: RestAction, expectedTime: Int? = nil, now: Int) throws
@@ -369,6 +371,7 @@ extension SportRepository {
       let workout = try readWorkout(id: id)
       guard workout.status == .active else { return }
       try validateChronology(workout, now: now)
+      try cancelWorkoutSkills(id: id, now: now)
       try database.execute(
         "UPDATE workout_rests SET status='cancelled',deadline=NULL,remaining_ms=NULL WHERE workout_id=? AND status IN ('running','paused')",
         [.text(id)])
@@ -401,13 +404,15 @@ extension SportRepository {
     .invalid("The device clock moved backward. Check the time settings and try again.")
   }
 
-  private func validateChronology(_ workout: WorkoutSession, now: Int) throws {
+  func validateChronology(_ workout: WorkoutSession, now: Int) throws {
     // Countdown starts are deliberately in the future, and must remain cancellable.
     // Completed sets and stopped timed sets are actual events, not planned deadlines.
     let lastSet = workout.exercises.flatMap(\.sets).map(\.completedAt).max() ?? workout.startedAt
     let lastStop = workout.exercises.compactMap(\.setEndedAt).max() ?? workout.startedAt
     let lastSupport = workout.support?.steps.compactMap(\.completedAt).max() ?? workout.startedAt
-    guard now >= max(lastSupport, max(workout.startedAt, max(lastSet, lastStop))) else {
+    let lastSkill = workout.skills?.blocks.map(\.lastEventAt).max() ?? workout.startedAt
+    guard now >= max(lastSkill, max(lastSupport, max(workout.startedAt, max(lastSet, lastStop))))
+    else {
       throw invalidClock
     }
   }
@@ -415,7 +420,8 @@ extension SportRepository {
   private func expectedExercise(_ workout: WorkoutSession, _ exerciseID: String) throws
     -> WorkoutExercise
   {
-    guard workout.status == .active, let exercise = workout.currentExercise,
+    guard workout.status == .active, workout.currentSkill == nil,
+      let exercise = workout.currentExercise,
       exercise.id == exerciseID
     else { throw staleAction }
     return exercise
@@ -441,7 +447,7 @@ extension SportRepository {
       dayKey: try row.text("day_key"), startedAt: try row.integer("started_at"),
       endedAt: try row.optionalInteger("ended_at"), status: status,
       restSeconds: try row.integer("rest_seconds"), exercises: exercises, rest: rest,
-      support: try readSupport(workoutID: id))
+      support: try readSupport(workoutID: id), skills: try readWorkoutSkills(id: id))
   }
 
   func readExercise(_ row: SQLRow) throws -> WorkoutExercise {

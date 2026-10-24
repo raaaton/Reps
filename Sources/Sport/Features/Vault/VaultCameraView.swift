@@ -5,7 +5,7 @@ import UIKit
 
 // Native camera UI; no automatic save to Photos and no app-authored plaintext file.
 struct VaultCameraView: UIViewControllerRepresentable {
-  let completion: @MainActor (Data?) -> Void
+  let completion: @MainActor (Result<Data, VaultMediaError>?) -> Void
   func makeCoordinator() -> Coordinator { Coordinator(completion: completion) }
   func makeUIViewController(context: Context) -> UIImagePickerController {
     let picker = UIImagePickerController()
@@ -19,8 +19,10 @@ struct VaultCameraView: UIViewControllerRepresentable {
   @MainActor
   final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate
   {
-    let completion: @MainActor (Data?) -> Void
-    init(completion: @escaping @MainActor (Data?) -> Void) { self.completion = completion }
+    let completion: @MainActor (Result<Data, VaultMediaError>?) -> Void
+    init(completion: @escaping @MainActor (Result<Data, VaultMediaError>?) -> Void) {
+      self.completion = completion
+    }
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { completion(nil) }
     func imagePickerController(
       _ picker: UIImagePickerController,
@@ -39,12 +41,12 @@ struct VaultCameraView: UIViewControllerRepresentable {
               [.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path)
             try FileManager.default.removeItem(at: file)
           } catch {
-            completion(nil)
+            completion(.failure(.captureFailed))
             return
           }
         }
       }
-      completion(data)
+      completion(data.map { .success($0) } ?? .failure(.captureFailed))
     }
   }
 }

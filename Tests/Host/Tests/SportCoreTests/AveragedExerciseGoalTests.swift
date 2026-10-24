@@ -110,6 +110,7 @@ final class AveragedExerciseGoalTests: XCTestCase, @unchecked Sendable {
             definition: definition, load: lighter,
             repetitions: [8, 8, 8, 8]))
       ])
+    try db.execute("ALTER TABLE preferences DROP COLUMN stretching_enabled")
     try db.execute("PRAGMA user_version=14")
     let reopened = try SportRepository(path: path)
     let repaired = try await reopened.goalContext(exerciseID: "bulgarians", scheduleID: "legs")

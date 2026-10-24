@@ -234,3 +234,55 @@ Build71 USB delivery confirmed: device-run.sh code0, installation/verification10
 Delivery blocked before installation: usbmuxd crashed withSIGABRT (`free(): invalid pointer`) while the phone remains visible inlsusb. xtool finished compilation2.39s, then waited for the device; the waiting attempt was stopped gracefully. No provisioning/signature error was reported, no certificate changed. Direct diagnostic confirms usbmuxd.service failed(core-dump); `sudo -n systemctl restart usbmuxd` returned `sudo: a password is required`. User must run `sudo systemctl restart usbmuxd`, then resume the standard USB delivery/postflight. Device last confirmedSport71; do not claim72installed.
 
 Build72 delivery confirmed after user restartedusbmuxd: standard device-run.sh code0, installation/verification100%, oneSport1.1.0(72) under same effective identity. Exact existing certificate and app/widget CMS profiles validated, capabilities unchanged.275host tests/6metadata/lint/build/inspection/review remain the local verification evidence; physical goals/screens await user feedback. No push/release.
+
+
+21 October — build 73: global Stretching toggle in Settings → Training, default on. Off removes stretches from preparation and all new workouts; warm-ups remain, last Feeling completes the workout. Active/history snapshots retained; SQLite schema16, JSONv5 with legacy defaults, CSV preservation. 281 host tests, strict lint, 6 metadata tests and real xtool app/widget inspection pass. USB delivery and physical review tracked in the execution record.
+
+
+USB delivery confirmed: device-run.sh exited0 (final rebuild7.43s), install/verification100%. Direct device postflight confirms one Sport1.1.0(73), same effective identity, exact cached signing certificate unchanged, app/widget CMS profiles valid and ordinary entitlements retained (no App Group/push). Physical toggle/flow review awaits the user; no GitHub push or release.
+
+
+Build74: removed only the description beneath Stretching at the user’s request. Strict lint/6metadata, xtool10.99s+2.47s, unsigned inspection and USB install (code0, verification100%) pass. Device postflight confirms74, same identity/certificate and valid app/widget CMS profiles with retained capabilities. Physical rendering awaits user review.
+## 22 October — audit corrections, build 75
+
+Approved audit fixes cover inherited goals after history mutations, preservation of unchanged explicit load decisions, displayed duration tenths and visible generic camera failures. Long-history attendance uses lazy columns/cached off-main calculation; chart metric controls adapt to large text/available width. No new animation or dependency. Nine new regressions plus the existing suite: 290 host tests, six metadata, strict lint, real xtool build and unsigned app/widget inspection pass; independent review approved after three additional edge-case fixes. USB delivery confirmed: code0, install/verification100%, direct postflight oneSport1.1.0(75), unchanged identity/signer/certificate/entitlements and valid installed app/widget CMS profiles. Physical review remains pending; see [ExecPlan](exec-plans/2026-10-22-audit-corrections.md). No GitHub push/release before user feedback. Camera encoding remains a device-profiling item; no unmeasured performance claim.
+
+## 22 October — selective revert, build 76
+
+User explicitly selected only three reversions: no future-goal recalculation from history mutations, whole-second recorded labels and the original eager consistency grid/minute calculation. Retained: Stretching/schema16, explicit load-decision preservation, generic camera errors and adaptive metric menu. 284 host tests, six metadata, strict lint, real xtool build/inspection and scoped independent review pass. No data downgrade, push or release. USB installation confirmed (code0, installation/verification100%); direct postflight confirms build76, unchanged identity/certificate/capabilities and valid app/widget CMS profiles. Physical feedback pending; see [ExecPlan](exec-plans/2026-10-22-selective-audit-revert.md).
+
+## Skills milestone — 1.2.0 — build 78, local implementation
+
+Four roadmaps and optional extensions, personal skills, per-workout blocks and standalone practice implemented locally. Schema17 and archive6 preserve definitions, step selections, achievements, settings, snapshots and active state. CSV force-history replacement detaches and retains prior skill practices with their original workout provenance. No automatic progression certification or new app-wide privacy behavior.
+
+Host/build evidence is recorded in the Skills ExecPlan. USB delivery and physical feedback are separate gates; this entry does not assert device acceptance. No push or release performed.
+
+## Skills interface refinement — 1.2.0 (79)
+
+Implemented from physical-device screenshots: clear current-step Practice action, numbered roadmap and separate extensions, per-step guidance/progress screen, native management menu, Skills between Consistency and Body Weight, red destructive glyphs and US copy. Installation and physical feedback tracked in exec-plans/2026-10-23-skills-interface-polish.md.
+
+## Skills complete follow-up — 1.2.0 (80)
+
+Implemented: centralized scoped controls, typed Add to Workout and isolated settings block drafts, history swipe/context deletion, ordered manual progression reconciliation, context-menu step statuses, YouTube demonstrations, reduced overview text, archived-skills access/permanent deletion, computed main/all-goal completion with native success feedback, external AI creation modeled on verified Kavi source, and confirmed progression reset. No schema or archive-version change: existing step/extension and progress payloads support the behavior. Physical acceptance remains pending.
+
+## Skills targeted follow-up — 1.2.0 (81)
+
+Implemented white neutral glass plus/cancel symbols, centered inline Skills title, archive placement and icon-only swipe/long-press deletion. AI creation now mirrors Kavi's actual multi-screen flow with direct paste-to-editable-review, preserved drafts and visible errors. Wrapped JSON acceptance has domain regression coverage. Physical acceptance remains pending; no push or public release.
+
+## Corrective version — 1.2.1 (82)
+
+The existing Skills UI/AI-flow corrections are delivered under patch1.2.1, with no further functional changes. Patch/minor increments follow fixes/important features; major increments require explicit user approval. Physical acceptance remains pending.
+
+## Device-reported Skills corrections — 1.2.2 (83)
+
+Correct nested neutral toolbar glass, use direct provider-logo file loading, preserve destructive menu symbol color, and make step achievements independent of current selection. Generation prompts require demonstration research rather than default null links. Exact ChatGPT import failure awaits a supplied response; physical UI acceptance remains pending.
+
+Build83 follow-up: user-supplied ChatGPT formatting now has a reproduced regression and string-aware import normalization.334 host tests pass; original clipboard acceptance still requires iPhone testing.
+
+## Accent labels — 1.2.3 (85)
+
+Shared content/action label styling applies adaptive blue SF Symbols beside normal text throughout the app. Native tabs explicitly excluded by the user; destructive and prominent contrast preserved. No domain changes; delivery evidence in the accent-labels ExecPlan.
+
+## Native Skills menu correction — 1.2.4 (86)
+
+Ordinary Skills menu entries use original accent-colored SF Symbol images after physical feedback showed native menus retaining white template icons. White menu triggers and working red destructive entries preserved. No domain changes; physical acceptance pending.

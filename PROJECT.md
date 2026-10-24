@@ -405,3 +405,7 @@ Future goals refresh from the latest completed session containing the exercise, 
 ## 20 October — Ceiling-average goals and mixed loads, superseding ordered carry-forward
 
 Device feedback72: replace learned ordered targets with one mean rounded upward to a whole repetition or second, repeated for each planned working set. Pike12,12,10,12 ->4×12; L-sit17.4,16.1,18.9,17.3 ->4×18s. User clarifies outdated target concerns Bulgarians, not Push-ups. For mixed loads, choose the highest actual load within the latest completed exercise session, averaging only sets at that load:12at6.6kg plus10,12,11at7.5kg ->11reps at7.5kg. Never merge sessions or mix repetition values across loads. Preserve recorded data, charts and explicit different-load decisions.
+
+## Calisthenics skills — accepted 23 October 2026
+
+The approved Skills specification is docs/exec-plans/2026-10-23-calisthenics-skills-design.md. Four preloaded roadmaps (Handstand, L-sit, Planche, Front Lever), personal steps, optional extensions and configurable workout blocks are included. Skills are available from Progress; standalone practice shares the same engine. Free practice records elapsed practice excluding explicit pauses, not hold time. Detailed holds/repetitions remain distinct from strength statistics. Achievement is declared by the person; no automatic technical certification or mandatory unlocks. Instructions work offline, with optional external HTTPS demonstration links opened only on request.
