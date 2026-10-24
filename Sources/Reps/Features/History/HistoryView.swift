@@ -200,7 +200,7 @@ struct WorkoutSummaryList: View {
               DisclosureGroup {
                 ForEach(components) { component in
                   LabeledContent(
-                    component.name, value: "\(WorkoutLabels.weight(component.grams)) kg")
+                    component.displayName, value: "\(WorkoutLabels.weight(component.grams)) kg")
                 }
               } label: {
                 LabeledContent("Set \(set.number)", value: WorkoutLabels.performance(set))

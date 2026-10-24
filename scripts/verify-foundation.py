@@ -49,10 +49,11 @@ def main():
         "CFBundleDisplayName": "Reps",
         "CFBundleExecutable": "Reps",
         "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": "1.3.3",
-        "CFBundleVersion": "99",
+        "CFBundleShortVersionString": "1.4.0",
+        "CFBundleVersion": "100",
         "MinimumOSVersion": "26.0",
         "UIDeviceFamily": [1],
+        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "CFBundleDevelopmentRegion": "en",
     }
     for key, value in expected.items():
@@ -69,7 +70,7 @@ def main():
     require(list((bundle / "PlugIns").iterdir()) == [extension], "Unexpected embedded extension")
     child = plistlib.loads((extension / "Info.plist").read_bytes())
     for key, value in {"CFBundleIdentifier": "com.raaaton.sport.rest-widget",
-                       "CFBundleShortVersionString": "1.3.3", "CFBundleVersion": "99",
+                       "CFBundleShortVersionString": "1.4.0", "CFBundleVersion": "100",
                        "MinimumOSVersion": "26.0", "CFBundleExecutable": "RepsRestWidget",
                        "CFBundlePackageType": "XPC!"}.items():
         require(child.get(key) == value, f"Unexpected extension {key}")
@@ -111,7 +112,7 @@ def main():
 
     inspect_binary(bundle / "Reps")
     inspect_binary(extension / "RepsRestWidget")
-    print("PASS: Reps 1.3.3 (99), com.raaaton.sport, arm64 iPhoneOS 26.0, English, unsigned.")
+    print(f"PASS: Reps {info['CFBundleShortVersionString']} ({info['CFBundleVersion']}), com.raaaton.sport, arm64 iPhoneOS 26.0, English, portrait only, unsigned.")
     print("PASS: one WidgetKit extension, app and extension intent metadata; no profile; declared Face ID/camera/Photos add-only purposes, no broad Photos access.")
     print("PASS: SwiftPM bundled rest sound present, mono PCM WAV, 0.30 seconds.")
     print("PASS: Reps layered icon present at app root and declared in Info.plist.")

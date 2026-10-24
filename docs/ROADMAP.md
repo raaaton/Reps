@@ -329,3 +329,9 @@ New load choices and progression proposals use at least500g spacing, keeping the
 ## Reps rename —1.3.3
 
 User explicitly requested Reps throughout app, filesystem and GitHub. Native branding/products/files, icon identifiers, help/export names and active docs use Reps; repository renamed to raaaton/Reps,23historical release titles/assets renamed without changing binary bytes or tags. Same device identity/Keychain/AAD/SQLite/backup identifiers and system-serialized module identities preserved, with additive reps:// and legacy sport:// support. Real local root moved to iOS/Reps with compatibility alias for existing tools; Codex's running sidebar registration remains cached until refreshed/reopened. Reps1.3.3(99)installed, identity/signature postflight and native synthetic probe pass. Source push is explicitly authorized for this rename, no new IPA Release.
+
+## Portrait and available item quantities —1.4.0
+
+Implemented approved portrait lock and per-item unit weight/available quantity. Count-based exact-total generation groups interchangeable copies, retains500g offered-choice spacing and preserves active/history snapshots. SQLite18/JSON7 retain existing quantities as1; backward import remains supported.385host tests,13metadata/style/branding checks, strict lint, actual native build/metadata/unsigned inspection and independent review pass. USB delivery and physical review are tracked in the [ExecPlan](exec-plans/2026-10-24-portrait-weight-quantities.md). No push/public release.
+
+USB delivery confirmed: device-run.sh exits0, install/verification100%. Direct postflight validates exactly one Reps1.4.0(100), identical effective bundle identity/signer/exact cached certificate/entitlements, and valid CMS-verified app/widget profiles. Actual rotation, quantity editor/layout/accessibility and personal-data review remain physical user checks. No GitHub push/public release.

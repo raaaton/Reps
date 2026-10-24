@@ -140,7 +140,7 @@ final class TimedWeightTests: XCTestCase, @unchecked Sendable {
       "PRAGMA user_version=2",
     ] { try old.execute(sql) }
     let repository = try RepsRepository(path: path)
-    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 17)
+    XCTAssertEqual(try old.query("PRAGMA user_version").first?.integer("user_version"), 18)
     var current = try await repository.workout(id: "active")
     XCTAssertEqual(current.currentExercise?.setStartedAt, now + 7000)
     XCTAssertNil(current.currentExercise?.setWeightGrams)

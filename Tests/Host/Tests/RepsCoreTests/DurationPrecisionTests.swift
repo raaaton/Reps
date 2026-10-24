@@ -64,7 +64,7 @@ final class DurationPrecisionTests: XCTestCase, @unchecked Sendable {
     try db.execute("UPDATE workout_sets SET duration_ms=12344")
     XCTAssertEqual(
       try db.query("SELECT duration_ms FROM workout_sets")[0].integer("duration_ms"), 12300)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 17)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 18)
     _ = try RepsRepository(path: path)
     XCTAssertEqual(
       try db.query("SELECT duration_ms FROM workout_sets")[0].integer("duration_ms"), 12300)

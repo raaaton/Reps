@@ -48,7 +48,7 @@ private struct LoadPicker: View {
               Text(load.grams == 0 ? "Bodyweight" : "\(WorkoutLabels.weight(load.grams)) kg")
                 .foregroundStyle(.primary)
               if load.grams != 0 {
-                Text(load.components.map(\.name).joined(separator: " + ")).font(.subheadline)
+                Text(load.components.map(\.displayName).joined(separator: " + ")).font(.subheadline)
                   .foregroundStyle(.secondary)
               }
             }

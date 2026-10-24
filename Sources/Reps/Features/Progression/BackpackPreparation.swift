@@ -17,7 +17,8 @@ struct BackpackPreparation: View {
             selection: Binding(get: { selected }, set: { overrides[exercise.id] = $0 }))
           if selected.grams == 0 { Text("No added weight needed.").foregroundStyle(.secondary) }
           ForEach(selected.components) { component in
-            LabeledContent(component.name, value: "\(WorkoutLabels.weight(component.grams)) kg")
+            LabeledContent(
+              component.displayName, value: "\(WorkoutLabels.weight(component.grams)) kg")
           }
         }
       }

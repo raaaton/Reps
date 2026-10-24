@@ -1,8 +1,14 @@
 import Foundation
 
-// Make historical fixtures represent real pre-Skills archives rather than a v6 body with an old label.
-func removingNewSkillFields(_ raw: [String: Any]) -> [String: Any] {
-  var root = raw
+// Make historical fixtures represent real pre-Skills archives rather than a current body with an old label.
+func removingNewTrainingFields(_ raw: [String: Any]) -> [String: Any] {
+  func stripQuantities(_ value: Any) -> Any {
+    if let array = value as? [Any] { return array.map(stripQuantities) }
+    guard var object = value as? [String: Any] else { return value }
+    if object["grams"] != nil { object.removeValue(forKey: "quantity") }
+    return object.mapValues(stripQuantities)
+  }
+  var root = (raw["version"] as? Int ?? 7) < 7 ? stripQuantities(raw) as! [String: Any] : raw
   guard (root["version"] as? Int ?? 6) < 6, var contents = root["contents"] as? [String: Any] else {
     return root
   }

@@ -128,6 +128,12 @@ private final class RepsReminderDelegate: NSObject, UNUserNotificationCenterDele
 @MainActor
 final class RepsAppDelegate: NSObject, UIApplicationDelegate {
   func application(
+    _ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    .portrait
+  }
+
+  func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {

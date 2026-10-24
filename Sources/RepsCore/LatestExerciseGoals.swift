@@ -19,7 +19,8 @@ enum LatestExerciseGoals {
         items: database.query("SELECT * FROM weight_items").map {
           WeightItem(
             id: try $0.text("id"), name: try $0.text("name"),
-            grams: try $0.integer("grams"), isEnabled: try $0.integer("enabled") == 1)
+            grams: try $0.integer("grams"), isEnabled: try $0.integer("enabled") == 1,
+            quantity: $0.values["quantity"] == nil ? 1 : try $0.integer("quantity"))
         })
       // Capture the explicit choice once; later goal edits must not rewrite that decision.
       let payload = try database.query(

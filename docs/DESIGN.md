@@ -470,3 +470,11 @@ Movement videos use the same dated stack layout as physique photos; a day's clip
 ### Added-weight choice spacing
 
 Inventory choices, selectors and progression proposals retain ascending exact totals at least500g apart, anchored to the last retained load, keeping the lighter option. Exactly500g remains. An existing valid picker selection remains visible even if the new-choice filter omits it. Full inventory validity, adopted goals and saved/active snapshots retain their exact grams and components. Filtering occurs after subset generation, so small items can still combine; exhaustive-generation complexity guards remain unchanged.
+
+## Portrait and inventory quantities —1.4.0(100)
+
+User explicitly requested portrait throughout. The iPhone plist allows only UIInterfaceOrientationPortrait; the registered app delegate also returns .portrait for system/fullscreen presentations. This is a product choice; media assets and video transforms are unchanged.
+
+Added Weight uses native Form controls: Unit Weight (kg), Quantity with direct number entry and an adjacent native stepper, and the existing enable toggle. Default1; range1…1000. Inventory rows show count × unit kg; preparation, picker and history group names as Book × 10 with total component kg. A ten-copy100g item supplies0…10copies; each total appears once, backpack included once. Existing500g offered-choice spacing stays.
+
+Quantity snapshots preserve original name, subtotal grams and count independently of current inventory. Existing components default1 and retain their previous display. Dynamic Type, VoiceOver and actual fullscreen rotation still require physical review.

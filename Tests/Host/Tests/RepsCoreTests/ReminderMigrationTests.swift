@@ -12,6 +12,8 @@ final class ReminderMigrationTests: XCTestCase, @unchecked Sendable {
       "CREATE TABLE workout_sets(id TEXT,weight_grams INTEGER,load_components TEXT,duration_ms INTEGER)"
     )
     try db.execute("INSERT INTO workout_sets VALUES('saved',2375,'captured',NULL)")
+    try db.execute(
+      "CREATE TABLE weight_items(id TEXT PRIMARY KEY,name TEXT,grams INTEGER,enabled INTEGER)")
     try db.execute("CREATE TABLE exercises(id TEXT PRIMARY KEY,set_count INTEGER)")
     try db.execute(
       "CREATE TABLE schedule_exercises(schedule_id TEXT,exercise_id TEXT,position INTEGER)")
@@ -19,7 +21,7 @@ final class ReminderMigrationTests: XCTestCase, @unchecked Sendable {
     try db.execute("INSERT INTO preferences VALUES(1,180)")
     try db.execute("PRAGMA user_version=4")
     _ = try RepsRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 17)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 18)
     let row = try db.query("SELECT * FROM notification_preferences").first
     XCTAssertEqual(try row?.integer("workouts_enabled"), 0)
     XCTAssertEqual(try row?.integer("photos_enabled"), 0)

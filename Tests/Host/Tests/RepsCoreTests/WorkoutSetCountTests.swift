@@ -170,7 +170,7 @@ extension WorkoutSetCountTests {
     contents["configuration"] = configuration
     root["contents"] = contents
     let decoded = try TrainingArchive.decode(
-      JSONSerialization.data(withJSONObject: removingNewSkillFields(root)))
+      JSONSerialization.data(withJSONObject: removingNewTrainingFields(root)))
     let target = try RepsRepository(path: ":memory:")
     let preview = try await target.previewArchiveImport(decoded, now: tuesday)
     try await target.applyTrainingImport(preview, now: tuesday)

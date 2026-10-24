@@ -115,7 +115,7 @@ extension SkillRepositoryTests {
     XCTAssertEqual(after.exercises, before.exercises)
     XCTAssertEqual(after.schedules, before.schedules)
     XCTAssertEqual(saved, workout)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 17)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 18)
   }
 }
 

@@ -64,7 +64,7 @@ extension WorkoutSupportTests {
     contents["configuration"] = configuration
     object["contents"] = contents
     let legacy = try TrainingArchive.decode(
-      JSONSerialization.data(withJSONObject: removingNewSkillFields(object)))
+      JSONSerialization.data(withJSONObject: removingNewTrainingFields(object)))
     XCTAssertTrue(legacy.contents.configuration.stretchingEnabled)
   }
 

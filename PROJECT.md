@@ -119,15 +119,15 @@ The running timer is derived from a persisted absolute deadline; pause stores th
 
 ## 8. Added weight
 
-The fixed base backpack weighs 3.0 kg. It is added exactly once to each weighted load. Bodyweight is a separate 0 kg option. Initial one-unit items:
+The fixed base backpack weighs 3.0 kg. It is added exactly once to each weighted load. Bodyweight is a separate 0 kg option. Initial items (quantity 1 each):
 
 * La rivière à l'envers — 0.9 kg
 * 1200 voitures — 2.1 kg
 * 2 livres programmation — 1.5 kg
 
-The application must allow the user to create, rename, change the weight of, enable, disable and delete weight items.
+The application must allow the user to create, rename, change the unit weight and available quantity of, enable, disable and delete weight items. Quantities are positive integers from 1 to 1,000; identical copies are interchangeable and displayed as one grouped component.
 
-The application must calculate unique combinations of active items using integer grams, and sort available loads in ascending order. When progression recommends an increase, the next goal is the smallest available load strictly above the greatest load recorded in the previous performance. If none exists, do not invent a value and explain that no heavier combination is available.
+The application must calculate unique totals from counts of active items using integer grams, and sort available loads in ascending order. When progression recommends an increase, the next goal is the smallest available load strictly above the greatest load recorded in the previous performance. If none exists, do not invent a value and explain that no heavier combination is available.
 
 Store each selected load and a snapshot of its component names and weights with the workout set. Inventory changes affect future combinations only; historical loads and snapshots must not be recalculated.
 

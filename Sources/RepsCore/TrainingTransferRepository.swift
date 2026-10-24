@@ -143,8 +143,11 @@ extension RepsRepository {
     for schedule in c.schedules { try writeScheduleSkills(schedule) }
     for item in c.weightItems {
       try database.execute(
-        "INSERT INTO weight_items VALUES(?,?,?,?)",
-        [.text(item.id), .text(item.name), .integer(item.grams), .integer(item.isEnabled ? 1 : 0)])
+        "INSERT INTO weight_items(id,name,grams,enabled,quantity) VALUES(?,?,?,?,?)",
+        [
+          .text(item.id), .text(item.name), .integer(item.grams), .integer(item.isEnabled ? 1 : 0),
+          .integer(item.quantity),
+        ])
     }
     for goal in c.goals {
       try database.execute(

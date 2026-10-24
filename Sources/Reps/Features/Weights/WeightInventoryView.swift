@@ -27,7 +27,7 @@ struct WeightInventoryView: View {
                 VStack(alignment: .leading, spacing: 4) {
                   Text(item.name).foregroundStyle(.primary)
                   Text(
-                    "\(WorkoutLabels.weight(item.grams)) kg\(item.isEnabled ? "" : " · Disabled")"
+                    "\(item.quantity) × \(WorkoutLabels.weight(item.grams)) kg\(item.isEnabled ? "" : " · Disabled")"
                   )
                   .font(.subheadline).foregroundStyle(.secondary)
                 }
@@ -53,7 +53,7 @@ struct WeightInventoryView: View {
               DisclosureGroup("\(WorkoutLabels.weight(load.grams)) kg") {
                 ForEach(load.components) { component in
                   LabeledContent(
-                    component.name, value: "\(WorkoutLabels.weight(component.grams)) kg")
+                    component.displayName, value: "\(WorkoutLabels.weight(component.grams)) kg")
                 }
               }
             }
@@ -109,11 +109,13 @@ private struct WeightItemEditor: View {
   @Environment(\.dismiss) private var dismiss
   @State private var item: WeightItem
   @State private var weight: String
+  @State private var quantity: String
   @State private var saving = false
   @State private var error: String?
   @FocusState private var focused: Bool
   init(item: WeightItem) {
     _item = State(initialValue: item)
+    _quantity = State(initialValue: String(item.quantity))
     _weight = State(initialValue: item.grams > 0 ? WorkoutLabels.weight(item.grams) : "")
   }
   var body: some View {
@@ -121,15 +123,31 @@ private struct WeightItemEditor: View {
       Form {
         Section {
           TextField("Item Name", text: $item.name).focused($focused)
-          LabeledContent("Weight (kg)") {
+          LabeledContent("Unit Weight (kg)") {
             TextField("0,9", text: $weight).keyboardType(.decimalPad).multilineTextAlignment(
               .trailing
             ).focused($focused)
-              .accessibilityLabel("Item weight in kilograms")
+              .accessibilityLabel("Weight of one item in kilograms")
+          }
+          LabeledContent("Quantity") {
+            HStack {
+              TextField("1", text: $quantity).keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing).focused($focused)
+                .accessibilityLabel("Available quantity")
+              Stepper(
+                "Quantity",
+                value: Binding(
+                  get: { min(1000, max(1, Int(quantity) ?? item.quantity)) },
+                  set: { quantity = String($0) }
+                ), in: 1...1000
+              ).labelsHidden()
+            }
           }
           Toggle("Include in Combinations", isOn: $item.isEnabled)
         } footer: {
-          Text("Each item is available once. The backpack is already included.")
+          Text(
+            "Enter the weight of one copy and how many identical copies you have. The backpack is already included."
+          )
         }
       }.disabled(saving)
         .navigationTitle(item.grams == 0 ? "New Item" : "Edit Item")
@@ -146,7 +164,7 @@ private struct WeightItemEditor: View {
             Button(saving ? "Saving…" : "Save") { save() }
               .disabled(
                 saving || item.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                  || weight.isEmpty)
+                  || weight.isEmpty || !(1...1000).contains(Int(quantity) ?? 0))
           }
           ToolbarItemGroup(placement: .keyboard) {
             Spacer()
@@ -172,6 +190,10 @@ private struct WeightItemEditor: View {
     Task {
       defer { saving = false }
       do {
+        guard let count = Int(quantity), (1...1000).contains(count) else {
+          throw TrainingError.invalid("Enter a quantity from 1 to 1,000.")
+        }
+        item.quantity = count
         item.grams = try WorkoutWeight.grams(weight)
         try await store.saveWeightItem(item)
         dismiss()

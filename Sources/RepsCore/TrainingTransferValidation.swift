@@ -17,7 +17,9 @@ extension TrainingTransfer {
     for item in items {
       try text(item.name)
       let (next, overflow) = sum.addingReportingOverflow(item.grams)
-      guard item.grams > 0, !overflow else { throw invalid }
+      guard item.grams > 0, (1...1000).contains(item.quantity),
+        item.grams % item.quantity == 0, !overflow
+      else { throw invalid }
       sum = next
     }
     guard sum == grams else { throw invalid }
@@ -128,7 +130,9 @@ extension TrainingTransfer {
     for ex in c.exercises { try definition(ex) }
     for item in c.weightItems {
       try text(item.name)
-      guard item.grams > 0, item.id != WeightInventory.bag.id else { throw invalid }
+      guard item.grams > 0, (1...1000).contains(item.quantity),
+        item.id != WeightInventory.bag.id
+      else { throw invalid }
     }
     _ = try WeightInventory.loads(items: c.weightItems)
     guard Set(c.schedules.map(\.weekday)).count == c.schedules.count else { throw invalid }

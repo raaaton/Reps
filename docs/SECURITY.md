@@ -279,3 +279,7 @@ Permanent audio removal is being validated using AVAssetReader compressed video 
 ## Reps rename compatibility —24 October 2026
 
 Reps keeps the installed app/widget identifiers com.raaaton.sport and com.raaaton.sport.rest-widget. Keychain services, vault Sport/vault/v1 AAD and Sport vault v1 verification bytes, database sport.sqlite, preference/reminder namespaces and JSON sport.training/CSV sport_csv_version are permanent compatibility identifiers, not display branding. Existing media, keys and training require no migration. Internal Swift modules Sport/SportRestWidget/SportLiveSupport also retain identity for system-serialized ActivityKit/AppIntent types; products, executables, folders and visible names use Reps. Both reps:// and legacy sport:// workout links are accepted. No certificate/capability/schema change or private-device-data read is part of this rename. Historical Git commits/tags and build artifacts retain their original bytes.
+
+## Inventory quantities —1.4.0(100)
+
+Training schema18 adds only weight_items.quantity with a1…1000SQL constraint/default1. Training JSON7 adds inventory/component counts; reads1…6 default missing counts to1. Unknown/private JSON fields remain rejected. Component grams continue to be subtotals; imports reject invalid/nonintegral counts, nondivisible subtotals, overflow and duplicate component identifiers. CSV component JSON retains counts. Existing vault schema, encryption, Keychain identity, privacy lifecycle, entitlements and permissions are unchanged.
