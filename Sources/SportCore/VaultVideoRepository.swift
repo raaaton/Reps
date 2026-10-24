@@ -53,7 +53,10 @@ extension VaultRepository {
         thumbnail: Data(), byteCount: $0.integer("byte_count"))
     }
   }
-  public func beginVideo(_ value: VaultEncryptedVideo, lease: VaultLease) throws {
+  public func beginVideo(
+    _ value: VaultEncryptedVideo, replacing sourceID: String? = nil,
+    expectedMetadata: Data? = nil, lease: VaultLease
+  ) throws {
     guard UUID(uuidString: value.id) != nil, UUID(uuidString: value.movementID) != nil,
       (28...16384).contains(value.metadata.count),
       (28...(1024 * 1024)).contains(value.thumbnail.count),
@@ -61,8 +64,24 @@ extension VaultRepository {
     else { throw VaultVideoFailure.tooLarge }
     try db.transaction {
       try authorize(lease)
-      guard try db.query("SELECT COUNT(*) AS n FROM vault_videos").first!.integer("n") < 5000 else {
-        throw VaultVideoFailure.storage
+      let count = try db.query("SELECT COUNT(*) AS n FROM vault_videos").first!.integer("n")
+      if let sourceID {
+        guard sourceID != value.id, let expectedMetadata,
+          let source = try db.query(
+            "SELECT metadata,movement_id FROM vault_videos WHERE id=? AND complete=1",
+            [.text(sourceID)]
+          ).first,
+          try source.blob("metadata") == expectedMetadata,
+          try source.text("movement_id") == value.movementID
+        else { throw VaultFailure.damaged }
+        // Reserve one transient replacement slot at the published-video limit.
+        let pending = try db.query("SELECT COUNT(*) AS n FROM vault_videos WHERE complete=0").first!
+          .integer("n")
+        guard count < 5000 || (count == 5000 && pending == 0) else {
+          throw VaultVideoFailure.storage
+        }
+      } else {
+        guard expectedMetadata == nil, count < 5000 else { throw VaultVideoFailure.storage }
       }
       try db.execute(
         "INSERT INTO vault_videos(id,movement_id,metadata,thumbnail,byte_count,import_session,complete) VALUES(?,?,?,?,?,?,0)",
@@ -94,7 +113,10 @@ extension VaultRepository {
       try lease.check()
     }
   }
-  public func finishVideo(id: String, lease: VaultLease) throws {
+  public func finishVideo(
+    id: String, replacing sourceID: String? = nil,
+    expectedMetadata: Data? = nil, lease: VaultLease
+  ) throws {
     try db.transaction {
       try authorize(lease)
       guard
@@ -114,6 +136,24 @@ extension VaultRepository {
           try chunk.integer("n") == min(
             VaultVideoLimits.chunkBytes, total - index * VaultVideoLimits.chunkBytes) + 28
         else { throw VaultFailure.damaged }
+      }
+      if let sourceID {
+        guard sourceID != id, let expectedMetadata,
+          let source = try db.query(
+            "SELECT metadata,movement_id FROM vault_videos WHERE id=? AND complete=1",
+            [.text(sourceID)]
+          ).first,
+          try source.blob("metadata") == expectedMetadata,
+          let target = try db.query("SELECT movement_id FROM vault_videos WHERE id=?", [.text(id)])
+            .first,
+          try source.text("movement_id") == target.text("movement_id")
+        else { throw VaultFailure.damaged }
+        try db.execute("DELETE FROM vault_videos WHERE id=?", [.text(sourceID)])
+      } else {
+        guard expectedMetadata == nil,
+          try db.query("SELECT COUNT(*) AS n FROM vault_videos WHERE complete=1").first!.integer(
+            "n") < 5000
+        else { throw VaultVideoFailure.storage }
       }
       try db.execute("UPDATE vault_videos SET complete=1 WHERE id=?", [.text(id)])
       try lease.check()

@@ -62,10 +62,19 @@ final class VaultVideoStaging: Sendable {
   }
 }
 
+enum VaultVideoImportContext {
+  @TaskLocal static var lease: VaultLease?
+}
+
 struct VaultTransferredVideo: Transferable, Sendable {
   let staging: VaultVideoStaging
   static var transferRepresentation: some TransferRepresentation {
-    FileRepresentation(importedContentType: .movie, shouldAttemptToOpenInPlace: false) { file in
+    // Capture when the representation is requested, before provider callbacks hop tasks.
+    let authorization = VaultVideoImportContext.lease
+    return FileRepresentation(importedContentType: .movie, shouldAttemptToOpenInPlace: false) {
+      file in
+      guard let lease = authorization else { throw VaultFailure.locked }
+      try lease.check()
       let values = try file.file.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
       guard values.isRegularFile == true, let size = values.fileSize,
         (1...VaultVideoLimits.maximumBytes).contains(size)
@@ -102,45 +111,12 @@ struct VaultTransferredVideo: Transferable, Sendable {
       {
         date = min(parsed, Date())
       }
-      let key = SymmetricKey(size: .bits256)
-      let keyID = UUID().uuidString
-      let output = try VaultVideoStaging.folder().appendingPathComponent(UUID().uuidString)
-        .appendingPathExtension("sealed")
-      guard
-        FileManager.default.createFile(
-          atPath: output.path, contents: nil,
-          attributes: [.protectionKey: FileProtectionType.complete])
-      else { throw VaultVideoFailure.storage }
+      let staging = try await VaultSilentVideo.stage(
+        asset: asset, date: date, thumbnail: thumbnail as Data, check: { try lease.check() })
       var keep = false
-      defer { if !keep { try? FileManager.default.removeItem(at: output) } }
-      let input = try FileHandle(forReadingFrom: file.file)
-      defer { try? input.close() }
-      let writer = try FileHandle(forWritingTo: output)
-      defer { try? writer.close() }
-      var count = 0
-      while count < size {
-        try Task.checkCancellation()
-        let expected = min(VaultVideoLimits.chunkBytes, size - count)
-        guard let bytes = try input.read(upToCount: expected), bytes.count == expected else {
-          throw VaultVideoFailure.invalid
-        }
-        let encrypted = try VaultCryptography.seal(
-          bytes, key: key, keyID: keyID,
-          id: "transfer", role: "video-chunk/\(count / VaultVideoLimits.chunkBytes)")
-        try writer.write(contentsOf: encrypted)
-        count += bytes.count
-      }
-      guard (try input.read(upToCount: 1))?.isEmpty != false else {
-        throw VaultVideoFailure.invalid
-      }
+      defer { if !keep { try? staging.remove() } }
+      try await VaultSilentVideo.validate(staging, source: asset, lease: lease)
       try Task.checkCancellation()
-      let sealedThumbnail = try VaultCryptography.seal(
-        thumbnail as Data, key: key, keyID: keyID, id: "transfer", role: "thumbnail")
-      let staging = VaultVideoStaging(
-        url: output, key: key, keyID: keyID, byteCount: size,
-        duration: duration,
-        type: ext == "mov" ? UTType.quickTimeMovie.identifier : UTType.mpeg4Movie.identifier,
-        date: date, thumbnail: sealedThumbnail)
       keep = true
       return VaultTransferredVideo(staging: staging)
     }

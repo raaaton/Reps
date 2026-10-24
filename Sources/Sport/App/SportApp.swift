@@ -51,6 +51,9 @@ struct SportApp: App {
           NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
         ) { _ in vault.cover() }
         .onReceive(
+          NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+        ) { _ in vault.foreground() }
+        .onReceive(
           NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
         ) { _ in vault.background() }
         .onReceive(NotificationCenter.default.publisher(for: SportRuntime.restDidChange)) { _ in

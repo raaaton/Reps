@@ -12,11 +12,14 @@ final class VaultVideoPlayback: ObservableObject, Identifiable {
   @Published private(set) var failed = false
   private var observation: NSKeyValueObservation?
   private var closed = false
+  private(set) var privacyPaused = false
+  private(set) var privacyRevision = UUID()
   init(reader: VaultVideoReader, byteCount: Int, type: String) {
     loader = VaultVideoResourceLoader(reader: reader, total: byteCount, type: type)
     asset = AVURLAsset(url: URL(string: "sport-vault-video://local/\(id.uuidString)")!)
     asset.resourceLoader.setDelegate(loader, queue: .main)
     player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+    player.isMuted = true
     player.allowsExternalPlayback = false
     player.preventsDisplaySleepDuringVideoPlayback = false
     observation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
@@ -24,9 +27,17 @@ final class VaultVideoPlayback: ObservableObject, Identifiable {
       Task { @MainActor [weak self] in self?.failed = failed }
     }
   }
+  func cover() {
+    privacyRevision = UUID()
+    privacyPaused = true
+    player.pause()
+    player.cancelPendingPrerolls()
+  }
+  func foreground() { if !closed { privacyPaused = false } }
   func stop() {
     guard !closed else { return }
     closed = true
+    privacyPaused = true
     player.pause()
     player.replaceCurrentItem(with: nil)
     observation = nil
@@ -49,8 +60,8 @@ struct VaultNativeVideoPlayer: UIViewControllerRepresentable {
     return controller
   }
   func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
-    controller.player = playback.player
-    controller.showsPlaybackControls = controls
+    if controller.player !== playback.player { controller.player = playback.player }
+    if controller.showsPlaybackControls != controls { controller.showsPlaybackControls = controls }
   }
   static func dismantleUIViewController(_ controller: AVPlayerViewController, coordinator: ()) {
     controller.player?.pause()

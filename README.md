@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). Version 1.3.0 (92) is installed on the owner’s iPhone with private movement videos. Physical acceptance and public release remain pending.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Sport/releases/latest). Version 1.3.1 (97) is installed on the owner’s iPhone with corrected video-vault transitions, comparison, day stacks and permanent audio removal. Physical acceptance and public release remain pending.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -107,6 +107,8 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Movement folders automatically show Skills you follow, alongside custom movements saved only in the vault.
 - Import dated MOV/MP4 videos from Photos, up to 5 minutes and 500 MiB, without changing the original.
 - Review technique at 1×, 0.5× or 0.25×; align and compare two videos with shared or separate playback.
+- Videos stack by day. Open a stack, then long-press or swipe a clip left for confirmed deletion.
+- Imported vault copies permanently omit audio without recompressing the video. Existing clips are converted after the next Face ID unlock; an interrupted or unsupported conversion keeps the encrypted original and retries on a later unlock. Photos originals stay unchanged.
 - Saved videos remain available after their Skill is completed, archived or deleted.
 
 The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable media backup. Training exports contain **no vault photos, videos, custom movements or vault key**. See [security](docs/SECURITY.md).

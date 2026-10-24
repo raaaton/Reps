@@ -14,7 +14,7 @@ struct VaultMovementDetailView: View {
   let session: UUID
   @State private var importing = false
   @State private var comparing = false
-  @State private var selected: VaultVideoRoute?
+  @State private var selectedDay: VaultDayRoute?
   private var movement: VaultMovementEntry? { vault.movements.first { $0.id == movementID } }
   private var videos: [VaultVideoEntry] {
     VaultMovementCollection.videos(vault.videos, movementID: movementID)
@@ -28,25 +28,33 @@ struct VaultMovementDetailView: View {
               "No Videos", systemImage: "video",
               description: Text("Import a video to follow your movement technique over time."))
           } else {
-            List(videos) { video in
-              Button {
-                selected = VaultVideoRoute(id: video.id, session: session)
-              } label: {
-                HStack(spacing: 12) {
-                  VaultVideoThumbnail(entry: video, session: session).frame(width: 80, height: 80)
-                  VStack(alignment: .leading, spacing: 4) {
-                    Text(WorkoutLabels.day(video.metadata.dayKey)).foregroundStyle(.primary)
-                    Text(VaultVideoLabels.duration(video.metadata.duration)).font(.subheadline)
-                      .foregroundStyle(.secondary)
-                  }
-                  Spacer()
-                  Image(systemName: "play.circle").foregroundStyle(.tint)
+            ScrollView {
+              LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 16) {
+                ForEach(VaultVideoDay.grouped(videos, movementID: movementID)) { day in
+                  Button {
+                    selectedDay = VaultDayRoute(id: day.id, session: session)
+                  } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                      ZStack {
+                        if day.videos.count > 1 {
+                          RoundedRectangle(cornerRadius: 12).fill(.quaternary)
+                            .padding(.horizontal, 8).offset(y: -8)
+                          RoundedRectangle(cornerRadius: 12).fill(.tertiary)
+                            .padding(.horizontal, 4).offset(y: -4)
+                        }
+                        if let video = day.videos.first {
+                          VaultVideoThumbnail(entry: video, session: session)
+                        }
+                      }.frame(height: 180).padding(.top, 8)
+                      Text(WorkoutLabels.day(day.id)).font(.subheadline).fontWeight(.medium)
+                      Text("\(day.videos.count) \(day.videos.count == 1 ? "video" : "videos")")
+                        .font(.caption).foregroundStyle(.secondary)
+                    }
+                  }.buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(WorkoutLabels.day(day.id)), \(day.videos.count) videos")
                 }
-              }.buttonStyle(.plain)
-                .accessibilityLabel(
-                  "\(WorkoutLabels.day(video.metadata.dayKey)), \(VaultVideoLabels.duration(video.metadata.duration))"
-                )
-                .accessibilityHint("Play private video")
+              }.padding()
             }
           }
         }
@@ -74,14 +82,14 @@ struct VaultMovementDetailView: View {
       .sheet(isPresented: $comparing) {
         VaultVideoComparisonView(movementID: movementID, session: session)
       }
-      .sheet(item: $selected) { route in
-        VaultVideoDetailView(videoID: route.id, session: route.session)
+      .sheet(item: $selectedDay) { route in
+        VaultVideoDayView(movementID: movementID, route: route)
       }
       .onChange(of: vault.gate.phase) { _, phase in
         if phase != .unlocked {
           importing = false
           comparing = false
-          selected = nil
+          selectedDay = nil
           dismiss()
         }
       }
@@ -89,7 +97,10 @@ struct VaultMovementDetailView: View {
   }
 }
 
-enum VaultVideoFeature { static let importsEnabled = true }
+enum VaultVideoFeature {
+  static let importsEnabled = true
+  static let silentImportsEnabled = true
+}
 
 enum VaultVideoLabels {
   static func duration(_ seconds: Double) -> String {

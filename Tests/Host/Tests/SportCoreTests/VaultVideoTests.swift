@@ -332,3 +332,116 @@ extension VaultVideoTests {
     XCTAssertThrowsError(try VaultMovementMetadata(name: "bad\0name").validate())
   }
 }
+
+extension VaultVideoTests {
+  func testReplacementIsAtomicAndRejectsChangedSource() async throws {
+    let (repo, lease, original) = try await setupVideo()
+    func fill(_ video: VaultEncryptedVideo) async throws {
+      try await repo.beginVideo(video, lease: lease)
+      try await repo.appendVideoChunk(
+        id: video.id, index: 0,
+        encrypted: Data(repeating: 5, count: VaultVideoLimits.chunkBytes + 28), lease: lease)
+      try await repo.appendVideoChunk(
+        id: video.id, index: 1,
+        encrypted: Data(repeating: 6, count: 35), lease: lease)
+    }
+    try await fill(original)
+    try await repo.finishVideo(id: original.id, lease: lease)
+    let replacement = VaultEncryptedVideo(
+      id: UUID().uuidString, movementID: original.movementID,
+      metadata: Data(repeating: 8, count: 64), thumbnail: original.thumbnail,
+      byteCount: original.byteCount)
+    try await fill(replacement)
+    try await repo.updateVideo(
+      id: original.id, encrypted: Data(repeating: 9, count: 64), lease: lease)
+    do {
+      try await repo.finishVideo(
+        id: replacement.id, replacing: original.id, expectedMetadata: original.metadata,
+        lease: lease)
+      XCTFail("Stale replacement committed")
+    } catch {}
+    let unchanged = try await repo.videoMetadata(lease: lease)
+    XCTAssertEqual(unchanged.map(\.id), [original.id])
+    try await repo.finishVideo(
+      id: replacement.id, replacing: original.id,
+      expectedMetadata: Data(repeating: 9, count: 64), lease: lease)
+    let complete = try await repo.videoMetadata(lease: lease)
+    XCTAssertEqual(complete.map(\.id), [replacement.id])
+    do {
+      _ = try await repo.videoChunk(id: original.id, index: 0, lease: lease)
+      XCTFail("Old chunks remain")
+    } catch {}
+  }
+}
+
+extension VaultVideoTests {
+  func testDayStacksKeepSameDayClipsAndIsolateMovements() throws {
+    let movement = UUID().uuidString
+    func video(_ day: String, _ time: Int, _ owner: String) -> VaultVideoEntry {
+      VaultVideoEntry(
+        id: UUID().uuidString,
+        metadata: .init(
+          dayKey: day, movementID: owner,
+          type: "public.mpeg-4", duration: 4, byteCount: 10, importedAt: time))
+    }
+    let first = video("2026-10-24", 1, movement)
+    let second = video("2026-10-24", 2, movement)
+    let older = video("2026-10-23", 3, movement)
+    let unrelated = video("2026-10-24", 4, UUID().uuidString)
+    let days = VaultVideoDay.grouped([first, unrelated, older, second], movementID: movement)
+    XCTAssertEqual(days.map(\.id), ["2026-10-24", "2026-10-23"])
+    XCTAssertEqual(days.first?.videos.map(\.id), [second.id, first.id])
+    XCTAssertEqual(days.last?.videos.map(\.id), [older.id])
+    var legacy =
+      try JSONSerialization.jsonObject(with: JSONEncoder().encode(first.metadata)) as! [String: Any]
+    legacy.removeValue(forKey: "audioRemoved")
+    let restored = try JSONDecoder().decode(
+      VaultVideoMetadata.self, from: JSONSerialization.data(withJSONObject: legacy))
+    XCTAssertNil(restored.audioRemoved)
+  }
+}
+
+extension VaultVideoTests {
+  func testReplacementAtVideoLimitDoesNotIncreasePublishedLimit() async throws {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+    defer { try? FileManager.default.removeItem(atPath: path) }
+    let (repo, lease, source) = try await setupVideo(path: path)
+    let db = try SQLiteDatabase(path: path)
+    try db.transaction {
+      for index in 0..<5000 {
+        try db.execute(
+          "INSERT INTO vault_videos VALUES(?,?,?,?,?,?,1)",
+          [
+            .text(index == 0 ? source.id : UUID().uuidString), .text(source.movementID),
+            .blob(source.metadata), .blob(source.thumbnail), .integer(source.byteCount),
+            .text(lease.id.uuidString),
+          ])
+      }
+    }
+    let candidate = VaultEncryptedVideo(
+      id: UUID().uuidString, movementID: source.movementID,
+      metadata: source.metadata, thumbnail: source.thumbnail, byteCount: source.byteCount)
+    do {
+      try await repo.beginVideo(candidate, lease: lease)
+      XCTFail("Ordinary import exceeded limit")
+    } catch {}
+    try await repo.beginVideo(
+      candidate, replacing: source.id, expectedMetadata: source.metadata, lease: lease)
+    try await repo.appendVideoChunk(
+      id: candidate.id, index: 0,
+      encrypted: Data(repeating: 5, count: VaultVideoLimits.chunkBytes + 28), lease: lease)
+    try await repo.appendVideoChunk(
+      id: candidate.id, index: 1,
+      encrypted: Data(repeating: 6, count: 35), lease: lease)
+    do {
+      try await repo.finishVideo(id: candidate.id, lease: lease)
+      XCTFail("Replacement bypassed published limit")
+    } catch {}
+    try await repo.finishVideo(
+      id: candidate.id, replacing: source.id, expectedMetadata: source.metadata, lease: lease)
+    let result = try await repo.videoMetadata(lease: lease)
+    XCTAssertEqual(result.count, 5000)
+    XCTAssertFalse(result.contains { $0.id == source.id })
+    XCTAssertTrue(result.contains { $0.id == candidate.id })
+  }
+}

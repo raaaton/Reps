@@ -48,9 +48,10 @@ public struct VaultVideoMetadata: Codable, Equatable, Sendable {
   public let duration: Double
   public let byteCount: Int
   public let importedAt: Int
+  public let audioRemoved: Bool?
   public init(
     dayKey: String, movementID: String, type: String, duration: Double, byteCount: Int,
-    importedAt: Int
+    importedAt: Int, audioRemoved: Bool? = nil
   ) {
     self.dayKey = dayKey
     self.movementID = movementID
@@ -58,6 +59,7 @@ public struct VaultVideoMetadata: Codable, Equatable, Sendable {
     self.duration = duration
     self.byteCount = byteCount
     self.importedAt = importedAt
+    self.audioRemoved = audioRemoved
   }
   public func validate() throws {
     guard UUID(uuidString: movementID) != nil, dayKey.utf8.count == 10,
@@ -158,5 +160,15 @@ public struct VaultVideoAlignment: Equatable, Sendable {
       return 0
     }
     return max(0, min(firstDuration - max(0, first), secondDuration - max(0, second)))
+  }
+}
+
+public struct VaultVideoDay: Identifiable, Equatable, Sendable {
+  public let id: String
+  public let videos: [VaultVideoEntry]
+  public static func grouped(_ videos: [VaultVideoEntry], movementID: String) -> [Self] {
+    let sorted = VaultMovementCollection.videos(videos, movementID: movementID)
+    let grouped = Dictionary(grouping: sorted, by: \.metadata.dayKey)
+    return grouped.keys.sorted(by: >).map { Self(id: $0, videos: grouped[$0] ?? []) }
   }
 }

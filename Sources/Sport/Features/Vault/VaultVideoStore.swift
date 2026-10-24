@@ -102,7 +102,7 @@ extension PhotoVaultStore {
     } catch { if allows(session) { self.error = message(error) } }
   }
   func stageVideo(_ item: PhotosPickerItem, session: UUID) async {
-    guard allows(session), !busy else { return }
+    guard allows(session), !busy, let lease else { return }
     let request = UUID()
     videoRequest = request
     videoStaging = nil
@@ -110,7 +110,10 @@ extension PhotoVaultStore {
     error = nil
     defer { if allows(session), videoRequest == request { busy = false } }
     do {
-      guard let transferred = try await item.loadTransferable(type: VaultTransferredVideo.self)
+      let result = try await VaultVideoImportContext.$lease.withValue(lease) {
+        try await item.loadTransferable(type: VaultTransferredVideo.self)
+      }
+      guard let transferred = result
       else { throw VaultVideoFailure.invalid }
       guard allows(session), videoRequest == request, !Task.isCancelled else {
         try transferred.staging.remove()
@@ -143,44 +146,13 @@ extension PhotoVaultStore {
     let meta = VaultVideoMetadata(
       dayKey: WorkoutClock.dayKey(Int(day.timeIntervalSince1970 * 1000)),
       movementID: movement.id, type: staging.type, duration: staging.duration,
-      byteCount: staging.byteCount, importedAt: WorkoutClock.now)
+      byteCount: staging.byteCount, importedAt: WorkoutClock.now, audioRemoved: true)
     do {
       try meta.validate()
       try await Task.detached {
-        try lease.check()
-        let thumbnail = try VaultCryptography.open(
-          staging.thumbnail, key: staging.key, keyID: staging.keyID, id: "transfer",
-          role: "thumbnail")
-        let value = try VaultEncryptedVideo(
-          id: id, movementID: movement.id,
-          metadata: VaultCryptography.seal(
-            JSONEncoder().encode(meta), key: key, keyID: lease.keyID, id: id, role: "video-metadata"
-          ),
-          thumbnail: VaultCryptography.seal(
-            thumbnail, key: key, keyID: lease.keyID, id: id, role: "video-thumbnail"),
-          byteCount: staging.byteCount)
-        try await repo.beginVideo(value, lease: lease)
-        let input = try FileHandle(forReadingFrom: staging.url)
-        defer { try? input.close() }
-        for offset in stride(from: 0, to: staging.byteCount, by: VaultVideoLimits.chunkBytes) {
-          try lease.check()
-          try Task.checkCancellation()
-          let index = offset / VaultVideoLimits.chunkBytes
-          let size = min(VaultVideoLimits.chunkBytes, staging.byteCount - offset)
-          guard let encrypted = try input.read(upToCount: size + 28), encrypted.count == size + 28
-          else { throw VaultFailure.damaged }
-          let clear = try VaultCryptography.open(
-            encrypted, key: staging.key, keyID: staging.keyID, id: "transfer",
-            role: "video-chunk/\(index)")
-          guard clear.count == size else { throw VaultFailure.damaged }
-          let sealed = try VaultCryptography.seal(
-            clear, key: key, keyID: lease.keyID, id: id, role: "video-chunk/\(index)")
-          try lease.check()
-          try await repo.appendVideoChunk(id: id, index: index, encrypted: sealed, lease: lease)
-        }
-        guard (try input.read(upToCount: 1))?.isEmpty != false else { throw VaultFailure.damaged }
-        try lease.check()
-        try await repo.finishVideo(id: id, lease: lease)
+        try await VaultVideoPersistence.write(
+          staging: staging, metadata: meta, id: id,
+          key: key, lease: lease, repository: repo)
       }.value
       guard allows(session) else { return false }
       videos.append(VaultVideoEntry(id: id, metadata: meta))

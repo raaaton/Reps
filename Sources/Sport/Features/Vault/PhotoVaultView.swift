@@ -19,18 +19,22 @@ struct VaultPrivacySurface<Content: View>: View {
   @ViewBuilder let content: () -> Content
   var body: some View {
     ZStack {
+      // Keep Photos/AVKit presenters alive while a system intervention temporarily
+      // deactivates the app. Only the privacy pixels change, never the view identity.
+      content()
+        .opacity(vault.gate.covered ? 0 : 1)
+        .allowsHitTesting(!vault.gate.covered)
+        .accessibilityHidden(vault.gate.covered)
       if vault.gate.covered {
         ContentUnavailableView("Private Vault", systemImage: "lock.fill")
-      } else {
-        content()
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(Color(uiColor: .systemBackground))
+          .transition(.identity)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color(uiColor: .systemBackground))
-    .transaction {
-      $0.animation = nil
-      $0.disablesAnimations = true
-    }
+    .animation(nil, value: vault.gate.covered)
   }
 }
 
@@ -52,7 +56,12 @@ struct PhotoVaultView: View {
               Text("Physique").tag(VaultSection.physique)
               Text("Movements").tag(VaultSection.movements)
             }.pickerStyle(.segmented).padding()
-            if section == .physique { photoGallery } else { VaultMovementsView() }
+            if let notice = vault.notice, vault.busy {
+              ProgressView(notice).padding().accessibilityAddTraits(.updatesFrequently)
+            }
+            Group {
+              if section == .physique { photoGallery } else { VaultMovementsView() }
+            }.disabled(vault.busy)
           }
         } else {
           VStack(spacing: 24) {

@@ -172,6 +172,7 @@ final class PhotoVaultStore: ObservableObject {
         self.context = nil
         context.invalidate()
         SportHaptics.shared.play(.success)
+        await removeExistingVideoAudio(session: lease.id)
       } catch {
         openingLease?.invalidate()
         guard gate.accepts(token) else { return }
@@ -213,8 +214,18 @@ final class PhotoVaultStore: ObservableObject {
     error = nil
     notice = nil
   }
-  func cover() { gate.cover() }
-  func foreground() { gate.foreground() }
+  func cover() {
+    if gate.phase != .locked { VaultPrivacyShield.shared.show() }
+    for playback in videoPlaybacks.values {
+      playback.cover()
+    }
+    gate.cover()
+  }
+  func foreground() {
+    VaultPrivacyShield.shared.hide()
+    gate.foreground()
+    for playback in videoPlaybacks.values { playback.foreground() }
+  }
   func background() {
     cover()
     lock()

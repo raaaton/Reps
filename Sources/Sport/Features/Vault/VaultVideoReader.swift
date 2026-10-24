@@ -9,6 +9,7 @@ actor VaultVideoReader {
   private let lease: VaultLease
   private let repository: VaultRepository?
   private var synthetic: [Data]?
+  private var staging: VaultVideoStaging?
 
   init(
     id: String, byteCount: Int, key: SymmetricKey, lease: VaultLease, repository: VaultRepository
@@ -36,6 +37,14 @@ actor VaultVideoReader {
     }
     synthetic = chunks
   }
+  init(staging: VaultVideoStaging, lease: VaultLease) {
+    id = "transfer"
+    byteCount = staging.byteCount
+    key = staging.key
+    self.lease = lease
+    repository = nil
+    self.staging = staging
+  }
   func read(index: Int) async throws -> Data {
     try lease.check()
     try Task.checkCancellation()
@@ -45,6 +54,16 @@ actor VaultVideoReader {
     let encrypted: Data
     if let repository {
       encrypted = try await repository.videoChunk(id: id, index: index, lease: lease)
+    } else if let staging {
+      let handle = try FileHandle(forReadingFrom: staging.url)
+      defer { try? handle.close() }
+      try handle.seek(toOffset: UInt64(index * (VaultVideoLimits.chunkBytes + 28)))
+      let length =
+        min(VaultVideoLimits.chunkBytes, byteCount - index * VaultVideoLimits.chunkBytes) + 28
+      guard let data = try handle.read(upToCount: length), data.count == length else {
+        throw VaultFailure.damaged
+      }
+      encrypted = data
     } else if let synthetic, synthetic.indices.contains(index) {
       encrypted = synthetic[index]
     } else {
@@ -55,7 +74,8 @@ actor VaultVideoReader {
     let expected = min(VaultVideoLimits.chunkBytes, byteCount - index * VaultVideoLimits.chunkBytes)
     guard encrypted.count == expected + 28 else { throw VaultFailure.damaged }
     let bytes = try VaultCryptography.open(
-      encrypted, key: key, keyID: lease.keyID, id: id, role: "video-chunk/\(index)")
+      encrypted, key: key, keyID: staging?.keyID ?? lease.keyID, id: id,
+      role: "video-chunk/\(index)")
     try lease.check()
     try Task.checkCancellation()
     guard bytes.count == expected, self.key != nil else { throw VaultFailure.locked }
@@ -64,5 +84,6 @@ actor VaultVideoReader {
   func close() {
     key = nil
     synthetic = nil
+    staging = nil
   }
 }

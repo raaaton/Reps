@@ -106,9 +106,14 @@ final class VaultVideoPairController: ObservableObject {
   let second: VaultVideoPlayback
   @Published var linked = true { didSet { pause() } }
   @Published var speed: Float = 1 { didSet { pause() } }
-  @Published var seeking = false
+  @Published private(set) var seeking = false
+  @Published private(set) var preparing = false
+  @Published private(set) var message: String?
+  private var revision = UUID()
+  private var operation: Task<Void, Never>?
   private var endObservers: [NSObjectProtocol] = []
-  private var boundaryObservers: [(AVPlayer, Any)] = []
+  private var alignedStart: (Double, Double)?
+  private var atEnd = false
   init(first: VaultVideoPlayback, second: VaultVideoPlayback) {
     self.first = first
     self.second = second
@@ -118,50 +123,144 @@ final class VaultVideoPairController: ObservableObject {
           NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
           ) { [weak self] _ in
-            Task { @MainActor [weak self] in if self?.linked == true { self?.pause() } }
+            Task { @MainActor [weak self] in
+              guard let self, self.linked else { return }
+              self.pause()
+              self.atEnd = true
+            }
+          })
+        endObservers.append(
+          NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main
+          ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+              guard let self, self.linked else { return }
+              self.pause()
+              self.message = "Playback paused while buffering. Tap Play Both to resume together."
+            }
           })
       }
     }
   }
   func pause() {
-    first.player.pause()
-    second.player.pause()
-    for (player, token) in boundaryObservers { player.removeTimeObserver(token) }
-    boundaryObservers = []
+    revision = UUID()
+    operation?.cancel()
+    operation = nil
+    preparing = false
+    seeking = false
+    for playback in [first, second] {
+      playback.player.pause()
+      playback.player.cancelPendingPrerolls()
+    }
+  }
+  private func ready(_ playback: VaultVideoPlayback, request: UUID) async throws {
+    for _ in 0..<200 {
+      try Task.checkCancellation()
+      guard revision == request, !playback.privacyPaused, playback.player.currentItem != nil,
+        !playback.failed
+      else {
+        throw VaultFailure.locked
+      }
+      if playback.player.currentItem?.status == .readyToPlay { return }
+      try await Task.sleep(for: .milliseconds(50))
+    }
+    throw VaultVideoFailure.invalid
   }
   func playBoth(firstDuration: Double, secondDuration: Double) {
     pause()
-    guard !seeking, first.player.currentItem?.status == .readyToPlay,
-      second.player.currentItem?.status == .readyToPlay
-    else { return }
-    let a = first.player.currentTime().seconds
-    let b = second.player.currentTime().seconds
-    let remaining = VaultVideoAlignment(first: a, second: b).remaining(
-      firstDuration: firstDuration, secondDuration: secondDuration)
-    guard remaining > 0 else { return }
-    for (player, start) in [(first.player, a), (second.player, b)] {
-      let boundary = CMTime(seconds: start + remaining, preferredTimescale: 600_000)
-      let token = player.addBoundaryTimeObserver(forTimes: [NSValue(time: boundary)], queue: .main)
-      { [weak self] in
-        Task { @MainActor [weak self] in self?.pause() }
+    let request = revision
+    let privacy = (first.privacyRevision, second.privacyRevision)
+    preparing = true
+    message = nil
+    operation = Task { [weak self] in
+      guard let self else { return }
+      let timeout = Task { [weak self] in
+        do { try await Task.sleep(for: .seconds(10)) } catch { return }
+        guard let self, self.revision == request, self.preparing else { return }
+        self.pause()
+        self.message = "The videos took too long to prepare. Try again."
       }
-      boundaryObservers.append((player, token))
-    }
-    let host = CMTimeAdd(
-      CMClockGetTime(CMClockGetHostTimeClock()),
-      CMTime(seconds: 0.15, preferredTimescale: 1_000_000_000))
-    for player in [first.player, second.player] {
-      player.automaticallyWaitsToMinimizeStalling = false
-      player.setRate(speed, time: player.currentTime(), atHostTime: host)
+      defer { timeout.cancel() }
+      do {
+        try await ready(first, request: request)
+        try await ready(second, request: request)
+        if atEnd, let start = alignedStart {
+          guard
+            await first.player.seek(
+              to: CMTime(seconds: start.0, preferredTimescale: 600_000), toleranceBefore: .zero,
+              toleranceAfter: .zero),
+            revision == request,
+            await second.player.seek(
+              to: CMTime(seconds: start.1, preferredTimescale: 600_000), toleranceBefore: .zero,
+              toleranceAfter: .zero)
+          else { throw VaultVideoFailure.invalid }
+        }
+        guard revision == request else { return }
+        let a = first.player.currentTime().seconds
+        let b = second.player.currentTime().seconds
+        let remaining = VaultVideoAlignment(first: a, second: b).remaining(
+          firstDuration: firstDuration, secondDuration: secondDuration)
+        guard remaining > 0.02 else { throw VaultVideoFailure.invalid }
+        alignedStart = (a, b)
+        atEnd = false
+        for (playback, start) in [(first, a), (second, b)] {
+          playback.player.currentItem?.forwardPlaybackEndTime = CMTime(
+            seconds: start + remaining, preferredTimescale: 600_000)
+          playback.player.automaticallyWaitsToMinimizeStalling = false
+        }
+        async let aReady = first.player.preroll(atRate: speed)
+        async let bReady = second.player.preroll(atRate: speed)
+        let prepared = await (aReady, bReady)
+        try Task.checkCancellation()
+        guard revision == request else { return }
+        guard prepared.0, prepared.1, !first.privacyPaused, !second.privacyPaused,
+          privacy.0 == first.privacyRevision, privacy.1 == second.privacyRevision
+        else {
+          throw VaultVideoFailure.invalid
+        }
+        let host = CMTimeAdd(
+          CMClockGetTime(CMClockGetHostTimeClock()),
+          CMTime(seconds: 0.2, preferredTimescale: 1_000_000_000))
+        first.player.setRate(
+          speed, time: CMTime(seconds: a, preferredTimescale: 600_000), atHostTime: host)
+        second.player.setRate(
+          speed, time: CMTime(seconds: b, preferredTimescale: 600_000), atHostTime: host)
+        preparing = false
+      } catch {
+        guard revision == request else { return }
+        pause()
+        message = "The videos could not start together. Try again."
+      }
     }
   }
   func seek(_ playback: VaultVideoPlayback, to seconds: Double) async {
     pause()
+    let request = revision
     seeking = true
+    atEnd = false
+    alignedStart = nil
+    for item in [first.player.currentItem, second.player.currentItem] {
+      item?.forwardPlaybackEndTime = .invalid
+    }
     _ = await playback.player.seek(
-      to: CMTime(seconds: seconds, preferredTimescale: 600_000), toleranceBefore: .zero,
-      toleranceAfter: .zero)
+      to: CMTime(seconds: seconds, preferredTimescale: 600_000),
+      toleranceBefore: .zero, toleranceAfter: .zero)
+    guard revision == request else { return }
     seeking = false
+  }
+  func play(_ playback: VaultVideoPlayback) {
+    guard !playback.privacyPaused else { return }
+    if linked {
+      pause()
+    } else {
+      revision = UUID()
+      operation?.cancel()
+      operation = nil
+      preparing = false
+      playback.player.cancelPendingPrerolls()
+    }
+    playback.player.currentItem?.forwardPlaybackEndTime = .invalid
+    playback.player.playImmediately(atRate: speed)
   }
   func close() {
     pause()
@@ -171,10 +270,10 @@ final class VaultVideoPairController: ObservableObject {
 }
 
 private struct VaultVideoPairContent: View {
+  @EnvironmentObject private var vault: PhotoVaultStore
   let firstEntry: VaultVideoEntry
   let secondEntry: VaultVideoEntry
   @StateObject private var control: VaultVideoPairController
-  @State private var tick = 0
   init(
     first: VaultVideoPlayback, second: VaultVideoPlayback, firstEntry: VaultVideoEntry,
     secondEntry: VaultVideoEntry
@@ -199,6 +298,10 @@ private struct VaultVideoPairContent: View {
         if control.first.failed || control.second.failed {
           Text("A private video could not be played.").foregroundStyle(.secondary)
         }
+        if control.preparing { ProgressView("Preparing both videos…") }
+        if let message = control.message {
+          Text(message).font(.footnote).foregroundStyle(.secondary)
+        }
         Toggle("Link Playback", isOn: $control.linked)
         Picker("Playback Speed", selection: $control.speed) {
           Text("1×").tag(Float(1))
@@ -217,13 +320,13 @@ private struct VaultVideoPairContent: View {
         }
         VaultVideoScrubber(
           title: "First Video", playback: control.first, duration: firstEntry.metadata.duration,
-          control: control, tick: tick)
+          control: control)
         VaultVideoScrubber(
           title: "Second Video", playback: control.second, duration: secondEntry.metadata.duration,
-          control: control, tick: tick)
+          control: control)
       }.padding()
     }
-    .onReceive(Timer.publish(every: 0.2, on: .main, in: .common).autoconnect()) { _ in tick &+= 1 }
+    .onChange(of: vault.gate.covered) { _, covered in if covered { control.pause() } }
     .onDisappear { control.close() }
   }
 }
@@ -233,7 +336,6 @@ private struct VaultVideoScrubber: View {
   @ObservedObject var playback: VaultVideoPlayback
   let duration: Double
   @ObservedObject var control: VaultVideoPairController
-  let tick: Int
   @State private var position = 0.0
   @State private var dragging = false
   var body: some View {
@@ -257,13 +359,13 @@ private struct VaultVideoScrubber: View {
       if !control.linked {
         HStack {
           Button("Play", systemImage: "play.fill") {
-            playback.player.playImmediately(atRate: control.speed)
+            control.play(playback)
           }
           Button("Pause", systemImage: "pause.fill") { playback.player.pause() }
         }.disabled(control.seeking)
       }
     }
-    .onChange(of: tick) { _, _ in
+    .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
       if !dragging, !control.seeking {
         let seconds = playback.player.currentTime().seconds
         if seconds.isFinite { position = min(duration, max(0, seconds)) }
