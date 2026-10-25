@@ -160,6 +160,7 @@ private struct VaultVideoImportView: View {
               if vault.busy { ProgressView("Encrypting video…") }
               if let error = vault.error {
                 Text(error).foregroundStyle(.secondary)
+                  .textSelection(.enabled)
                   .accessibilityAddTraits(.updatesFrequently)
               }
             } footer: {

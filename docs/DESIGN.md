@@ -508,3 +508,7 @@ Every trailing-swipe delete control explicitly uses native red tint rather than 
 ## Video import error ownership — 1.5.3 (109)
 
 Video-import failures appear within the existing native form, so an error cannot start a competing alert during Photos-picker dismissal. The root Physique error presenter is restricted to Physique; Movements presents its own errors only without its detail/editor sheet. This addresses a concrete duplicate-presentation path found alongside UIKit assertion crash reports. USB delivery and direct version inspection succeeded; physical retry of the original video remains pending. No change to privacy-surface identity or media processing.
+
+## Detailed import errors — 1.5.5
+
+At the user's request, the same inline message now identifies the original failed import stage and system/diagnostic code, retaining underlying system reasons instead of only the provider's wrapper. Duration validation shows the compared durations and unchanged 100 ms threshold. Text is selectable for explicit copying. The existing form, privacy surface and accessibility traits remain; no error modal or new diagnostic screen is introduced. Precise diagnostics locate a failure but do not by themselves prove its root cause.

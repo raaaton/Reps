@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.3 (109) is installed on the owner’s iPhone, including the video-import error-presentation correction and explicit red deletion-swipe backgrounds throughout. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-25-video-import-crash.md). Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.5 (114) is installed on the owner's iPhone and adds detailed video-import errors, including the original failure hidden by the Photos provider and duration-validation values. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-25-visible-video-errors.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -182,7 +182,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **409 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **411 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 
@@ -220,4 +220,4 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 
 Reps updates the same installed app. Its technical bundle/keychain identity and backup markers intentionally retain the legacy name, preserving local training, Face ID vault access, reminders and existing exports. The `sport://` workout-link alias remains supported alongside `reps://`.
 
-Reps 1.5.3 (109) addresses competing video-import error alerts. Compilation, 409 host tests and 13 metadata checks pass. USB delivery succeeded after the user reconnected the iPhone; direct inspection confirms 1.5.3 (109), unchanged installed identity, signer and entitlements. Retrying the original video remains a physical user check. See the [diagnosis and validation limits](docs/exec-plans/2026-10-25-video-import-crash.md).
+The user confirms the video-import alert crash is resolved. Original-file import still fails; 1.5.5 (114) now preserves and displays the precise original diagnostic in the import form. 411 host tests, 13 metadata checks, native builds and USB delivery pass; direct inspection confirms 114 with unchanged identity/signer/entitlements. The original file's acceptance remains unresolved. See the [current investigation](docs/exec-plans/2026-10-25-visible-video-errors.md).

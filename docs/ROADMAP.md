@@ -374,4 +374,6 @@ Strict Swift lint,13metadata/style tests, complete native app/widget build and c
 
 ## Pending local correction — 25 October
 
+1.5.5: preserve and display detailed video-import errors directly in the form, including original provider-wrapped failures and duration comparisons. 411 host tests, 13 metadata checks and native build/inspection pass; final build 114 delivery tracked in [the current plan](exec-plans/2026-10-25-visible-video-errors.md). Original-video acceptance remains unresolved; 112's precise-timing hypothesis did not resolve the user's error.
+
 1.5.3 (109): video-import error-presentation conflict corrected; native build, lint, 409 host tests and 13 metadata checks pass. USB delivery succeeded after the user's reconnect; direct postflight confirms 1.5.3 (109) with unchanged identity/signer/entitlements. Original-video reproduction and import compatibility remain unverified. [Plan](exec-plans/2026-10-25-video-import-crash.md).

@@ -1,5 +1,7 @@
 # Reps — sécurité
 
+25 October — detailed video-import errors: original failures are retained per request in a memory-only actor and displayed only in the existing covered import form while the originating session/request remains valid. Lock clears the displayed error. Duration-validation values and localized/underlying system reasons are not added to persistent storage or application logs. Existing logs remain limited to pipeline identifiers/domain/code. Text selection allows explicit user copying; no automatic clipboard write, screenshot, export or upload is added. Crypto, database schema, key/lease rules and permissions are unchanged.
+
 ## État au 13 octobre 2026 — audit global
 
 Sauvegarde privée portable et prototype abandonnés à la demande explicite de l'utilisateur. Les mentions historiques de ce chantier ne sont plus des travaux à poursuivre. CSV/JSON d'entraînement excluent toujours photos/clés ; aucune donnée personnelle exportée/importée pour l'audit.

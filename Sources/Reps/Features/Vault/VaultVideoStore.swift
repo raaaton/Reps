@@ -109,10 +109,13 @@ extension PhotoVaultStore {
     videoStaging = nil
     busy = true
     error = nil
+    let diagnostics = VaultVideoImportDiagnostics()
     defer { if allows(session), videoRequest == request { busy = false } }
     do {
       let result = try await VaultVideoImportContext.$lease.withValue(lease) {
-        try await item.loadTransferable(type: VaultTransferredVideo.self)
+        try await VaultVideoImportContext.$diagnostics.withValue(diagnostics) {
+          try await item.loadTransferable(type: VaultTransferredVideo.self)
+        }
       }
       guard let transferred = result
       else { throw VaultVideoFailure.invalid }
@@ -131,7 +134,11 @@ extension PhotoVaultStore {
         Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
           "Video preparation failed: phase \(failure.phase), media code \(failure.code)")
       }
-      if allows(session), videoRequest == request, !Task.isCancelled { self.error = message(error) }
+      await diagnostics.record(VaultVideoImportError.describe(error, phase: nil))
+      let report = await diagnostics.report
+      if allows(session), videoRequest == request, !Task.isCancelled {
+        self.error = report ?? message(error)
+      }
     }
   }
   func clearVideoImport() {
@@ -149,7 +156,7 @@ extension PhotoVaultStore {
     defer { if allows(session) { busy = false } }
     let repo: VaultRepository
     do { repo = try database() } catch {
-      self.error = message(error)
+      self.error = VaultVideoImportError.describe(error, phase: 8)
       return false
     }
     let id = UUID().uuidString
@@ -172,7 +179,7 @@ extension PhotoVaultStore {
     } catch {
       // Cleanup is allowed only for this session's incomplete import, never another session's rows.
       try? await repo.cancelVideo(id: id, lease: lease)
-      if allows(session) { self.error = message(error) }
+      if allows(session) { self.error = VaultVideoImportError.describe(error, phase: 8) }
       return false
     }
   }

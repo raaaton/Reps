@@ -65,6 +65,7 @@ final class VaultVideoStaging: Sendable {
 
 enum VaultVideoImportContext {
   @TaskLocal static var lease: VaultLease?
+  @TaskLocal static var diagnostics: VaultVideoImportDiagnostics?
 }
 
 struct VaultTransferredVideo: Transferable, Sendable {
@@ -72,6 +73,7 @@ struct VaultTransferredVideo: Transferable, Sendable {
   static var transferRepresentation: some TransferRepresentation {
     // Capture when the representation is requested, before provider callbacks hop tasks.
     let authorization = VaultVideoImportContext.lease
+    let diagnostics = VaultVideoImportContext.diagnostics
     return FileRepresentation(importedContentType: .movie, shouldAttemptToOpenInPlace: false) {
       file in
       var phase = 0
@@ -131,6 +133,7 @@ struct VaultTransferredVideo: Transferable, Sendable {
         keep = true
         return VaultTransferredVideo(staging: staging)
       } catch {
+        await diagnostics?.record(VaultVideoImportError.describe(error, phase: phase))
         // Only pipeline identifiers and numeric codes; no media or error descriptions.
         let failure = error as NSError
         Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
