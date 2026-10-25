@@ -1,5 +1,7 @@
 # Reps — design et interactions
 
+25 October — video import119 retains the visible selection of a Photos-trimmed video by restoring MP4 edit metadata. No new user step or reencoding is introduced. Detailed inline errors remain. Two synthetic cropped fixtures pass exact native frame/duration checks; the owner confirms the original video now imports successfully.
+
 ## Corrections0.11.6
 
 Menus et actions destructives inline : SF et titre rouges explicitement ; swipe blanc sur rouge natif conservé. Cancel neutre choisi par l'utilisateur : blanc sombre/noir clair. Confirmations SwiftUI.alert et callbacks inchangés ; UIColor.label appliqué au UIAlertController public par un adaptateur transparent à recherche bornée. Les autres actions non destructives de ces confirmations deviennent aussi neutres ; erreurs OK inchangées. Pas d'UIAppearance/swizzling/API privée. Rendu/fermeture au verrouillage à confirmer physiquement.

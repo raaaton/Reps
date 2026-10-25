@@ -1,4 +1,20 @@
-# Preserve edited video bounds — 1.5.6 (116)
+# Preserve edited video bounds — 1.5.7 (119)
+
+## Reproduction and replacement correction — 1.5.7 (119)
+
+The user reports exactly the same V74 error after116; session bounds alone did not fix the bug. The unavailable developer service is bypassed with a DEBUG-only fixed cache request/result harness: the user opens the synthetic screen once, then unique request tokens rerun only bundled synthetic fixtures. No private media/database is read. Normal app startup resumes after the request is consumed and the process is reopened.
+
+Native117/118 RED: source3.211654s, prepared3.550000s, excess0.338346s.118 inspects compressed firstPTS0, outputPTS−0.338346, DTS0, source edit mediaStart0.338346/targetStart0. The fragmented writer initialization has no edit list. Thus the raw compressed timestamps are copied but the visible selection is lost. Evidence: `/tmp/reps-timeline118-red-result.json` and the bounded synthetic output117.
+
+An isolated, synthetic-only standard MP4 edit-list experiment passes on iPhone118: precise candidate duration3.2116667s versus source3.2116536s, beginning/middle/end image hashes match, plus the full existing provider/encrypted playback/tamper/revocation probe passes. That initial image comparison uses default generator tolerances;119 tightens both tolerances to zero.
+
+119 restores only initialization metadata before the encrypted sink: derives visible mediaStart from the first rawPTS minus outputPTS before writer startup, writes a version1 elst, and updates movie/track durations in their correct independent timescales. Compressed fragment bytes, codec descriptions, transforms, audio omission, encrypted chunking and strict100ms validation remain unchanged. The parser checks box bounds and supported versions; input and output initialization remain capped at16MiB. No plaintext private export or reencoding. A second synthetic B-frame cropped fixture exercises decoding order and negative decode timestamps; both fixtures compare exact frames after the normal encrypted stage/validate path. The extra fixture is generated exclusively from the existing test pattern.
+
+Five host regressions cover visible offset/duration, tail-only trim, malformed containers/times, replacement of old edit lists, v1 headers and differing media/movie timescales. Complete416host tests pass9.309s;13metadata tests and full strict lint pass. Real119native build, regenerated compiler metadata, embedding and unsigned portrait-only inspection pass. Independent review finds no blocking defect; its early-size-limit recommendation is implemented, additional header/timescale tests added, native B-frame regression pending. First119installation is interrupted gracefully after usbmuxd ABRT/free-invalid-pointer; user restarts the service. Standard USB installation resumes. Native119GREEN and original-file acceptance remain pending; no publication.
+
+119 final native result is GREEN: `/tmp/reps-timeline119-native-result.json`, unique run `timeline-119-native-a`, build119. Both cropped fixtures pass the production encrypted preparation/duration/orientation/dimensions/seek guards and exact-tolerance first/middle/end image hashes. The B-frame fixture reads firstPTS0.033333, outputPTS−0.338346, DTS0; visible source edit begins0.371680. The full provider transfer, silent remux from provider and encrypted source, authenticated chunk tamper/reorder rejection, paired transport, precision seeking, slow playback and revoked-session checks also pass. User independently reports the test screen passes. The request marker is consumed; user is asked to close/reopen normally and add their original video. Actual-file acceptance remains pending.
+
+Normal USB helper exits0/install+verification100%; direct postflight verifies exactly one Reps1.5.7(119), unchanged effective identity/signer/entitlements. Both provisioning-cache hashes remain unchanged. Evidence: `/tmp/reps-timeline119-install-resume.log`, `/tmp/reps-timeline119-postflight-apps.json`, `/tmp/reps-timeline119-host-tests.log`. No push/release.
 
 ## Evidence and hypothesis
 
@@ -37,3 +53,7 @@ CoreDevice launch of 115 fails with `Failed to start service`; no native RED or 
 Full strict Swift lint, 13 metadata/style checks, whitespace checks, 411 host tests/zero failures (10.926 s), real native compilation (12.05 s), compiler metadata embedding (2.47 s) and unsigned app/widget inspection pass. The fixture packet inspection is a host timing reproduction, not an AVFoundation runtime pass. Preflight directly verifies installed 115 with the same identity/signer/entitlements as 114; provisioning-cache hashes remain unchanged. Standard USB 116 delivery in progress. Physical acceptance of the user's actual 47.53 s file remains pending. No push/release.
 
 Final delivery: normal USB helper exits 0/install+verification100%. Direct postflight verifies exactly one Reps 1.5.6 (116), unchanged effective identity/signer/entitlements and unchanged provisioning-cache hashes. Evidence: `/tmp/reps-timeline116-install.log`, `/tmp/reps-timeline116-postflight.json`, `/tmp/reps-timeline116-host-tests.log`. The user has been asked to check actual import/save, duration and visible start/end; response pending. No claim of native probe success or actual-file acceptance yet.
+
+## Acceptance
+
+The user closes/reopens Reps119 normally, adds the same original Photos-trimmed video and explicitly confirms: “ca fonctionne !”. Original-file import acceptance is therefore confirmed for1.5.7(119), alongside the independent native synthetic GREEN. No original private video was copied to the host. Dedicated local commit only; no GitHub push/release requested.

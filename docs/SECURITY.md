@@ -1,5 +1,7 @@
 # Reps — sécurité
 
+25 October — trimmed-video119: MP4 initialization metadata is restored inside the existing encrypted segment sink, before authenticated chunk sealing. Compressed media fragments, encryption, key/lease checks, permissions and strict duration/audio/transform/dimension/seek guards remain unchanged. Both original and rewritten initialization are capped at16MiB; checked box parsing supports the writer's32-bit headers and v0/v1 timing fields. DEBUG cache-triggered tests access only fixed bundled synthetic fixtures and their bounded synthetic cache outputs; no real vault media/database export. Independent code review finds no blocker; native119passes encrypted playback, tamper/reorder rejection and revocation plus both trimmed fixtures. The owner confirms the original-file import succeeds.
+
 25 October — detailed video-import errors: original failures are retained per request in a memory-only actor and displayed only in the existing covered import form while the originating session/request remains valid. Lock clears the displayed error. Duration-validation values and localized/underlying system reasons are not added to persistent storage or application logs. Existing logs remain limited to pipeline identifiers/domain/code. Text selection allows explicit user copying; no automatic clipboard write, screenshot, export or upload is added. Crypto, database schema, key/lease rules and permissions are unchanged.
 
 ## État au 13 octobre 2026 — audit global

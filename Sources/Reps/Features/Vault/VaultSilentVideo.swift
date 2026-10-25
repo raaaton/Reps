@@ -15,8 +15,11 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
   private var pending = Data()
   private var count = 0
   private var failure: (any Error)?
+  private var mediaStart = 0.0
+  private let duration: Double
   private let check: @Sendable () throws -> Void
-  init(check: @escaping @Sendable () throws -> Void) throws {
+  init(duration: Double, check: @escaping @Sendable () throws -> Void) throws {
+    self.duration = duration
     self.check = check
     url = try VaultVideoStaging.folder().appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("sealed")
@@ -27,6 +30,11 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
     else { throw VaultVideoFailure.storage }
     handle = try FileHandle(forWritingTo: url)
   }
+  func setMediaStart(_ value: Double) {
+    lock.lock()
+    defer { lock.unlock() }
+    mediaStart = value
+  }
   func assetWriter(
     _ writer: AVAssetWriter, didOutputSegmentData data: Data,
     segmentType: AVAssetSegmentType
@@ -36,6 +44,10 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
     guard failure == nil else { return }
     do {
       try check()
+      guard data.count <= 16 * 1024 * 1024 else { throw VaultVideoFailure.tooLarge }
+      let data =
+        segmentType == .initialization
+        ? try VaultVideoTimeline.restore(data, duration: duration, mediaStart: mediaStart) : data
       guard data.count <= 16 * 1024 * 1024,
         count + pending.count + data.count <= VaultVideoLimits.maximumBytes
       else {
@@ -129,7 +141,7 @@ enum VaultSilentVideo {
     output.alwaysCopiesSampleData = false
     guard reader.canAdd(output) else { throw VaultVideoFailure.invalid }
     reader.add(output)
-    let sink = try VaultVideoSegmentSink(check: check)
+    let sink = try VaultVideoSegmentSink(duration: duration, check: check)
     var keep = false
     defer { if !keep { try? FileManager.default.removeItem(at: sink.url) } }
     let writer = AVAssetWriter(contentType: .mpeg4Movie)
@@ -143,7 +155,7 @@ enum VaultSilentVideo {
     var phase = 0
     do {
       try check()
-      guard writer.startWriting(), reader.startReading() else { throw VaultVideoFailure.invalid }
+      guard reader.startReading() else { throw VaultVideoFailure.invalid }
       phase = 1
       var started = false
       var segmentBytes = 0
@@ -159,8 +171,15 @@ enum VaultSilentVideo {
           as? [[CFString: Any]]
         let sync = (attachments?.first?[kCMSampleAttachmentKey_NotSync] as? Bool) != true
         if !started {
-          // Compressed samples may start before the visible edit for decoding
-          // preroll. Preserve the asset timeline rather than exposing that preroll.
+          // Compressed buffers retain their original timestamps; the output PTS
+          // includes Photos' visible edit. Preserve that mapping in the MP4 edit
+          // list instead of exposing the preroll or modifying compressed bytes.
+          let mediaStart = CMTimeSubtract(
+            CMSampleBufferGetPresentationTimeStamp(sample),
+            CMSampleBufferGetOutputPresentationTimeStamp(sample)
+          ).seconds
+          sink.setMediaStart(mediaStart)
+          guard writer.startWriting() else { throw VaultVideoFailure.invalid }
           writer.startSession(atSourceTime: .zero)
           started = true
         } else if sync, segmentBytes > 0 {

@@ -8,6 +8,8 @@ import UniformTypeIdentifiers
 @MainActor
 enum VaultVideoProbe {
   static var step = "starting"
+  static var patchedContainer = false
+  static var timelineDiagnostics = ""
   static func run() async throws -> String {
     guard let url = Bundle.module.url(forResource: "VaultVideoProbe", withExtension: "mp4") else {
       throw VaultFailure.damaged
@@ -16,7 +18,11 @@ enum VaultVideoProbe {
       let audioURL = Bundle.module.url(forResource: "VaultVideoAudioProbe", withExtension: "mp4")
     else { throw VaultFailure.damaged }
     step = "trimmed synthetic video timeline"
-    try await verifyTrimmedTimeline()
+    if patchedContainer {
+      try await verifyPatchedTimeline()
+    } else {
+      try await verifyTrimmedTimeline()
+    }
     step = "provider transfer authorization"
     let provider = NSItemProvider()
     provider.registerFileRepresentation(
@@ -200,12 +206,37 @@ extension VaultVideoProbe {
   // Reproduce an edit that starts between keyframes, leaving compressed decoding
   // preroll outside the visible selection. This never reads a private asset.
   static func verifyTrimmedTimeline() async throws {
+    for name in ["VaultVideoTrimmedProbe", "VaultVideoTrimmedBFrameProbe"] {
+      step = "trimmed synthetic timeline: \(name)"
+      try await verifyTrimmedAsset(name)
+    }
+  }
+
+  static func verifyTrimmedAsset(_ name: String) async throws {
     guard
       let url = Bundle.module.url(
-        forResource: "VaultVideoTrimmedProbe", withExtension: "mp4")
+        forResource: name, withExtension: "mp4")
     else { throw VaultVideoFailure.invalid }
     let source = AVURLAsset(
       url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    if let track = try await source.loadTracks(withMediaType: .video).first {
+      let inspection = try AVAssetReader(asset: source)
+      let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+      inspection.add(output)
+      guard inspection.startReading() else { throw VaultVideoFailure.invalid }
+      while let sample = output.copyNextSampleBuffer() {
+        if CMSampleBufferGetNumSamples(sample) == 0 { continue }
+        timelineDiagnostics =
+          "first PTS=\(CMSampleBufferGetPresentationTimeStamp(sample).seconds), output PTS=\(CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds), DTS=\(CMSampleBufferGetDecodeTimeStamp(sample).seconds)"
+        break
+      }
+      inspection.cancelReading()
+      for segment in try await track.load(.segments) {
+        let mapping = segment.timeMapping
+        timelineDiagnostics +=
+          " | edit source=\(mapping.source.start.seconds)/\(mapping.source.duration.seconds), target=\(mapping.target.start.seconds)/\(mapping.target.duration.seconds)"
+      }
+    }
     let staging = try await VaultSilentVideo.stage(
       asset: source, date: Date(), thumbnail: Data())
     let lease = VaultLease(keyID: staging.keyID)
@@ -213,44 +244,139 @@ extension VaultVideoProbe {
       lease.invalidate()
       try? staging.remove()
     }
+    // Fixed bundled synthetic input only. Export its small prepared output for
+    // container/timestamp inspection without ever opening the private vault.
+    guard staging.byteCount < 4 * 1024 * 1024 else { throw VaultVideoFailure.invalid }
+    let reader = VaultVideoReader(staging: staging, lease: lease)
+    var bytes = Data()
+    for index
+      in 0..<((staging.byteCount + VaultVideoLimits.chunkBytes - 1) / VaultVideoLimits.chunkBytes)
+    {
+      bytes.append(try await reader.read(index: index))
+    }
+    let output = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("RepsSyntheticTrimmedOutput.mp4")
+    try bytes.write(to: output, options: .atomic)
+    await reader.close()
     try await VaultSilentVideo.validate(staging, source: source, lease: lease)
+    try await verifyFrames(sourceURL: url, candidateURL: output)
+  }
+
+  static func verifyPatchedTimeline() async throws {
+    guard
+      let sourceURL = Bundle.module.url(forResource: "VaultVideoTrimmedProbe", withExtension: "mp4")
+    else { throw VaultVideoFailure.invalid }
+    let candidateURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("RepsSyntheticPatchedTrim.mp4")
+    let source = AVURLAsset(
+      url: sourceURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let candidate = AVURLAsset(
+      url: candidateURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let expected = try await source.load(.duration).seconds
+    let actual = try await candidate.load(.duration).seconds
+    timelineDiagnostics = "patched source=\(expected), candidate=\(actual)"
+    guard abs(actual - expected) < 0.02 else { throw VaultVideoFailure.invalid }
+    try await verifyFrames(sourceURL: sourceURL, candidateURL: candidateURL)
+  }
+
+  static func verifyFrames(sourceURL: URL, candidateURL: URL) async throws {
+    let source = AVURLAsset(
+      url: sourceURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let candidate = AVURLAsset(
+      url: candidateURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let expected = try await source.load(.duration).seconds
+    let originalGenerator = AVAssetImageGenerator(asset: source)
+    let candidateGenerator = AVAssetImageGenerator(asset: candidate)
+    originalGenerator.appliesPreferredTrackTransform = true
+    candidateGenerator.appliesPreferredTrackTransform = true
+    originalGenerator.requestedTimeToleranceBefore = .zero
+    originalGenerator.requestedTimeToleranceAfter = .zero
+    candidateGenerator.requestedTimeToleranceBefore = .zero
+    candidateGenerator.requestedTimeToleranceAfter = .zero
+    for time in [0.0, expected / 2, max(0, expected - 0.05)] {
+      step = "patched synthetic frame at \(time)"
+      let point = CMTime(seconds: time, preferredTimescale: 60_000)
+      let first = try await originalGenerator.image(at: point).image
+      let second = try await candidateGenerator.image(at: point).image
+      guard let firstBytes = first.dataProvider?.data as Data?,
+        let secondBytes = second.dataProvider?.data as Data?,
+        first.width == second.width, first.height == second.height,
+        SHA256.hash(data: firstBytes) == SHA256.hash(data: secondBytes)
+      else { throw VaultVideoFailure.invalid }
+    }
   }
 }
 
 #if DEBUG
   import SwiftUI
 
+  enum VaultVideoProbeLaunch {
+    static let requestURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("RepsSyntheticVideoProbeRequest.txt")
+    static func readToken() -> String? {
+      guard let token = try? String(contentsOf: requestURL, encoding: .utf8),
+        token.count <= 100, token.hasPrefix("timeline-")
+      else { return nil }
+      return token
+    }
+    static let requestedToken: String? = {
+      if let token = readToken() { return token }
+      let args = ProcessInfo.processInfo.arguments
+      guard args.contains("--vault-video-probe") else { return nil }
+      if let index = args.firstIndex(of: "--probe-token"), args.indices.contains(index + 1) {
+        return args[index + 1]
+      }
+      return "timeline-cli-missing"
+    }()
+    static var enabled: Bool {
+      requestedToken != nil || ProcessInfo.processInfo.arguments.contains("--vault-video-probe")
+    }
+  }
+
   struct VaultVideoProbeScreen: View {
     @State private var result = "Testing synthetic encrypted video…"
     var body: some View {
       Text(result).padding().task {
-        do { result = try await VaultVideoProbe.run() } catch let diagnostic
-          as VaultSilentVideoDiagnostic
-        {
-          result =
-            "FAIL: synthetic \(VaultVideoProbe.step), phase \(diagnostic.phase), code \(diagnostic.code)."
-        } catch {
-          result = "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
+        var previous: String?
+        while !Task.isCancelled {
+          if let token = VaultVideoProbeLaunch.readToken()
+            ?? (previous == nil ? VaultVideoProbeLaunch.requestedToken : nil), token != previous
+          {
+            previous = token
+            await execute(token: token)
+          }
+          do { try await Task.sleep(for: .seconds(1)) } catch { break }
         }
-        // Only this fixed synthetic test report is emitted; never private data or native error descriptions.
-        let output = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-          .appendingPathComponent("RepsSyntheticVideoProbeResult.txt")
-        let arguments = ProcessInfo.processInfo.arguments
-        let tokenIndex = arguments.firstIndex(of: "--probe-token")
-        let token =
-          tokenIndex.flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
-          ?? "missing"
-        let report = [
-          "result": result, "run": token,
-          "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
-        ]
-        try? FileManager.default.createDirectory(
-          at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if let data = try? JSONSerialization.data(withJSONObject: report) {
-          try? data.write(to: output, options: .atomic)
-        }
-        print("REPS_VIDEO_PROBE \(result)")
       }
+    }
+    private func execute(token: String) async {
+      VaultVideoProbe.patchedContainer = token.contains("-patched-")
+      VaultVideoProbe.timelineDiagnostics = ""
+      do { result = try await VaultVideoProbe.run() } catch let diagnostic
+        as VaultSilentVideoDiagnostic
+      {
+        result =
+          "FAIL: synthetic \(VaultVideoProbe.step). \(diagnostic.localizedDescription)"
+      } catch {
+        result = "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
+      }
+      // Only this fixed synthetic test report is emitted; never private data or native error descriptions.
+      let output = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("RepsSyntheticVideoProbeResult.txt")
+      let report = [
+        "result": result, "run": token,
+        "timeline": VaultVideoProbe.timelineDiagnostics,
+        "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
+      ]
+      try? FileManager.default.createDirectory(
+        at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
+      if let data = try? JSONSerialization.data(withJSONObject: report) {
+        try? data.write(to: output, options: .atomic)
+      }
+      if VaultVideoProbeLaunch.requestedToken != nil {
+        try? FileManager.default.removeItem(at: VaultVideoProbeLaunch.requestURL)
+      }
+      print("REPS_VIDEO_PROBE \(result)")
     }
   }
 #endif

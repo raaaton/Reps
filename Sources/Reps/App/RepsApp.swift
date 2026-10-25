@@ -9,6 +9,13 @@ struct RepsApp: App {
   @StateObject private var vault = PhotoVaultStore()
   @Environment(\.scenePhase) private var scenePhase
   @State private var clockRevision = 0
+  private var runsVideoProbe: Bool {
+    #if DEBUG
+      VaultVideoProbeLaunch.enabled
+    #else
+      false
+    #endif
+  }
 
   private struct RestWake: Hashable {
     let id: String
@@ -30,7 +37,7 @@ struct RepsApp: App {
   @ViewBuilder
   private var rootView: some View {
     #if DEBUG
-      if ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+      if runsVideoProbe {
         VaultVideoProbeScreen()
       } else {
         RepsTabView()
@@ -60,7 +67,7 @@ struct RepsApp: App {
           Task { await store.refreshWorkouts() }
         }
         .task {
-          if !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+          if !runsVideoProbe {
             await store.reload()
           }
         }
@@ -88,14 +95,14 @@ struct RepsApp: App {
           case .background: vault.background()
           @unknown default: vault.background()
           }
-          if phase == .active, !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") {
+          if phase == .active, !runsVideoProbe {
             Task { await store.reload() }
           }
         }
         .onReceive(
           NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)
         ) { _ in
-          guard !ProcessInfo.processInfo.arguments.contains("--vault-video-probe") else { return }
+          guard !runsVideoProbe else { return }
           clockRevision &+= 1
           Task { await store.reload() }
         }
