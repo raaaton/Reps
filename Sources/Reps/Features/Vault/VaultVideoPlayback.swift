@@ -16,7 +16,9 @@ final class VaultVideoPlayback: ObservableObject, Identifiable {
   private(set) var privacyRevision = UUID()
   init(reader: VaultVideoReader, byteCount: Int, type: String) {
     loader = VaultVideoResourceLoader(reader: reader, total: byteCount, type: type)
-    asset = AVURLAsset(url: URL(string: "reps-vault-video://local/\(id.uuidString)")!)
+    asset = AVURLAsset(
+      url: URL(string: "reps-vault-video://local/\(id.uuidString)")!,
+      options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
     asset.resourceLoader.setDelegate(loader, queue: .main)
     player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
     player.isMuted = true

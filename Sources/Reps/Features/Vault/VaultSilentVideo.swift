@@ -191,25 +191,42 @@ extension VaultSilentVideo {
       reader: reader, byteCount: staging.byteCount, type: staging.type)
     defer { playback.stop() }
     try lease.check()
-    guard try await playback.asset.loadTracks(withMediaType: .audio).isEmpty,
-      let video = try await playback.asset.loadTracks(withMediaType: .video).first,
-      let original = try await source.loadTracks(withMediaType: .video).first,
-      abs((try await playback.asset.load(.duration)).seconds - staging.duration) < 0.1,
-      try await video.load(.preferredTransform) == original.load(.preferredTransform),
-      try await video.load(.naturalSize) == original.load(.naturalSize)
-    else { throw VaultVideoFailure.invalid }
+    guard try await playback.asset.loadTracks(withMediaType: .audio).isEmpty else {
+      throw VaultSilentVideoDiagnostic(phase: 71, code: 0)
+    }
+    guard let video = try await playback.asset.loadTracks(withMediaType: .video).first else {
+      throw VaultSilentVideoDiagnostic(phase: 72, code: 0)
+    }
+    guard let original = try await source.loadTracks(withMediaType: .video).first else {
+      throw VaultSilentVideoDiagnostic(phase: 73, code: 0)
+    }
+    let outputDuration = try await playback.asset.load(.duration).seconds
+    guard abs(outputDuration - staging.duration) < 0.1 else {
+      let videoDuration = try await original.load(.timeRange).duration.seconds
+      throw VaultSilentVideoDiagnostic(
+        phase: 74, code: abs(outputDuration - videoDuration) < 0.1 ? 1 : 0)
+    }
+    guard try await video.load(.preferredTransform) == original.load(.preferredTransform) else {
+      throw VaultSilentVideoDiagnostic(phase: 75, code: 0)
+    }
+    guard try await video.load(.naturalSize) == original.load(.naturalSize) else {
+      throw VaultSilentVideoDiagnostic(phase: 76, code: 0)
+    }
     for _ in 0..<200 {
       try lease.check()
       try Task.checkCancellation()
       if playback.player.currentItem?.status == .readyToPlay { break }
-      guard !playback.failed else { throw VaultVideoFailure.invalid }
+      guard !playback.failed else { throw VaultSilentVideoDiagnostic(phase: 77, code: 0) }
       try await Task.sleep(for: .milliseconds(50))
     }
-    guard playback.player.currentItem?.status == .readyToPlay,
+    guard playback.player.currentItem?.status == .readyToPlay else {
+      throw VaultSilentVideoDiagnostic(phase: 78, code: 0)
+    }
+    guard
       await playback.player.seek(
         to: CMTime(seconds: staging.duration / 2, preferredTimescale: 600_000),
         toleranceBefore: .zero, toleranceAfter: .zero)
-    else { throw VaultVideoFailure.invalid }
+    else { throw VaultSilentVideoDiagnostic(phase: 79, code: 0) }
     try lease.check()
     try Task.checkCancellation()
   }

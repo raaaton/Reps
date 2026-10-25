@@ -1,5 +1,7 @@
 # Build and distribute Reps on Linux
 
+25 October follow-up: diagnostic builds 110/111 localize the original-file failure to post-remux duration validation (guard 74). Candidate 1.5.4 (112) requests precise source/playback timing without relaxing validation. Changed-file strict lint, 13 metadata tests, native build/metadata/inspection and normal USB delivery pass; direct postflight confirms 112 and unchanged identity/signer/entitlements and provisioning-cache hashes. Synthetic probe launch is blocked by an unavailable CoreDevice service (no mounted developer image); original-file acceptance remains pending. [Investigation](exec-plans/2026-10-25-video-duration-validation.md).
+
 25 October: 1.5.3 (109) video-import alert correction passes strict lint, 409 host tests, 13 metadata checks, native builds, regenerated App Intents metadata and unsigned bundle inspection. First USB attempt stopped at Apple provisioning `409 ENTITY_ERROR`; after the user reconnected the iPhone, the normal helper succeeded with install/verification 100% and exit 0. Direct postflight confirms 1.5.3 (109), unchanged effective identity/signer/entitlements and byte-identical provisioning cache. No certificate/profile workaround, push or release. [Evidence and remaining work](exec-plans/2026-10-25-video-import-crash.md).
 
 Reps uses Swift Package Manager and xtool. The main product is `Reps`, its embedded extension is `RepsRestWidget`, and `xtool.yml` describes both bundles. There is no primary Xcode project.

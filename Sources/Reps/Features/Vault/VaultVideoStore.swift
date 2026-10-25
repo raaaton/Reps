@@ -123,6 +123,10 @@ extension PhotoVaultStore {
       videoStaging = transferred.staging
     } catch {
       // Record only numeric pipeline diagnostics, never media URLs or metadata.
+      let providerFailure = error as NSError
+      Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
+        "Video provider failed: domain \(providerFailure.domain, privacy: .public), code \(providerFailure.code)"
+      )
       if let failure = error as? VaultSilentVideoDiagnostic {
         Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
           "Video preparation failed: phase \(failure.phase), media code \(failure.code)")

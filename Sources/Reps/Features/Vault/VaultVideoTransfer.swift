@@ -3,6 +3,7 @@ import CoreTransferable
 import CryptoKit
 import Foundation
 import ImageIO
+import OSLog
 import RepsCore
 import UniformTypeIdentifiers
 
@@ -73,52 +74,74 @@ struct VaultTransferredVideo: Transferable, Sendable {
     let authorization = VaultVideoImportContext.lease
     return FileRepresentation(importedContentType: .movie, shouldAttemptToOpenInPlace: false) {
       file in
-      guard let lease = authorization else { throw VaultFailure.locked }
-      try lease.check()
-      let values = try file.file.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
-      guard values.isRegularFile == true, let size = values.fileSize,
-        (1...VaultVideoLimits.maximumBytes).contains(size)
-      else { throw VaultVideoFailure.tooLarge }
-      let ext = file.file.pathExtension.lowercased()
-      guard ["mov", "mp4", "m4v"].contains(ext) else { throw VaultVideoFailure.invalid }
-      let asset = AVURLAsset(url: file.file)
-      let duration = try await asset.load(.duration).seconds
-      guard duration.isFinite, duration > 0, duration <= VaultVideoLimits.maximumSeconds else {
-        throw VaultVideoFailure.tooLarge
+      var phase = 0
+      do {
+        guard let lease = authorization else { throw VaultFailure.locked }
+        try lease.check()
+        phase = 1
+        let values = try file.file.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+        guard values.isRegularFile == true, let size = values.fileSize,
+          (1...VaultVideoLimits.maximumBytes).contains(size)
+        else { throw VaultVideoFailure.tooLarge }
+        let ext = file.file.pathExtension.lowercased()
+        guard ["mov", "mp4", "m4v"].contains(ext) else { throw VaultVideoFailure.invalid }
+        let asset = AVURLAsset(
+          url: file.file, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        phase = 2
+        let duration = try await asset.load(.duration).seconds
+        guard duration.isFinite, duration > 0, duration <= VaultVideoLimits.maximumSeconds else {
+          throw VaultVideoFailure.tooLarge
+        }
+        phase = 3
+        guard try await asset.load(.isPlayable),
+          !(try await asset.loadTracks(withMediaType: .video)).isEmpty
+        else { throw VaultVideoFailure.invalid }
+        phase = 4
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: 500, height: 500)
+        let generated = try await generator.image(at: .zero)
+        let thumbnail = NSMutableData()
+        guard
+          let destination = CGImageDestinationCreateWithData(
+            thumbnail, UTType.jpeg.identifier as CFString, 1, nil)
+        else { throw VaultVideoFailure.invalid }
+        CGImageDestinationAddImage(
+          destination, generated.image,
+          [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
+        guard CGImageDestinationFinalize(destination), thumbnail.length <= 1024 * 1024 else {
+          throw VaultVideoFailure.invalid
+        }
+        phase = 5
+        var date = Date()
+        if let creation = try? await asset.load(.creationDate),
+          let string = try? await creation.load(.stringValue),
+          let parsed = ISO8601DateFormatter().date(from: string)
+        {
+          date = min(parsed, Date())
+        }
+        phase = 6
+        let staging = try await VaultSilentVideo.stage(
+          asset: asset, date: date, thumbnail: thumbnail as Data, check: { try lease.check() })
+        var keep = false
+        defer { if !keep { try? staging.remove() } }
+        phase = 7
+        try await VaultSilentVideo.validate(staging, source: asset, lease: lease)
+        try Task.checkCancellation()
+        keep = true
+        return VaultTransferredVideo(staging: staging)
+      } catch {
+        // Only pipeline identifiers and numeric codes; no media or error descriptions.
+        let failure = error as NSError
+        Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
+          "Video transfer failed: phase \(phase), domain \(failure.domain, privacy: .public), code \(failure.code)"
+        )
+        if let diagnostic = error as? VaultSilentVideoDiagnostic {
+          Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
+            "Video preparation failed: phase \(diagnostic.phase), media code \(diagnostic.code)")
+        }
+        throw error
       }
-      guard try await asset.load(.isPlayable),
-        !(try await asset.loadTracks(withMediaType: .video)).isEmpty
-      else { throw VaultVideoFailure.invalid }
-      let generator = AVAssetImageGenerator(asset: asset)
-      generator.appliesPreferredTrackTransform = true
-      generator.maximumSize = CGSize(width: 500, height: 500)
-      let generated = try await generator.image(at: .zero)
-      let thumbnail = NSMutableData()
-      guard
-        let destination = CGImageDestinationCreateWithData(
-          thumbnail, UTType.jpeg.identifier as CFString, 1, nil)
-      else { throw VaultVideoFailure.invalid }
-      CGImageDestinationAddImage(
-        destination, generated.image,
-        [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
-      guard CGImageDestinationFinalize(destination), thumbnail.length <= 1024 * 1024 else {
-        throw VaultVideoFailure.invalid
-      }
-      var date = Date()
-      if let creation = try? await asset.load(.creationDate),
-        let string = try? await creation.load(.stringValue),
-        let parsed = ISO8601DateFormatter().date(from: string)
-      {
-        date = min(parsed, Date())
-      }
-      let staging = try await VaultSilentVideo.stage(
-        asset: asset, date: date, thumbnail: thumbnail as Data, check: { try lease.check() })
-      var keep = false
-      defer { if !keep { try? staging.remove() } }
-      try await VaultSilentVideo.validate(staging, source: asset, lease: lease)
-      try Task.checkCancellation()
-      keep = true
-      return VaultTransferredVideo(staging: staging)
     }
   }
 }
