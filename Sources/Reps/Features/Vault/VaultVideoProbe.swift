@@ -15,6 +15,8 @@ enum VaultVideoProbe {
     guard
       let audioURL = Bundle.module.url(forResource: "VaultVideoAudioProbe", withExtension: "mp4")
     else { throw VaultFailure.damaged }
+    step = "trimmed synthetic video timeline"
+    try await verifyTrimmedTimeline()
     step = "provider transfer authorization"
     let provider = NSItemProvider()
     provider.registerFileRepresentation(
@@ -191,6 +193,27 @@ enum VaultVideoProbe {
     } catch VaultFailure.locked {}
     return
       "PASS: actual aligned pair transport, validated silent passthrough from provider and encrypted asset, native AES-GCM, altered/reordered chunks rejected, two encrypted players, precise seek, slow playback and revoked session."
+  }
+}
+
+extension VaultVideoProbe {
+  // Reproduce an edit that starts between keyframes, leaving compressed decoding
+  // preroll outside the visible selection. This never reads a private asset.
+  static func verifyTrimmedTimeline() async throws {
+    guard
+      let url = Bundle.module.url(
+        forResource: "VaultVideoTrimmedProbe", withExtension: "mp4")
+    else { throw VaultVideoFailure.invalid }
+    let source = AVURLAsset(
+      url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let staging = try await VaultSilentVideo.stage(
+      asset: source, date: Date(), thumbnail: Data())
+    let lease = VaultLease(keyID: staging.keyID)
+    defer {
+      lease.invalidate()
+      try? staging.remove()
+    }
+    try await VaultSilentVideo.validate(staging, source: source, lease: lease)
   }
 }
 

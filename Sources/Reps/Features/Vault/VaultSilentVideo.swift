@@ -114,7 +114,8 @@ enum VaultSilentVideo {
     asset: AVAsset, date: Date, thumbnail: Data,
     check: @escaping @Sendable () throws -> Void = {}
   ) async throws -> VaultVideoStaging {
-    let duration = try await asset.load(.duration).seconds
+    let sourceDuration = try await asset.load(.duration)
+    let duration = sourceDuration.seconds
     guard duration.isFinite, duration > 0, duration <= VaultVideoLimits.maximumSeconds,
       let track = try await asset.loadTracks(withMediaType: .video).first
     else {
@@ -158,7 +159,9 @@ enum VaultSilentVideo {
           as? [[CFString: Any]]
         let sync = (attachments?.first?[kCMSampleAttachmentKey_NotSync] as? Bool) != true
         if !started {
-          writer.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(sample))
+          // Compressed samples may start before the visible edit for decoding
+          // preroll. Preserve the asset timeline rather than exposing that preroll.
+          writer.startSession(atSourceTime: .zero)
           started = true
         } else if sync, segmentBytes > 0 {
           writer.flushSegment()
@@ -180,6 +183,9 @@ enum VaultSilentVideo {
       }
       phase = 3
       guard started, reader.status == .completed else { throw VaultVideoFailure.invalid }
+      // Readers may also emit dependency samples beyond a cropped asset's end.
+      // Keep them decodable without extending the visible session to their end.
+      writer.endSession(atSourceTime: sourceDuration)
       input.markAsFinished()
       phase = 4
       await writer.finishWriting()

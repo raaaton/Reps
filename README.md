@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.5 (114) is installed on the owner's iPhone and adds detailed video-import errors, including the original failure hidden by the Photos provider and duration-validation values. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-25-visible-video-errors.md). Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.6 (116) is installed on the owner's iPhone and corrects the remux session bounds of Photos-trimmed videos, retaining detailed import errors and strict validation. Actual-file acceptance remains pending. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-25-trimmed-video-timeline.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 

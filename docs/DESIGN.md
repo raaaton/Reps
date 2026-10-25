@@ -512,3 +512,7 @@ Video-import failures appear within the existing native form, so an error cannot
 ## Detailed import errors — 1.5.5
 
 At the user's request, the same inline message now identifies the original failed import stage and system/diagnostic code, retaining underlying system reasons instead of only the provider's wrapper. Duration validation shows the compared durations and unchanged 100 ms threshold. Text is selectable for explicit copying. The existing form, privacy surface and accessibility traits remain; no error modal or new diagnostic screen is introduced. Precise diagnostics locate a failure but do not by themselves prove its root cause.
+
+## Edited video timeline — 1.5.6
+
+Imports retain the visible asset timeline from zero through the exact source duration. Compressed decoding dependencies outside a Photos edit stay available for decoding without becoming part of the intended playback interval. The strict duration and other validation checks remain; no import UI changes. Physical validation of the user's trimmed video remains pending.
