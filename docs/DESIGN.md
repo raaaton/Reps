@@ -1,5 +1,7 @@
 # Reps — design et interactions
 
+Final version consolidation: the complete accepted video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
+
 25 October — video import119 retains the visible selection of a Photos-trimmed video by restoring MP4 edit metadata. No new user step or reencoding is introduced. Detailed inline errors remain. Two synthetic cropped fixtures pass exact native frame/duration checks; the owner confirms the original video now imports successfully.
 
 ## Corrections0.11.6

@@ -57,3 +57,9 @@ Final delivery: normal USB helper exits 0/install+verification100%. Direct postf
 ## Acceptance
 
 The user closes/reopens Reps119 normally, adds the same original Photos-trimmed video and explicitly confirms: “ca fonctionne !”. Original-file import acceptance is therefore confirmed for1.5.7(119), alongside the independent native synthetic GREEN. No original private video was copied to the host. Dedicated local commit only; no GitHub push/release requested.
+
+## Final version consolidation and GitHub delivery
+
+The user requests version1.5.3 for this single video-import correction, retaining the complete accepted implementation. Previous1.5.4–1.5.7 labels describe local diagnostic iterations, not separate public releases. App/widget/inspection now target1.5.3(120); the independent build number advances for delivery. Prepare verified unsigned Release IPA, install using the existing identity, publish the complete source to main without rewriting history and publish v1.5.3 with only the IPA asset. Publication and byte-for-byte downloaded-asset verification pending.
+
+Release120verification: release-local.sh exits0;416host tests/zero failures8.727s,13metadata checks, strictlint, optimized native build91.43s, compiler metadata/embedding and unsigned portrait-only IPA inspection pass. Public artifact `dist/Reps-1.5.3.ipa`, SHA256 `5b8a075f2314da3647b89d14c542ed33b187997e53080a7cf1019bf2470eb0ad`. Standard xtool release USB delivery exits0/install+verification100%; direct postflight confirms exactly one1.5.3(120), same identity/signer/entitlements. App functionality is unchanged from the user-accepted119; only version/build metadata changes.

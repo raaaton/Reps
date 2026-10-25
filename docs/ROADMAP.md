@@ -1,5 +1,7 @@
 # Reps — jalons natifs
 
+Final version consolidation: the complete accepted video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
+
 Référence : [plan global](../PLAN-REPS-NATIF.md). Chaque jalon exige compilation xtool, contrôles applicables, installation USB autorisée et **confirmation utilisateur sur iPhone** avant le suivant.
 
 | Jalon | Périmètre | État |
