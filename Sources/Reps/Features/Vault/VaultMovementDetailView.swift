@@ -158,6 +158,10 @@ private struct VaultVideoImportView: View {
                   systemImage: "video.badge.plus")
               }
               if vault.busy { ProgressView("Encrypting video…") }
+              if let error = vault.error {
+                Text(error).foregroundStyle(.secondary)
+                  .accessibilityAddTraits(.updatesFrequently)
+              }
             } footer: {
               Text(
                 "Reps keeps an encrypted copy. The original stays in Photos. Limit: 5 minutes and 500 MiB."
@@ -195,7 +199,6 @@ private struct VaultVideoImportView: View {
           dismiss()
         }
       }
-      .vaultVideoErrorAlert()
     }.interactiveDismissDisabled(vault.busy)
   }
 }

@@ -49,8 +49,8 @@ def main():
         "CFBundleDisplayName": "Reps",
         "CFBundleExecutable": "Reps",
         "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": "1.5.2",
-        "CFBundleVersion": "108",
+        "CFBundleShortVersionString": "1.5.3",
+        "CFBundleVersion": "109",
         "MinimumOSVersion": "26.0",
         "UIDeviceFamily": [1],
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
@@ -70,7 +70,7 @@ def main():
     require(list((bundle / "PlugIns").iterdir()) == [extension], "Unexpected embedded extension")
     child = plistlib.loads((extension / "Info.plist").read_bytes())
     for key, value in {"CFBundleIdentifier": "com.raaaton.sport.rest-widget",
-                       "CFBundleShortVersionString": "1.5.2", "CFBundleVersion": "108",
+                       "CFBundleShortVersionString": "1.5.3", "CFBundleVersion": "109",
                        "MinimumOSVersion": "26.0", "CFBundleExecutable": "RepsRestWidget",
                        "CFBundlePackageType": "XPC!"}.items():
         require(child.get(key) == value, f"Unexpected extension {key}")

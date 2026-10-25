@@ -504,3 +504,7 @@ The custom bag component is added once and remains excluded from object counts. 
 ## Red deletion swipes — 1.5.2 (108)
 
 Every trailing-swipe delete control explicitly uses native red tint rather than inherited app accent, including workout history and implicit onDelete editors. Retain destructive roles, accessible labels, original deletion/confirmation rules and native Edit/reorder behavior. Skills use their existing red helper with white filled labels.
+
+## Video import error ownership — 1.5.3 (109), delivery pending
+
+Video-import failures appear within the existing native form, so an error cannot start a competing alert during Photos-picker dismissal. The root Physique error presenter is restricted to Physique; Movements presents its own errors only without its detail/editor sheet. This addresses a concrete duplicate-presentation path found alongside UIKit assertion crash reports. Physical confirmation awaits USB delivery; no change to privacy-surface identity or media processing.

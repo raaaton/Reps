@@ -219,3 +219,5 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 ### Existing installations and backups
 
 Reps updates the same installed app. Its technical bundle/keychain identity and backup markers intentionally retain the legacy name, preserving local training, Face ID vault access, reminders and existing exports. The `sport://` workout-link alias remains supported alongside `reps://`.
+
+Local 1.5.3 (109) addresses competing video-import error alerts. Compilation, 409 host tests and 13 metadata checks pass; USB delivery is blocked by Apple's device-registration provisioning error. The iPhone remains on 1.5.2 (108). See the [diagnosis and validation limits](docs/exec-plans/2026-10-25-video-import-crash.md).

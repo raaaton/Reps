@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import OSLog
 import PhotosUI
 import RepsCore
 import SwiftUI
@@ -121,6 +122,11 @@ extension PhotoVaultStore {
       }
       videoStaging = transferred.staging
     } catch {
+      // Record only numeric pipeline diagnostics, never media URLs or metadata.
+      if let failure = error as? VaultSilentVideoDiagnostic {
+        Logger(subsystem: "com.raaaton.sport", category: "VideoImport").error(
+          "Video preparation failed: phase \(failure.phase), media code \(failure.code)")
+      }
       if allows(session), videoRequest == request, !Task.isCancelled { self.error = message(error) }
     }
   }

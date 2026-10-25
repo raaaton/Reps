@@ -9,9 +9,9 @@
     <key>CFBundleLocalizations</key>
     <array><string>en</string></array>
     <key>CFBundleShortVersionString</key>
-    <string>1.5.2</string>
+    <string>1.5.3</string>
     <key>CFBundleVersion</key>
-    <string>108</string>
+    <string>109</string>
     <key>CFBundleIcons</key>
     <dict><key>CFBundlePrimaryIcon</key><dict>
         <key>CFBundleIconFiles</key><array><string>RepsIcon60x60</string></array>

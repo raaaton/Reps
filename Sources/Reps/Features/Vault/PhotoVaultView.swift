@@ -165,7 +165,10 @@ struct PhotoVaultView: View {
       .alert(
         "Unable to Complete Operation",
         isPresented: Binding(
-          get: { vault.error != nil && selected == nil && importing == nil && comparing == nil },
+          get: {
+            vault.error != nil && section == .physique && selected == nil
+              && importing == nil && comparing == nil
+          },
           set: { if !$0 { vault.error = nil } })
       ) {
         Button("OK", role: .cancel) { vault.error = nil }

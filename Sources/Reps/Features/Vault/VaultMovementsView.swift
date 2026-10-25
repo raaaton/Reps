@@ -71,6 +71,7 @@ struct VaultMovementsView: View {
     .sheet(item: $editing) { route in
       VaultMovementEditor(original: route.original, session: route.session)
     }
+    .vaultVideoErrorAlert(enabled: selected == nil && editing == nil)
     .repsConfirmation(
       "Delete This Movement?",
       isPresented: Binding(
@@ -196,15 +197,18 @@ private struct VaultMovementEditor: View {
 }
 
 extension View {
-  func vaultVideoErrorAlert() -> some View { modifier(VaultVideoErrorAlert()) }
+  func vaultVideoErrorAlert(enabled: Bool = true) -> some View {
+    modifier(VaultVideoErrorAlert(enabled: enabled))
+  }
 }
 private struct VaultVideoErrorAlert: ViewModifier {
   @EnvironmentObject private var vault: PhotoVaultStore
+  let enabled: Bool
   func body(content: Content) -> some View {
     content.alert(
       "Unable to Complete Operation",
       isPresented: Binding(
-        get: { vault.error != nil && vault.gate.phase == .unlocked },
+        get: { enabled && vault.error != nil && vault.gate.phase == .unlocked },
         set: { if !$0 { vault.error = nil } })
     ) {
       Button("OK", role: .cancel) { vault.error = nil }
