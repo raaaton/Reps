@@ -15,6 +15,7 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
   private var pending = Data()
   private var count = 0
   private var failure: (any Error)?
+  private var movie = VaultVideoMovie()
   private var mediaStart = 0.0
   private let duration: Double
   private let check: @Sendable () throws -> Void
@@ -40,30 +41,36 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
     segmentType: AVAssetSegmentType
   ) {
     lock.lock()
-    defer { lock.unlock() }
-    guard failure == nil else { return }
+    guard failure == nil else {
+      lock.unlock()
+      return
+    }
     do {
       try check()
       guard data.count <= 16 * 1024 * 1024 else { throw VaultVideoFailure.tooLarge }
       let data =
         segmentType == .initialization
         ? try VaultVideoTimeline.restore(data, duration: duration, mediaStart: mediaStart) : data
-      guard data.count <= 16 * 1024 * 1024,
-        count + pending.count + data.count <= VaultVideoLimits.maximumBytes
-      else {
-        throw VaultVideoFailure.tooLarge
-      }
-      var offset = 0
-      while offset < data.count {
-        try check()
-        let length = min(VaultVideoLimits.chunkBytes - pending.count, data.count - offset)
-        pending.append(data.subdata(in: offset..<(offset + length)))
-        offset += length
-        if pending.count == VaultVideoLimits.chunkBytes { try flush() }
-      }
+      try append(try movie.append(data, initialization: segmentType == .initialization))
     } catch {
       failure = error
-      writer.cancelWriting()
+    }
+    let cancel = failure != nil
+    lock.unlock()
+    if cancel { writer.cancelWriting() }
+  }
+  // Caller holds the same lock for writer callbacks and the completed index.
+  private func append(_ data: Data) throws {
+    guard data.count <= 16 * 1024 * 1024,
+      count + pending.count + data.count <= VaultVideoLimits.maximumBytes
+    else { throw VaultVideoFailure.tooLarge }
+    var offset = 0
+    while offset < data.count {
+      try check()
+      let length = min(VaultVideoLimits.chunkBytes - pending.count, data.count - offset)
+      pending.append(data.subdata(in: offset..<(offset + length)))
+      offset += length
+      if pending.count == VaultVideoLimits.chunkBytes { try flush() }
     }
   }
   private func flush() throws {
@@ -75,11 +82,17 @@ private final class VaultVideoSegmentSink: NSObject, AVAssetWriterDelegate, @unc
     count += pending.count
     pending.removeAll(keepingCapacity: true)
   }
+  func checkFailure() throws {
+    lock.lock()
+    defer { lock.unlock() }
+    if let failure { throw failure }
+  }
   func finish() throws -> Int {
     lock.lock()
     defer { lock.unlock() }
     if let failure { throw failure }
     try check()
+    try append(try movie.finish())
     try flush()
     try handle.synchronize()
     try handle.close()
@@ -225,6 +238,7 @@ enum VaultSilentVideo {
       let code = (writer.error ?? reader.error).map { ($0 as NSError).code } ?? 0
       reader.cancelReading()
       writer.cancelWriting()
+      try sink.checkFailure()
       if error is VaultVideoFailure { throw VaultSilentVideoDiagnostic(phase: phase, code: code) }
       throw error
     }

@@ -1,6 +1,8 @@
 # Build and distribute Reps on Linux
 
-Final version consolidation: the complete accepted video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
+Local follow-up1.5.3(122): complete the movie index within the encrypted stream to preserve independently cropped ends without reencoding.419host tests,13metadata checks, strict lint, native build/metadata/bundle inspection and independent review pass. Installed iPhone122passes all four native cropped fixtures with2ms duration agreement and exact first/middle/last-frame hashes, plus the full encrypted video probe. The owner confirms both new original videos import successfully; public release remains120. See [the current plan](exec-plans/2026-10-25-trimmed-video-tail.md).
+
+Published version consolidation: the original-file video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
 
 25 October — edited-video mapping 1.5.7 (119):116's session-bound attempt was insufficient. Native117/118 reproduce the missing MP4 edit list.119 restores visible selection metadata before encryption without changing compressed fragments. Full strict lint,416host tests,13metadata checks, native build/compiler metadata/unsigned inspection pass. Independent review finds no blocker. Both cropped synthetic fixtures (including B-frames) pass exact-frame/duration checks on iPhone119, together with the full encrypted native probe. Normal USB delivery/postflight verifies119 with unchanged identity/signer/entitlements and provisioning-cache hashes. The owner confirms the original Photos-trimmed video imports successfully. [Evidence and delivery](exec-plans/2026-10-25-trimmed-video-timeline.md).
 

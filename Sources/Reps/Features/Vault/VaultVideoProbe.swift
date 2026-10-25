@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 enum VaultVideoProbe {
   static var step = "starting"
   static var patchedContainer = false
+  static var patchedResource = "VaultVideoTrimmedProbe"
   static var timelineDiagnostics = ""
   static func run() async throws -> String {
     guard let url = Bundle.module.url(forResource: "VaultVideoProbe", withExtension: "mp4") else {
@@ -206,7 +207,10 @@ extension VaultVideoProbe {
   // Reproduce an edit that starts between keyframes, leaving compressed decoding
   // preroll outside the visible selection. This never reads a private asset.
   static func verifyTrimmedTimeline() async throws {
-    for name in ["VaultVideoTrimmedProbe", "VaultVideoTrimmedBFrameProbe"] {
+    for name in [
+      "VaultVideoTrimmedProbe", "VaultVideoTrimmedBFrameProbe", "VaultVideoTrimmedTailProbe",
+      "VaultVideoTrimmedHEVCProbe",
+    ] {
       step = "trimmed synthetic timeline: \(name)"
       try await verifyTrimmedAsset(name)
     }
@@ -224,12 +228,19 @@ extension VaultVideoProbe {
       let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
       inspection.add(output)
       guard inspection.startReading() else { throw VaultVideoFailure.invalid }
+      var samples = 0
+      var last = ""
       while let sample = output.copyNextSampleBuffer() {
         if CMSampleBufferGetNumSamples(sample) == 0 { continue }
-        timelineDiagnostics =
-          "first PTS=\(CMSampleBufferGetPresentationTimeStamp(sample).seconds), output PTS=\(CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds), DTS=\(CMSampleBufferGetDecodeTimeStamp(sample).seconds)"
-        break
+        if samples == 0 {
+          timelineDiagnostics =
+            "\(name): first PTS=\(CMSampleBufferGetPresentationTimeStamp(sample).seconds), output PTS=\(CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds), DTS=\(CMSampleBufferGetDecodeTimeStamp(sample).seconds)"
+        }
+        samples += 1
+        last =
+          "last PTS=\(CMSampleBufferGetPresentationTimeStamp(sample).seconds), output PTS=\(CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds), duration=\(CMSampleBufferGetDuration(sample).seconds), output duration=\(CMSampleBufferGetOutputDuration(sample).seconds)"
       }
+      timelineDiagnostics += " | \(samples) samples; \(last)"
       inspection.cancelReading()
       for segment in try await track.load(.segments) {
         let mapping = segment.timeMapping
@@ -259,12 +270,18 @@ extension VaultVideoProbe {
     try bytes.write(to: output, options: .atomic)
     await reader.close()
     try await VaultSilentVideo.validate(staging, source: source, lease: lease)
+    let candidate = AVURLAsset(
+      url: output, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+    let expected = try await source.load(.duration).seconds
+    let actual = try await candidate.load(.duration).seconds
+    timelineDiagnostics += " | source=\(expected), prepared=\(actual)"
+    guard abs(actual - expected) < 0.002 else { throw VaultVideoFailure.invalid }
     try await verifyFrames(sourceURL: url, candidateURL: output)
   }
 
   static func verifyPatchedTimeline() async throws {
     guard
-      let sourceURL = Bundle.module.url(forResource: "VaultVideoTrimmedProbe", withExtension: "mp4")
+      let sourceURL = Bundle.module.url(forResource: patchedResource, withExtension: "mp4")
     else { throw VaultVideoFailure.invalid }
     let candidateURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("RepsSyntheticPatchedTrim.mp4")
@@ -293,7 +310,7 @@ extension VaultVideoProbe {
     originalGenerator.requestedTimeToleranceAfter = .zero
     candidateGenerator.requestedTimeToleranceBefore = .zero
     candidateGenerator.requestedTimeToleranceAfter = .zero
-    for time in [0.0, expected / 2, max(0, expected - 0.05)] {
+    for time in [0.0, expected / 2, max(0, expected - 0.001)] {
       step = "patched synthetic frame at \(time)"
       let point = CMTime(seconds: time, preferredTimescale: 60_000)
       let first = try await originalGenerator.image(at: point).image
@@ -309,6 +326,7 @@ extension VaultVideoProbe {
 
 #if DEBUG
   import SwiftUI
+  import UIKit
 
   enum VaultVideoProbeLaunch {
     static let requestURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -336,21 +354,26 @@ extension VaultVideoProbe {
   struct VaultVideoProbeScreen: View {
     @State private var result = "Testing synthetic encrypted video…"
     var body: some View {
-      Text(result).padding().task {
-        var previous: String?
-        while !Task.isCancelled {
-          if let token = VaultVideoProbeLaunch.readToken()
-            ?? (previous == nil ? VaultVideoProbeLaunch.requestedToken : nil), token != previous
-          {
-            previous = token
-            await execute(token: token)
+      Text(result).padding()
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .task {
+          var previous: String?
+          while !Task.isCancelled {
+            if let token = VaultVideoProbeLaunch.readToken()
+              ?? (previous == nil ? VaultVideoProbeLaunch.requestedToken : nil), token != previous
+            {
+              previous = token
+              await execute(token: token)
+            }
+            do { try await Task.sleep(for: .seconds(1)) } catch { break }
           }
-          do { try await Task.sleep(for: .seconds(1)) } catch { break }
         }
-      }
     }
     private func execute(token: String) async {
       VaultVideoProbe.patchedContainer = token.contains("-patched-")
+      VaultVideoProbe.patchedResource =
+        token.contains("-tail-") ? "VaultVideoTrimmedTailProbe" : "VaultVideoTrimmedProbe"
       VaultVideoProbe.timelineDiagnostics = ""
       do { result = try await VaultVideoProbe.run() } catch let diagnostic
         as VaultSilentVideoDiagnostic

@@ -1,6 +1,8 @@
 # Reps — jalons natifs
 
-Final version consolidation: the complete accepted video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
+Local follow-up1.5.3(122): complete the movie index within the encrypted stream to preserve independently cropped ends without reencoding.419host tests,13metadata checks, strict lint, native build/metadata/bundle inspection and independent review pass. Installed iPhone122passes all four native cropped fixtures with2ms duration agreement and exact first/middle/last-frame hashes, plus the full encrypted video probe. The owner confirms both new original videos import successfully; public release remains120. See [the current plan](exec-plans/2026-10-25-trimmed-video-tail.md).
+
+Published version consolidation: the original-file video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.
 
 Référence : [plan global](../PLAN-REPS-NATIF.md). Chaque jalon exige compilation xtool, contrôles applicables, installation USB autorisée et **confirmation utilisateur sur iPhone** avant le suivant.
 
