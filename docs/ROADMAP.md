@@ -374,4 +374,4 @@ Strict Swift lint,13metadata/style tests, complete native app/widget build and c
 
 ## Pending local correction — 25 October
 
-1.5.3 (109): video-import error-presentation conflict corrected locally; native build, lint, 409 host tests and 13 metadata checks pass. Apple provisioning blocks USB replacement; 1.5.2 (108) remains installed. Original-video reproduction and import compatibility remain unverified. [Plan](exec-plans/2026-10-25-video-import-crash.md).
+1.5.3 (109): video-import error-presentation conflict corrected; native build, lint, 409 host tests and 13 metadata checks pass. USB delivery succeeded after the user's reconnect; direct postflight confirms 1.5.3 (109) with unchanged identity/signer/entitlements. Original-video reproduction and import compatibility remain unverified. [Plan](exec-plans/2026-10-25-video-import-crash.md).

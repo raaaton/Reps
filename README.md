@@ -20,7 +20,7 @@ Plan your workouts, prepare your added weight, follow each set, rest with Dynami
 
 ## Download
 
-The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.2 (108) is installed on the owner’s iPhone, with explicit red deletion-swipe backgrounds throughout. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-24-red-swipe-deletion.md). Historical release binaries retain the display name they were built with.
+The latest published IPA is available from [Releases](https://github.com/raaaton/Reps/releases/latest). Reps is the new name of Sport. Reps 1.5.3 (109) is installed on the owner’s iPhone, including the video-import error-presentation correction and explicit red deletion-swipe backgrounds throughout. The latest published release is 1.5.1 (107). It groups Backpack/Maximum Objects settings, adds editable backpack weight and uses checkmarks to save. Delivery and verification are tracked in [the current plan](docs/exec-plans/2026-10-25-video-import-crash.md). Historical release binaries retain the display name they were built with.
 
 Public IPAs are built locally on Linux in **Release** configuration and distributed **unsigned**. Sign the IPA with your own Apple account and a compatible sideloading tool before installing it. Downloading the file alone does not install the app. No personal development certificate or provisioning profile is included.
 
@@ -220,4 +220,4 @@ See [LICENSE](LICENSE). The app icon adapts a [Phosphor](https://github.com/phos
 
 Reps updates the same installed app. Its technical bundle/keychain identity and backup markers intentionally retain the legacy name, preserving local training, Face ID vault access, reminders and existing exports. The `sport://` workout-link alias remains supported alongside `reps://`.
 
-Local 1.5.3 (109) addresses competing video-import error alerts. Compilation, 409 host tests and 13 metadata checks pass; USB delivery is blocked by Apple's device-registration provisioning error. The iPhone remains on 1.5.2 (108). See the [diagnosis and validation limits](docs/exec-plans/2026-10-25-video-import-crash.md).
+Reps 1.5.3 (109) addresses competing video-import error alerts. Compilation, 409 host tests and 13 metadata checks pass. USB delivery succeeded after the user reconnected the iPhone; direct inspection confirms 1.5.3 (109), unchanged installed identity, signer and entitlements. Retrying the original video remains a physical user check. See the [diagnosis and validation limits](docs/exec-plans/2026-10-25-video-import-crash.md).

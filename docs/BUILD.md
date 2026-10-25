@@ -1,6 +1,6 @@
 # Build and distribute Reps on Linux
 
-25 October: local 1.5.3 (109) video-import alert correction passes strict lint, 409 host tests, 13 metadata checks, native builds, regenerated App Intents metadata and unsigned bundle inspection. Normal USB helper stops at Apple provisioning `409 ENTITY_ERROR`: `There are no current IOS devices on this team matching the provided device IDs.` No certificate/profile workaround attempted; existing provisioning cache remains byte-identical. Installed version remains 1.5.2 (108). [Evidence and remaining work](exec-plans/2026-10-25-video-import-crash.md).
+25 October: 1.5.3 (109) video-import alert correction passes strict lint, 409 host tests, 13 metadata checks, native builds, regenerated App Intents metadata and unsigned bundle inspection. First USB attempt stopped at Apple provisioning `409 ENTITY_ERROR`; after the user reconnected the iPhone, the normal helper succeeded with install/verification 100% and exit 0. Direct postflight confirms 1.5.3 (109), unchanged effective identity/signer/entitlements and byte-identical provisioning cache. No certificate/profile workaround, push or release. [Evidence and remaining work](exec-plans/2026-10-25-video-import-crash.md).
 
 Reps uses Swift Package Manager and xtool. The main product is `Reps`, its embedded extension is `RepsRestWidget`, and `xtool.yml` describes both bundles. There is no primary Xcode project.
 
