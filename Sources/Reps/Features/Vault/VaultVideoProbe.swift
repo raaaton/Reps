@@ -377,11 +377,13 @@ extension VaultVideoProbe {
       VaultVideoProbe.timelineDiagnostics = ""
       do {
         result =
-          token.contains("-backup-memory-")
-          ? try await PortableBackupMemoryProbe.run(
-            chunkCount: token.contains("-large-") ? 500 : 32)
-          : token.contains("-backup-")
-            ? try await PortableBackupProbe.run() : try await VaultVideoProbe.run()
+          token.contains("-stencil-")
+          ? try VaultPhotoStencilProbe.run()
+          : token.contains("-backup-memory-")
+            ? try await PortableBackupMemoryProbe.run(
+              chunkCount: token.contains("-large-") ? 500 : 32)
+            : token.contains("-backup-")
+              ? try await PortableBackupProbe.run() : try await VaultVideoProbe.run()
       } catch let diagnostic
         as VaultSilentVideoDiagnostic
       {
@@ -391,7 +393,9 @@ extension VaultVideoProbe {
         result =
           token.contains("-backup-")
           ? "FAIL: synthetic backup at \(PortableBackupProbe.stage)."
-          : "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
+          : token.contains("-stencil-")
+            ? "FAIL: synthetic photo validation at \(VaultVideoProbe.step)."
+            : "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
       }
       // Only this fixed synthetic test report is emitted; never private data or native error descriptions.
       let output = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]

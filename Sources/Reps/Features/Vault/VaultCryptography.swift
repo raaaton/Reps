@@ -78,7 +78,7 @@ enum VaultCryptography {
     return result as Data
   }
   static func prepare(
-    _ data: Data, day: String, pose: VaultPhotoPose, key: SymmetricKey, keyID: String
+    _ data: Data, day: String, pose: VaultPhotoPose?, key: SymmetricKey, keyID: String
   ) throws
     -> VaultEncryptedPhoto
   {

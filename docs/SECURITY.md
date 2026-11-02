@@ -331,3 +331,10 @@ The real export currently fails with a generic storage message; root cause is un
 ### Long-running backup memory
 
 Build126 drains Foundation autoreleased objects per authenticated import record and per export/rekey record callback. No change to encryption, KDF, validation, staging protection or publication. Independent review finds no concrete regression. Physical synthetic500MiB import peaks55MiB; the owner's original archive remains a separate acceptance test. See exec-plans/2026-11-02-backup-import-memory.md.
+
+
+## Camera stencil — 1.5.6 (127)
+
+AVCapturePhotoOutput generates an in-memory JPEG; crop/EXIF normalization runs on bounded image data and never includes the stencil pixels. There is no app-authored clear camera file or automatic Photos save. No audio input, broad Photos permission, key migration or new entitlement. Reference loading reuses the authorized original→bounded preview path; saves reuse the existing encrypted insert. Only one reference and one unsaved shot are held by the flow. Nullable poses preserve legacy metadata.
+
+Pipeline mutations are serialized on a dedicated queue, UI state on main. Stop invalidates settings/model tokens, cancels timer and clears pending bytes/reference. Late callbacks cannot publish into a later capture. Retry and switch are controlled by a cancellable view task that rechecks authorization and active scene after loading. Existing privacy shield covers inactivity; background locks the vault and invalidates its lease. Independent security review identified and closed a Retry lifecycle issue, then found no concrete remaining issue in the amended per-photo scope/crop. No automatic personal camera capture is used for verification; native generated-image proof and physical owner review are distinct.

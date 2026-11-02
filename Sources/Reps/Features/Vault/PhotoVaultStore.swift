@@ -286,7 +286,7 @@ final class PhotoVaultStore: ObservableObject {
       try await saveImage(transfer.data, day: day, pose: pose, lease: lease, key: key)
     } catch { if current(lease) { self.error = message(error) } }
   }
-  func importCamera(_ bytes: Data, day: Date, pose: VaultPhotoPose, session: UUID) async {
+  func importCamera(_ bytes: Data, day: Date, pose: VaultPhotoPose?, session: UUID) async {
     guard allows(session) else { return }
     guard let lease, let key, current(lease), !busy else { return }
     busy = true
@@ -298,7 +298,7 @@ final class PhotoVaultStore: ObservableObject {
     }
   }
   private func saveImage(
-    _ bytes: Data, day: Date, pose: VaultPhotoPose, lease: VaultLease, key: SymmetricKey
+    _ bytes: Data, day: Date, pose: VaultPhotoPose?, lease: VaultLease, key: SymmetricKey
   )
     async throws
   {

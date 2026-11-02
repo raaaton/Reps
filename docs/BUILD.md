@@ -315,3 +315,8 @@ Remote developer launch is unavailable because no Tunneld is running; no daemon/
 ### Import memory candidate — 1.5.5 (126)
 
 Native app/widget build, compiler metadata generation/embedding and unsigned inspection pass. Standard USB helper installs/verifies100%; direct device query confirms126 with unchanged signer/entitlements and exact cached certificate. Userspace developer launch works without Tunneld or daemon changes. Fresh-process physical synthetic32/500MiB imports pass at47/55MiB peak. No push/release; original import still awaits owner retest. Evidence and limitations: exec-plans/2026-11-02-backup-import-memory.md.
+
+
+## Camera stencil — 1.5.6 (127)
+
+Native build, compiler metadata regeneration/embedding and unsigned app/widget inspection pass; strict lint,436host tests and13metadata tests pass. NormalUSB helper installs/verifies100% with exit0. Direct postflight verifies127 and unchanged signer/entitlements/exact certificate. Retrieved native generated-image stencil proof and full synthetic backup regression pass. Normal app relaunched without probe arguments. Live camera/UI requires owner acceptance. Evidence: exec-plans/2026-11-02-photo-stencil.md.

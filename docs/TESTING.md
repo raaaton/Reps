@@ -254,3 +254,14 @@ Two new behavioral tests bring the suite to429: damaged synthetic source exposes
 ## Large encrypted import memory — build126
 
 Physical fresh-process synthetic reports reproduce125 FAIL32MiB (peak42→146MiB,+103MiB) and verify126 PASS32MiB (42→47MiB,+5MiB) and500MiB (51→55MiB,+3MiB), unchanged96MiB growth ceiling. Matching build/run tokens directly retrieved. Original archive and actual media playback remain owner acceptance; fixture payload is synthetic.429host tests, strict lint,13metadata checks and native build/inspection pass. See exec-plans/2026-11-02-backup-import-memory.md.
+
+
+## Photo stencil — 1.5.6 (127)
+
+Seven host regressions cover latest-folder-only selection, one step per photo with duplicate/unassigned poses, stable unique step IDs, immutable reference plan, latest single-pose reference, centered portrait/square/landscape crops and invalid dimensions/ratios. Actual deduplication gives two observed failing behavioral cases before the owner correction; all426XCTest+10SwiftTesting (436 total) pass afterward. Strict lint,13metadata checks, native build/compiler metadata/unsigned inspection pass.
+
+DEBUG `timeline-127-stencil-…` runs a generated-image probe through actual UIKit/ImageIO normalization and CryptoKit preparation, without camera/Keychain/personal database access. Only a matching build/run report can establish native PASS.
+
+Physical acceptance: Take Photo stencil50%/opacity toggle; front/back preview vs saved crop and mirror; timers/cancel; repeated-type steps each use their own source photo; unassigned type preserved; save/retake/skip/close preserve previous saves; permission denial; interruption/lock during loading/timer/capture/save; empty-folder hint; largest Dynamic Type and VoiceOver. Original/private photos must be tested by the owner without agent logs/captures.
+
+Native127 generated-image stencil report and full backup regression directly retrieved with matching build/token: PASS. Normal app restored after probes. This proves UIKit/EXIF/crypto synthetic paths, not live camera framing or UI interaction.

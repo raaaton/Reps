@@ -29,3 +29,6 @@ Values are individually truncated to integer MiB; subtracting the displayed trun
 Native126 full synthetic backup regression also passes: KDF known vector, real vault-schema snapshot capture, complete encrypted round-trip with different destination key, multiblock video, atomic restore/rekey, random exports, wrong password, tamper/reorder, truncation, appended data and revocation. Measured synthetic export110ms. This uses only generated data and temporary repositories, not the personal vault. Report: /tmp/reps-import-memory126-crypto-result.json.
 
 Final postflight rechecks1.5.5(126), signer, entitlements and exact cached certificate. The app is relaunched normally without probe arguments after tests (developer launch exits0). Final strict lint, whitespace check, native rebuild after whitespace-only formatting and bundle inspection pass. The original archive still requires owner retest.
+
+
+Owner acceptance: after126 delivery, the owner confirms “ok c bon” for the original import before requesting photo stencil. The original failing-file retest is accepted; no personal archive was accessed by the agent.

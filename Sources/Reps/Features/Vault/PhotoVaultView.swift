@@ -44,6 +44,7 @@ struct PhotoVaultView: View {
   @State private var section = VaultSection.physique
   @State private var selected: VaultDayRoute?
   @State private var importing: VaultImportRoute?
+  @State private var capturing: VaultCameraRoute?
   @State private var comparing: VaultComparisonRoute?
   @State private var deleteAllSession: UUID?
   @State private var deletingDay: VaultDayDeletion?
@@ -101,6 +102,13 @@ struct PhotoVaultView: View {
               Menu {
                 Button("Import from Photos", systemImage: "photo") { beginImport(camera: false) }
                 Button("Take Photo", systemImage: "camera") { beginImport(camera: true) }
+                Button("Photo Session", systemImage: "photo.stack") {
+                  if let session = vault.sessionToken {
+                    capturing = VaultCameraRoute(
+                      session: session, plan: VaultPhotoCapturePlan.latestSession(vault.photos),
+                      day: Date(), sequential: true)
+                  }
+                }
               } label: {
                 Label("Add Photo", systemImage: "plus")
               }.tint(.white).disabled(vault.busy)
@@ -124,6 +132,9 @@ struct PhotoVaultView: View {
         VaultDayView(route: route)
       }
       .sheet(item: $importing) { route in VaultImportView(route: route) }
+      .fullScreenCover(item: $capturing, onDismiss: { vault.clearPreview() }) { route in
+        VaultCameraView(route: route)
+      }
       .sheet(item: $comparing, onDismiss: { vault.clearComparison() }) { route in
         VaultComparisonView(route: route)
       }
@@ -167,7 +178,7 @@ struct PhotoVaultView: View {
         isPresented: Binding(
           get: {
             vault.error != nil && section == .physique && selected == nil
-              && importing == nil && comparing == nil
+              && importing == nil && comparing == nil && capturing == nil
           },
           set: { if !$0 { vault.error = nil } })
       ) {
@@ -179,6 +190,7 @@ struct PhotoVaultView: View {
         if phase != .unlocked {
           selected = nil
           importing = nil
+          capturing = nil
           comparing = nil
           deleteAllSession = nil
           deletingDay = nil
@@ -259,7 +271,7 @@ struct VaultImportView: View {
   @State private var day = Date()
   @State private var pose = VaultPhotoPose.frontRelaxed
   @State private var item: PhotosPickerItem?
-  @State private var cameraOpen = false
+  @State private var cameraRoute: VaultCameraRoute?
   @State private var cameraError: String?
   var body: some View {
     NavigationStack {
@@ -300,31 +312,13 @@ struct VaultImportView: View {
           }.tint(.white).labelStyle(.iconOnly).disabled(vault.busy)
         }
       }
-      .sheet(isPresented: $cameraOpen) {
-        VaultPrivacySurface {
-          if vault.allows(route.session) {
-            VaultCameraView { result in
-              cameraOpen = false
-              guard vault.allows(route.session) else { return }
-              switch result {
-              case .success(let data):
-                Task {
-                  await vault.importCamera(data, day: day, pose: pose, session: route.session)
-                  if vault.allows(route.session), vault.error == nil { dismiss() }
-                }
-              case .failure(let error):
-                vault.error = error.localizedDescription
-              case nil:
-                break
-              }
-            }.ignoresSafeArea()
-          }
-        }
+      .fullScreenCover(item: $cameraRoute, onDismiss: { vault.clearPreview() }) { camera in
+        VaultCameraView(route: camera) { dismiss() }
       }
       .alert(
         "Unable to Import",
         isPresented: Binding(
-          get: { vault.error != nil && !cameraOpen }, set: { if !$0 { vault.error = nil } })
+          get: { vault.error != nil && cameraRoute == nil }, set: { if !$0 { vault.error = nil } })
       ) {
         Button("OK", role: .cancel) { vault.error = nil }
       } message: {
@@ -340,7 +334,7 @@ struct VaultImportView: View {
       .onChange(of: day) { _, _ in selectMissingPose() }
       .onChange(of: vault.gate.phase) { _, phase in
         if phase != .unlocked {
-          cameraOpen = false
+          cameraRoute = nil
           item = nil
           dismiss()
         }
@@ -362,7 +356,10 @@ struct VaultImportView: View {
       let permitted = await AVCaptureDevice.requestAccess(for: .video)
       guard vault.allows(route.session) else { return }
       if permitted {
-        cameraOpen = true
+        cameraRoute = VaultCameraRoute(
+          session: route.session,
+          plan: VaultPhotoCapturePlan.single(pose: pose, photos: vault.photos),
+          day: day, sequential: false)
       } else {
         cameraError = "Allow camera access in the iOS settings for Reps."
       }
