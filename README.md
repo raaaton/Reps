@@ -1,4 +1,4 @@
-> Local candidate 1.5.4 (123): optional complete encrypted vault backup. Source implementation, 427 host tests, strict lint, 13 metadata checks and native bundle inspection pass. Installed on the iPhone after a requested retry; postflight confirms 1.5.4 (123) with the same signer, certificate and entitlements. Native crypto/Files/Face ID and personal-media acceptance remain unverified. See [implementation record](docs/exec-plans/2026-11-02-portable-backup-implementation.md).
+> Local candidate 1.5.4 (123): optional complete encrypted vault backup. Source implementation, 427 host tests, strict lint, 13 metadata checks and native bundle inspection pass. Installed on the iPhone after a requested retry; postflight confirms 1.5.4 (123) with the same signer, certificate and entitlements. The owner reports PASS for the native synthetic backup checks. Direct report readback is pending because USB is disconnected; real Files/Face ID and personal-media acceptance remain pending. See [implementation record](docs/exec-plans/2026-11-02-portable-backup-implementation.md).
 
 <img src="https://github.com/user-attachments/assets/592e7645-aa5b-4b73-a24c-8ea2925e3516" />
 

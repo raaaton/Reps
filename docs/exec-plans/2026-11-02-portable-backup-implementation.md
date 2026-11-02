@@ -124,3 +124,8 @@
 User requests reinstall. The renewed standard USB attempt passes Apple registration/provisioning/signing, then encounters a transient `noDevice`. Read-only checks still find the same iPhone on122; a second standard attempt succeeds with installation/verification100%. Direct postflight verifies Reps1.5.4(123), same signer, byte-identical certificate and unchanged entitlement dictionary (`/tmp/reps-backup-postflight123.json`); helper exits0 (`/tmp/reps-backup-reinstall123-usb.log`). No certificate was replaced/revoked.
 
 Remote developer launch is unavailable because no Tunneld is running; no daemon/system configuration was changed. The fixed `timeline-123-backup-` synthetic request is prepared in Caches, awaiting the owner opening Reps. Only synthetic report/readback will be used. Native crypto proof, measured timing, prepared-Keychain behavior and real Files/Face ID/media acceptance remain pending; successful installation does not establish them.
+
+
+### Owner-reported native PASS
+
+After opening installed123 with the queued synthetic request, the owner reports “pass”. This confirms the result observed on the physical iPhone, not yet a directly retrieved report or measured timing. Immediate readback of only the fixed synthetic report fails: usbmuxd is unreachable/no USB device is available. No private media/database read or alternate access attempted. The native synthetic test is owner-reported PASS; exact report token/build/result and export timing are not independently read back. Close Reps fully and reopen normally after the consumed request to return from the synthetic screen. Real Files/password/Face ID/private-media workflows remain for user acceptance.
