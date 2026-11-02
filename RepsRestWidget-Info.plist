@@ -4,7 +4,7 @@
 <dict>
     <key>CFBundleDisplayName</key><string>Reps</string>
     <key>CFBundleShortVersionString</key><string>1.5.5</string>
-    <key>CFBundleVersion</key><string>124</string>
+    <key>CFBundleVersion</key><string>126</string>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>NSExtension</key>
     <dict>

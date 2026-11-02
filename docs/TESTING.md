@@ -249,3 +249,8 @@ After opening installed123 with the queued synthetic request, the owner reports 
 ## Real backup export failure — diagnostic124
 
 Two new behavioral tests bring the suite to429: damaged synthetic source exposes the known failing capture step and SQLite1/1 without private details; actual SQLite automatic rollback retains initial19/2067 rather than cleanup1. Both have observed RED→GREEN. Prior419XCTest and8backup tests remain green; strict lint and13metadata tests pass. Native capture and the owner's actual export remain pending; see exec-plans/2026-11-02-backup-export-storage-diagnostics.md.
+
+
+## Large encrypted import memory — build126
+
+Physical fresh-process synthetic reports reproduce125 FAIL32MiB (peak42→146MiB,+103MiB) and verify126 PASS32MiB (42→47MiB,+5MiB) and500MiB (51→55MiB,+3MiB), unchanged96MiB growth ceiling. Matching build/run tokens directly retrieved. Original archive and actual media playback remain owner acceptance; fixture payload is synthetic.429host tests, strict lint,13metadata checks and native build/inspection pass. See exec-plans/2026-11-02-backup-import-memory.md.

@@ -114,36 +114,44 @@ public final class VaultBackupFile {
   public func readRecords(_ consume: (VaultBackupRecord) throws -> Void) throws {
     _ = try inventory()
     for row in try db.query("SELECT id FROM vault_movements ORDER BY id") {
-      let id = try row.text("id")
-      let value = try db.query("SELECT metadata FROM vault_movements WHERE id=?", [.text(id)])
-        .first!
-      try consume(VaultBackupRecord(kind: .movement, id: id, metadata: value.blob("metadata")))
+      try BackupAutoreleasePool.withPool {
+        let id = try row.text("id")
+        let value = try db.query("SELECT metadata FROM vault_movements WHERE id=?", [.text(id)])
+          .first!
+        try consume(VaultBackupRecord(kind: .movement, id: id, metadata: value.blob("metadata")))
+      }
     }
     for row in try db.query("SELECT id FROM vault_photos ORDER BY id") {
-      let id = try row.text("id")
-      let v = try db.query("SELECT * FROM vault_photos WHERE id=?", [.text(id)]).first!
-      try consume(
-        VaultBackupRecord(
-          kind: .photo, id: id, dayKey: v.optionalText("day_key"), metadata: v.blob("metadata"),
-          original: v.blob("original"), thumbnail: v.blob("thumbnail")))
+      try BackupAutoreleasePool.withPool {
+        let id = try row.text("id")
+        let v = try db.query("SELECT * FROM vault_photos WHERE id=?", [.text(id)]).first!
+        try consume(
+          VaultBackupRecord(
+            kind: .photo, id: id, dayKey: v.optionalText("day_key"), metadata: v.blob("metadata"),
+            original: v.blob("original"), thumbnail: v.blob("thumbnail")))
+      }
     }
     for row in try db.query("SELECT id FROM vault_videos ORDER BY id") {
       let id = try row.text("id")
-      let v = try db.query("SELECT * FROM vault_videos WHERE id=?", [.text(id)]).first!
-      try consume(
-        VaultBackupRecord(
-          kind: .video, id: id, movementID: v.text("movement_id"),
-          byteCount: v.integer("byte_count"), metadata: v.blob("metadata"),
-          thumbnail: v.blob("thumbnail")))
+      try BackupAutoreleasePool.withPool {
+        let v = try db.query("SELECT * FROM vault_videos WHERE id=?", [.text(id)]).first!
+        try consume(
+          VaultBackupRecord(
+            kind: .video, id: id, movementID: v.text("movement_id"),
+            byteCount: v.integer("byte_count"), metadata: v.blob("metadata"),
+            thumbnail: v.blob("thumbnail")))
+      }
       for c in try db.query(
         "SELECT position FROM vault_video_chunks WHERE video_id=? ORDER BY position", [.text(id)])
       {
-        let index = try c.integer("position")
-        let data = try db.query(
-          "SELECT ciphertext FROM vault_video_chunks WHERE video_id=? AND position=?",
-          [.text(id), .integer(index)]
-        ).first!.blob("ciphertext")
-        try consume(VaultBackupRecord(kind: .chunk, id: id, position: index, payload: data))
+        try BackupAutoreleasePool.withPool {
+          let index = try c.integer("position")
+          let data = try db.query(
+            "SELECT ciphertext FROM vault_video_chunks WHERE video_id=? AND position=?",
+            [.text(id), .integer(index)]
+          ).first!.blob("ciphertext")
+          try consume(VaultBackupRecord(kind: .chunk, id: id, position: index, payload: data))
+        }
       }
     }
   }

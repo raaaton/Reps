@@ -310,3 +310,8 @@ Strict Swift lint,13metadata/style tests, complete native app/widget build and c
 User requests reinstall. The renewed standard USB attempt passes Apple registration/provisioning/signing, then encounters a transient `noDevice`. Read-only checks still find the same iPhone on122; a second standard attempt succeeds with installation/verification100%. Direct postflight verifies Reps1.5.4(123), same signer, byte-identical certificate and unchanged entitlement dictionary (`/tmp/reps-backup-postflight123.json`); helper exits0 (`/tmp/reps-backup-reinstall123-usb.log`). No certificate was replaced/revoked.
 
 Remote developer launch is unavailable because no Tunneld is running; no daemon/system configuration was changed. The fixed `timeline-123-backup-` synthetic request is prepared in Caches, awaiting the owner opening Reps. Only synthetic report/readback will be used. Native crypto proof, measured timing, prepared-Keychain behavior and real Files/Face ID/media acceptance remain pending; successful installation does not establish them.
+
+
+### Import memory candidate — 1.5.5 (126)
+
+Native app/widget build, compiler metadata generation/embedding and unsigned inspection pass. Standard USB helper installs/verifies100%; direct device query confirms126 with unchanged signer/entitlements and exact cached certificate. Userspace developer launch works without Tunneld or daemon changes. Fresh-process physical synthetic32/500MiB imports pass at47/55MiB peak. No push/release; original import still awaits owner retest. Evidence and limitations: exec-plans/2026-11-02-backup-import-memory.md.

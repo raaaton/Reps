@@ -135,34 +135,38 @@ actor PortableBackupEngine {
     let archive = try TrainingArchive.decode(first.1)
     var count = 0
     while true {
-      let (type, bytes) = try stream.read(check: access.check)
-      if type == 0 {
-        let end = try JSONDecoder().decode(PortableBackupEnd.self, from: bytes)
-        try file.validate()
-        let inventory = try file.inventory()
-        guard end.records == count, end.inventory == inventory, !inventory.isEmpty else {
-          throw PortableBackupFailure.invalid
+      let completed: PortableBackupContents? = try BackupAutoreleasePool.withPool {
+        let (type, bytes) = try stream.read(check: access.check)
+        if type == 0 {
+          let end = try JSONDecoder().decode(PortableBackupEnd.self, from: bytes)
+          try file.validate()
+          let inventory = try file.inventory()
+          guard end.records == count, end.inventory == inventory, !inventory.isEmpty else {
+            throw PortableBackupFailure.invalid
+          }
+          try stream.requireEOF()
+          try access.check()
+          return PortableBackupContents(archive: archive, inventory: inventory)
         }
-        try stream.requireEOF()
-        try access.check()
-        return PortableBackupContents(archive: archive, inventory: inventory)
+        guard type == 2, count < 2_508_000,
+          let shape = try JSONSerialization.jsonObject(with: bytes) as? [String: Any],
+          Set(shape.keys).isSubset(of: [
+            "kind", "id", "movementID", "byteCount", "position", "dayKey", "metadata", "original",
+            "thumbnail", "payload",
+          ])
+        else { throw PortableBackupFailure.invalid }
+        var record = try JSONDecoder().decode(VaultBackupRecord.self, from: bytes)
+        try Self.validateClear(&record)
+        try record.mapPayloads { data, id, role in
+          try VaultCryptography.seal(
+            data, key: access.key, keyID: access.lease.keyID, id: id, role: role)
+        }
+        try file.append(record)
+        _ = try file.inventory()
+        count += 1
+        return nil
       }
-      guard type == 2, count < 2_508_000,
-        let shape = try JSONSerialization.jsonObject(with: bytes) as? [String: Any],
-        Set(shape.keys).isSubset(of: [
-          "kind", "id", "movementID", "byteCount", "position", "dayKey", "metadata", "original",
-          "thumbnail", "payload",
-        ])
-      else { throw PortableBackupFailure.invalid }
-      var record = try JSONDecoder().decode(VaultBackupRecord.self, from: bytes)
-      try Self.validateClear(&record)
-      try record.mapPayloads { data, id, role in
-        try VaultCryptography.seal(
-          data, key: access.key, keyID: access.lease.keyID, id: id, role: role)
-      }
-      try file.append(record)
-      _ = try file.inventory()
-      count += 1
+      if let completed { return completed }
     }
   }
   func rekey(source: URL, from: PortableBackupAccess, to: PortableBackupAccess, destination: URL)

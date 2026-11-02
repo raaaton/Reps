@@ -26,3 +26,8 @@ Deliver124 with the existing identity/certificate/capabilities. Retry the owner'
 ## Available verification and device delivery
 
 429host tests, strict lint and13metadata checks pass. Actual iOS124build, App Intent metadata regeneration/embedding and unsigned bundle inspection pass. Existing signer/certificate/entitlements verified before standard USB helper; helper exits0 with installation/verification100%. Direct postflight confirms1.5.5(124) with the same signer, entitlements and byte-identical certificate (`/tmp/reps-backup-diagnostic124-postflight.json`). No synthetic request marker is queued: the owner should reopen the normal app and retry the original export to obtain the precise in-app failure. The strengthened native capture probe compiles but has not run; original export success and exact cause remain pending. No private device database/media read, no push/release.
+
+
+## Owner diagnosis and next correction
+
+The owner reports snapshot.copy.vault_video_chunks, SQLite13/13 (disk full), then confirms export succeeds after freeing storage. That original export issue is resolved without a snapshot redesign. The subsequent import process termination is separately investigated and corrected in exec-plans/2026-11-02-backup-import-memory.md.

@@ -377,8 +377,11 @@ extension VaultVideoProbe {
       VaultVideoProbe.timelineDiagnostics = ""
       do {
         result =
-          token.contains("-backup-")
-          ? try await PortableBackupProbe.run() : try await VaultVideoProbe.run()
+          token.contains("-backup-memory-")
+          ? try await PortableBackupMemoryProbe.run(
+            chunkCount: token.contains("-large-") ? 500 : 32)
+          : token.contains("-backup-")
+            ? try await PortableBackupProbe.run() : try await VaultVideoProbe.run()
       } catch let diagnostic
         as VaultSilentVideoDiagnostic
       {

@@ -11,7 +11,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.5.5</string>
     <key>CFBundleVersion</key>
-    <string>124</string>
+    <string>126</string>
     <key>CFBundleIcons</key>
     <dict><key>CFBundlePrimaryIcon</key><dict>
         <key>CFBundleIconFiles</key><array><string>RepsIcon60x60</string></array>

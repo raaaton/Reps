@@ -326,3 +326,8 @@ SQLite20 adds preferences.backpack_weight_grams with default3000 and positive SQ
 ## Backup export diagnostic — 1.5.5 (124)
 
 The real export currently fails with a generic storage message; root cause is unconfirmed. This candidate exposes only a fixed backup operation label and numeric SQLite primary/extended statuses inside the private transfer form. Native SQLite error text/SQL/bound values/paths/media IDs/secrets are never added to UI, logs or persisted reports. A first-failure latch prevents cleanup errors from masking FULL/IOERR/constraint status. Existing SQLite thrown-error contract, encryption, keys, permissions and transaction/restore logic remain unchanged. A focused independent review identified the latch issue and its actual auto-rollback regression now passes. The synthetic native probe now includes original-vault snapshot capture; prior native PASS did not cover that step.
+
+
+### Long-running backup memory
+
+Build126 drains Foundation autoreleased objects per authenticated import record and per export/rekey record callback. No change to encryption, KDF, validation, staging protection or publication. Independent review finds no concrete regression. Physical synthetic500MiB import peaks55MiB; the owner's original archive remains a separate acceptance test. See exec-plans/2026-11-02-backup-import-memory.md.
