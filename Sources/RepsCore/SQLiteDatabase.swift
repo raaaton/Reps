@@ -42,6 +42,7 @@ struct SQLRow {
 /// Accessed exclusively by RepsRepository's actor, including each transaction.
 final class SQLiteDatabase {
   private let handle: OpaquePointer
+  var lastFailure: (code: Int32, extended: Int32)?
 
   init(path: String) throws {
     var opened: OpaquePointer?
@@ -64,7 +65,11 @@ final class SQLiteDatabase {
   func execute(_ sql: String, _ arguments: [SQLValue] = []) throws {
     let statement = try prepare(sql, arguments)
     defer { sqlite3_finalize(statement) }
-    guard sqlite3_step(statement) == SQLITE_DONE else { throw TrainingError.storage }
+    let status = sqlite3_step(statement)
+    guard status == SQLITE_DONE else {
+      recordFailure(status)
+      throw TrainingError.storage
+    }
   }
 
   func query(_ sql: String, _ arguments: [SQLValue] = []) throws -> [SQLRow] {
@@ -74,7 +79,10 @@ final class SQLiteDatabase {
     while true {
       let status = sqlite3_step(statement)
       if status == SQLITE_DONE { return rows }
-      guard status == SQLITE_ROW else { throw TrainingError.storage }
+      guard status == SQLITE_ROW else {
+        recordFailure(status)
+        throw TrainingError.storage
+      }
       var values: [String: SQLValue] = [:]
       for column in 0..<sqlite3_column_count(statement) {
         let key = String(cString: sqlite3_column_name(statement, column))
@@ -114,9 +122,16 @@ final class SQLiteDatabase {
     }
   }
 
+  private func recordFailure(_ status: Int32) {
+    // Keep the initiating failure: SQLite may have rolled back automatically, in which
+    // case our cleanup ROLLBACK/DETACH can fail too and must not hide FULL/IOERR/etc.
+    if lastFailure == nil { lastFailure = (status & 0xff, sqlite3_extended_errcode(handle)) }
+  }
   private func prepare(_ sql: String, _ arguments: [SQLValue]) throws -> OpaquePointer {
     var statement: OpaquePointer?
-    guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
+    let status = sqlite3_prepare_v2(handle, sql, -1, &statement, nil)
+    guard status == SQLITE_OK, let statement else {
+      recordFailure(status)
       if let statement { sqlite3_finalize(statement) }
       throw TrainingError.storage
     }
@@ -137,7 +152,10 @@ final class SQLiteDatabase {
             }
         case .null: status = sqlite3_bind_null(statement, index)
         }
-        guard status == SQLITE_OK else { throw TrainingError.storage }
+        guard status == SQLITE_OK else {
+          recordFailure(status)
+          throw TrainingError.storage
+        }
       }
       return statement
     } catch {

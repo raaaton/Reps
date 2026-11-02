@@ -202,4 +202,44 @@ struct PortableBackupTests {
     #expect(try await vault.state()?.keyID == lease.keyID)
   }
 
+  @Test func captureFailureReportsStageAndSQLiteCodesWithoutPrivateDetails() async throws {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let source = dir.appendingPathComponent("private-name-sentinel.sqlite").path
+    let vault = try VaultRepository(path: source)
+    let lease = VaultLease(keyID: UUID().uuidString)
+    try await vault.initialize(keyID: lease.keyID, verification: Data(repeating: 1, count: 32))
+    let db = try SQLiteDatabase(path: source)
+    try db.execute("DROP TABLE vault_video_chunks")
+    let training = try RepsRepository(path: dir.appendingPathComponent("training.sqlite").path)
+    do {
+      _ = try await training.captureCompleteBackup(
+        vaultPath: source, snapshotPath: dir.appendingPathComponent("snapshot.sqlite").path,
+        lease: lease, now: 1_793_606_400_000)
+      Issue.record("Damaged source must fail")
+    } catch let failure as PortableBackupStorageFailure {
+      #expect(failure.stage == "snapshot.copy.vault_video_chunks")
+      #expect(failure.code == 1)
+      #expect(failure.extendedCode == 1)
+      #expect(!failure.localizedDescription.contains("private-name-sentinel"))
+      #expect(!failure.localizedDescription.contains(lease.keyID))
+      #expect(!failure.localizedDescription.contains("SELECT"))
+    }
+    #expect(try await vault.state()?.keyID == lease.keyID)
+  }
+
+  @Test func automaticRollbackPreservesOriginalSQLiteFailure() throws {
+    let db = try SQLiteDatabase(path: ":memory:")
+    try db.execute("CREATE TABLE conflict_probe(value INTEGER UNIQUE ON CONFLICT ROLLBACK)")
+    try db.execute("INSERT INTO conflict_probe VALUES(1)")
+    db.lastFailure = nil
+    #expect(throws: (any Error).self) {
+      try db.transaction { try db.execute("INSERT INTO conflict_probe VALUES(1)") }
+    }
+    #expect(db.lastFailure?.code == 19)
+    #expect(db.lastFailure?.extended == 2067)
+    #expect(try db.query("SELECT value FROM conflict_probe").first?.integer("value") == 1)
+  }
+
 }

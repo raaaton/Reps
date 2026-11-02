@@ -244,3 +244,8 @@ Physical acceptance remains: toggle off/empty gives JSON without password; nonem
 ### Owner-reported native PASS
 
 After opening installed123 with the queued synthetic request, the owner reports “pass”. This confirms the result observed on the physical iPhone, not yet a directly retrieved report or measured timing. Immediate readback of only the fixed synthetic report fails: usbmuxd is unreachable/no USB device is available. No private media/database read or alternate access attempted. The native synthetic test is owner-reported PASS; exact report token/build/result and export timing are not independently read back. Close Reps fully and reopen normally after the consumed request to return from the synthetic screen. Real Files/password/Face ID/private-media workflows remain for user acceptance.
+
+
+## Real backup export failure — diagnostic124
+
+Two new behavioral tests bring the suite to429: damaged synthetic source exposes the known failing capture step and SQLite1/1 without private details; actual SQLite automatic rollback retains initial19/2067 rather than cleanup1. Both have observed RED→GREEN. Prior419XCTest and8backup tests remain green; strict lint and13metadata tests pass. Native capture and the owner's actual export remain pending; see exec-plans/2026-11-02-backup-export-storage-diagnostics.md.

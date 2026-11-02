@@ -24,6 +24,8 @@
       let key = SymmetricKey(size: .bits256)
       let lease = VaultLease(keyID: UUID().uuidString)
       let snapshot = workspace.url("source.sqlite")
+      let liveVault = try VaultRepository(path: snapshot.path)
+      defer { withExtendedLifetime(liveVault) {} }
       let file = try VaultBackupFile(path: snapshot.path)
       try file.setState(keyID: lease.keyID, verification: Data(repeating: 1, count: 32))
       let movementID = UUID().uuidString
@@ -75,7 +77,10 @@
         try file.append(chunk)
       }
       let training = try RepsRepository(path: workspace.url("training.sqlite").path)
-      let archive = try await training.exportTraining(now: 1_793_606_400_000)
+      stage = "capture original vault into coherent snapshot"
+      let captured = workspace.url("captured.sqlite")
+      let archive = try await training.captureCompleteBackup(
+        vaultPath: snapshot.path, snapshotPath: captured.path, lease: lease, now: 1_793_606_400_000)
       let source = PortableBackupAccess(
         key: key, lease: lease, path: snapshot.path,
         stamp: VaultBackupStamp(keyID: lease.keyID, revision: 0))
@@ -84,7 +89,7 @@
       stage = "encrypt source"
       let start = Date()
       try await engine.export(
-        archive: archive, snapshot: snapshot, access: source, password: password, output: output)
+        archive: archive, snapshot: captured, access: source, password: password, output: output)
       let elapsed = Int(Date().timeIntervalSince(start) * 1000)
       let destinationKey = SymmetricKey(size: .bits256)
       let destinationLease = VaultLease(keyID: UUID().uuidString)
@@ -143,7 +148,7 @@
       stage = "distinct exports and hostile archives"
       let second = workspace.url("second.repsbackup")
       try await engine.export(
-        archive: archive, snapshot: snapshot, access: source, password: password, output: second)
+        archive: archive, snapshot: captured, access: source, password: password, output: second)
       let original = try Data(contentsOf: output)
       guard original != (try Data(contentsOf: second)) else { throw PortableBackupFailure.invalid }
       var badTag = original
@@ -184,12 +189,12 @@
       rejected = false
       do {
         try await engine.export(
-          archive: archive, snapshot: snapshot, access: source, password: password,
+          archive: archive, snapshot: captured, access: source, password: password,
           output: workspace.url("revoked.repsbackup"))
       } catch { rejected = true }
       guard rejected else { throw PortableBackupFailure.invalid }
       return
-        "PASS backup: KDF vector, complete encrypted round-trip, different destination key, multiblock video, atomic restore/rekey, random exports, wrong password, tamper/reorder, truncation, appended data, revocation; export \(elapsed) ms."
+        "PASS backup: KDF vector, original-vault snapshot capture, complete encrypted round-trip, different destination key, multiblock video, atomic restore/rekey, random exports, wrong password, tamper/reorder, truncation, appended data, revocation; export \(elapsed) ms."
     }
   }
 #endif

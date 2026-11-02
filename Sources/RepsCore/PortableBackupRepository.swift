@@ -23,29 +23,45 @@ extension RepsRepository {
   public func captureCompleteBackup(
     vaultPath: String, snapshotPath: String, lease: VaultLease, now: Int
   ) throws -> TrainingArchive {
-    try lease.check()
-    guard !FileManager.default.fileExists(atPath: snapshotPath), vaultPath != snapshotPath else {
-      throw PortableBackupFailure.invalid
-    }
-    _ = try VaultBackupFile(path: snapshotPath)
-    try attachBackupDatabase(vaultPath, as: "private_backup")
-    defer { try? database.execute("DETACH DATABASE private_backup") }
-    try attachBackupDatabase(snapshotPath, as: "staged_backup")
-    defer { try? database.execute("DETACH DATABASE staged_backup") }
-    return try database.transaction {
-      guard
-        try database.query("SELECT key_id FROM private_backup.vault_state WHERE singleton=1").first?
-          .text("key_id") == lease.keyID
-      else { throw VaultFailure.locked }
-      _ = try VaultBackupFile.inventory(database, schema: "private_backup")
-      for table in VaultBackupFile.tables {
-        try database.execute(
-          "INSERT INTO staged_backup.\(table) SELECT * FROM private_backup.\(table)")
-      }
-      let archive = TrainingArchive(createdAt: now, contents: try readTransferData())
-      try archive.validate()
+    var stage = "snapshot.create"
+    database.lastFailure = nil
+    do {
       try lease.check()
-      return archive
+      guard !FileManager.default.fileExists(atPath: snapshotPath), vaultPath != snapshotPath else {
+        throw PortableBackupFailure.invalid
+      }
+      _ = try VaultBackupFile(path: snapshotPath)
+      stage = "snapshot.attach.vault"
+      try attachBackupDatabase(vaultPath, as: "private_backup")
+      defer { try? database.execute("DETACH DATABASE private_backup") }
+      stage = "snapshot.attach.staging"
+      try attachBackupDatabase(snapshotPath, as: "staged_backup")
+      defer { try? database.execute("DETACH DATABASE staged_backup") }
+      stage = "snapshot.begin"
+      return try database.transaction {
+        stage = "snapshot.authorize"
+        guard
+          try database.query("SELECT key_id FROM private_backup.vault_state WHERE singleton=1")
+            .first?.text("key_id") == lease.keyID
+        else { throw VaultFailure.locked }
+        stage = "snapshot.inventory"
+        _ = try VaultBackupFile.inventory(database, schema: "private_backup")
+        for table in VaultBackupFile.tables {
+          stage = "snapshot.copy.\(table)"
+          try database.execute(
+            "INSERT INTO staged_backup.\(table) SELECT * FROM private_backup.\(table)")
+        }
+        stage = "snapshot.training"
+        let archive = TrainingArchive(createdAt: now, contents: try readTransferData())
+        try archive.validate()
+        try lease.check()
+        stage = "snapshot.commit"
+        return archive
+      }
+    } catch TrainingError.storage {
+      throw PortableBackupStorageFailure(
+        stage: stage, code: database.lastFailure?.code, extendedCode: database.lastFailure?.extended
+      )
     }
   }
   public func applyCompleteBackup(

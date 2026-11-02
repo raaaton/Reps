@@ -51,6 +51,7 @@ final class PortableBackupStore: ObservableObject {
     let request = generation
     let selected = input
     task = Task {
+      var stage = "vault.authentication"
       do {
         let access: PortableBackupAccess
         if importing {
@@ -66,11 +67,13 @@ final class PortableBackupStore: ObservableObject {
           return
         }
         self.access = access
+        stage = "workspace.create"
         let workspace = try PortableBackupWorkspace()
         self.workspace = workspace
         defer { withExtendedLifetime(workspace) {} }
         if importing {
           guard let selected else { throw PortableBackupFailure.invalid }
+          stage = "archive.read"
           let contents = try await engine.read(
             url: selected, password: secret, access: access, staged: workspace.url("vault.sqlite"))
           let preview = try await repository.previewArchiveImport(
@@ -87,10 +90,12 @@ final class PortableBackupStore: ObservableObject {
           step = .preview
         } else {
           let snapshot = workspace.url("snapshot.sqlite")
+          stage = "snapshot.capture"
           let archive = try await repository.captureCompleteBackup(
             vaultPath: access.path, snapshotPath: snapshot.path, lease: access.lease,
             now: WorkoutClock.now)
           let output = workspace.url("Reps-\(WorkoutClock.dayKey(WorkoutClock.now)).repsbackup")
+          stage = "archive.encrypt"
           try await engine.export(
             archive: archive, snapshot: snapshot, access: access, password: secret, output: output)
           try access.check()
@@ -101,7 +106,11 @@ final class PortableBackupStore: ObservableObject {
         }
       } catch {
         guard generation == request else { return }
-        self.error = Self.message(error)
+        if case TrainingError.storage = error {
+          self.error = PortableBackupStorageFailure(stage: stage).localizedDescription
+        } else {
+          self.error = Self.message(error)
+        }
         self.workspace = nil
         self.access = nil
         vault.lock()
@@ -186,6 +195,7 @@ final class PortableBackupStore: ObservableObject {
     error = nil
   }
   private static func message(_ error: Error) -> String {
+    if let failure = error as? PortableBackupStorageFailure { return failure.localizedDescription }
     if let failure = error as? PortableBackupFailure { return failure.localizedDescription }
     if let failure = error as? VaultFailure { return failure.localizedDescription }
     if let failure = error as? TrainingError { return failure.localizedDescription }
