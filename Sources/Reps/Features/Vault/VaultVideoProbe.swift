@@ -375,13 +375,20 @@ extension VaultVideoProbe {
       VaultVideoProbe.patchedResource =
         token.contains("-tail-") ? "VaultVideoTrimmedTailProbe" : "VaultVideoTrimmedProbe"
       VaultVideoProbe.timelineDiagnostics = ""
-      do { result = try await VaultVideoProbe.run() } catch let diagnostic
+      do {
+        result =
+          token.contains("-backup-")
+          ? try await PortableBackupProbe.run() : try await VaultVideoProbe.run()
+      } catch let diagnostic
         as VaultSilentVideoDiagnostic
       {
         result =
           "FAIL: synthetic \(VaultVideoProbe.step). \(diagnostic.localizedDescription)"
       } catch {
-        result = "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
+        result =
+          token.contains("-backup-")
+          ? "FAIL: synthetic backup at \(PortableBackupProbe.stage)."
+          : "FAIL: synthetic video validation at \(VaultVideoProbe.step)."
       }
       // Only this fixed synthetic test report is emitted; never private data or native error descriptions.
       let output = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]

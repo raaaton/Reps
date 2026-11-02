@@ -522,3 +522,10 @@ At the user's request, the same inline message now identifies the original faile
 ## Edited video timeline — 1.5.6
 
 Imports retain the visible asset timeline from zero through the exact source duration. Compressed decoding dependencies outside a Photos edit stay available for decoding without becoming part of the intended playback interval. The strict duration and other validation checks remain; no import UI changes. Physical validation of the user's trimmed video remains pending.
+
+
+## Optional complete encrypted backup — 2 November 2026
+
+Settings keeps Import from Files and Export to Files and adds a native Include Private Vault switch. Off/empty exports remain current training JSON with no password. Nonempty included vaults use a SecureField password/confirmation form, Face ID, a bounded streaming encrypted file and the native Files export picker. Import accepts current/legacy training files and the authenticated complete format (magic detection also accepts renamed backups). Legacy imports preserve the vault; complete import privately previews incoming/current counts and explicitly confirms replacement of both. Password loss is explained before export.
+
+The crypto actor owns file processing away from MainActor. Transfer generations/leases prevent publication after cancel/background. Import staging first uses a memory-only key; confirmed import reencrypts to the local biometric key. A SQLite attached-database transaction publishes the two independent stores with stale-preview guards and encrypted local recovery. Pending local key identities survive interruption without silently replacing an inaccessible key. No new account, backend, broad Photos/microphone permission or third-party dependency.

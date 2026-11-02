@@ -1,3 +1,9 @@
+# Candidate 1.5.4 (123) — optional encrypted vault backup
+
+2 November 2026: source implementation and independent security review completed; 419 existing XCTest cases plus 8 Swift Testing backup cases pass, with strict lint, 13 metadata checks, actual xtool compilation, compiler-derived App Intent metadata and unsigned bundle inspection. Native backup proof compiles but has not run.
+
+Connected iPhone preflight: installed1.5.3(122), matching existing signer/certificate valid beyond24h. Standard device-run.sh stops at Apple profile creation with409 ENTITY_ERROR: “There are no current IOS devices on this team matching the provided device IDs.” Read-only xtool ds devices list succeeds with an empty inventory. No certificate/profile was revoked or replaced. Postflight confirms122 remains with the same signer and entitlements. The synthetic request marker is removed, so the old app opens normally. Do not retry provisioning without resolving the registration issue under AGENTS.md; no native-runtime/Files/Face ID acceptance claim or public release.
+
 # Build and distribute Reps on Linux
 
 Local follow-up1.5.3(122): complete the movie index within the encrypted stream to preserve independently cropped ends without reencoding.419host tests,13metadata checks, strict lint, native build/metadata/bundle inspection and independent review pass. Installed iPhone122passes all four native cropped fixtures with2ms duration agreement and exact first/middle/last-frame hashes, plus the full encrypted video probe. The owner confirms both new original videos import successfully; public release remains120. See [the current plan](exec-plans/2026-10-25-trimmed-video-tail.md).

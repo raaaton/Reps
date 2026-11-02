@@ -1,7 +1,7 @@
 import Foundation
 
 extension RepsRepository {
-  private func readTransferData() throws -> TrainingDataSet {
+  func readTransferData() throws -> TrainingDataSet {
     return TrainingDataSet(
       configuration: try readSnapshot(), notifications: try readNotificationPreferences(),
       workouts: try database.query("SELECT id FROM workouts ORDER BY rowid").map {
@@ -64,46 +64,47 @@ extension RepsRepository {
     }
   }
   public func applyTrainingImport(_ preview: TrainingImportPreview, now: Int) throws {
-    try database.transaction {
-      try requireNoActiveImport()
-      let current = try readTransferData()
-      guard current == preview.expected else {
-        throw TrainingError.invalid(
-          "Data have changed since the preview. Select the file again before importing."
-        )
-      }
-      try TrainingTransfer.validate(preview.incoming)
-      try TrainingTransfer.workouts(preview.incoming.workouts, now: now, allowActive: true)
-      let final = preview.incoming
-      _ = try TrainingArchive(createdAt: now, contents: final).encoded()
-      if preview.isUnchanged { return }
-      let recovery = TrainingArchive(createdAt: now, contents: current)
-      let payload = String(decoding: try recovery.encoded(), as: UTF8.self)
-      try database.execute(
-        "INSERT INTO import_recovery VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
-        [.text(payload)])
-      try database.execute("DELETE FROM skill_sessions")
-      for table in ["workout_rests", "workouts"] {
+    try database.transaction { try applyTrainingImportBody(preview, now: now) }
+  }
+  func applyTrainingImportBody(_ preview: TrainingImportPreview, now: Int) throws {
+    try requireNoActiveImport()
+    let current = try readTransferData()
+    guard current == preview.expected else {
+      throw TrainingError.invalid(
+        "Data have changed since the preview. Select the file again before importing."
+      )
+    }
+    try TrainingTransfer.validate(preview.incoming)
+    try TrainingTransfer.workouts(preview.incoming.workouts, now: now, allowActive: true)
+    let final = preview.incoming
+    _ = try TrainingArchive(createdAt: now, contents: final).encoded()
+    if preview.isUnchanged { return }
+    let recovery = TrainingArchive(createdAt: now, contents: current)
+    let payload = String(decoding: try recovery.encoded(), as: UTF8.self)
+    try database.execute(
+      "INSERT INTO import_recovery VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
+      [.text(payload)])
+    try database.execute("DELETE FROM skill_sessions")
+    for table in ["workout_rests", "workouts"] {
+      try database.execute("DELETE FROM \(table)")
+    }
+    if preview.isRestoration {
+      for table in [
+        "schedules", "exercises", "weight_items", "skill_progress", "skill_definitions",
+      ] {
         try database.execute("DELETE FROM \(table)")
       }
-      if preview.isRestoration {
-        for table in [
-          "schedules", "exercises", "weight_items", "skill_progress", "skill_definitions",
-        ] {
-          try database.execute("DELETE FROM \(table)")
-        }
-        try insertConfiguration(preview.incoming.configuration)
-        try writeNotificationPreferences(preview.incoming.notifications)
-        try database.execute("DELETE FROM body_weight_measurements")
-        for weight in final.bodyWeights {
-          try database.execute(
-            "INSERT INTO body_weight_measurements VALUES(?,?,?)",
-            [.text(weight.id), .text(weight.dayKey), .integer(weight.grams)])
-        }
+      try insertConfiguration(preview.incoming.configuration)
+      try writeNotificationPreferences(preview.incoming.notifications)
+      try database.execute("DELETE FROM body_weight_measurements")
+      for weight in final.bodyWeights {
+        try database.execute(
+          "INSERT INTO body_weight_measurements VALUES(?,?,?)",
+          [.text(weight.id), .text(weight.dayKey), .integer(weight.grams)])
       }
-      for workout in preview.incoming.workouts { try insertTransferredWorkout(workout) }
-      for practice in final.skillSessions { try writeSkillSession(practice) }
     }
+    for workout in preview.incoming.workouts { try insertTransferredWorkout(workout) }
+    for practice in final.skillSessions { try writeSkillSession(practice) }
   }
   private func insertConfiguration(_ c: TrainingSnapshot) throws {
     for definition in c.skills {

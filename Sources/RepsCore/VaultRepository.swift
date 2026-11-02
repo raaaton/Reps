@@ -73,6 +73,7 @@ public actor VaultRepository {
     }
     if version <= 2 { try VaultVideoSchema.migrate(database) }
     try database.execute("DELETE FROM vault_videos WHERE complete=0")
+    try Self.installBackupRevision(database)
     db = database
   }
   public func state() throws -> (keyID: String, verification: Data)? {
@@ -105,7 +106,13 @@ public actor VaultRepository {
     }
     try db.transaction {
       guard try state() == nil else { throw VaultFailure.damaged }
+      if let pending = try db.query("SELECT key_id FROM vault_pending_key WHERE id=1").first?.text(
+        "key_id"), pending != keyID
+      {
+        throw VaultFailure.damaged
+      }
       try db.execute("INSERT INTO vault_state VALUES(1,?,?)", [.text(keyID), .blob(verification)])
+      try db.execute("DELETE FROM vault_pending_key")
     }
   }
   func authorize(_ lease: VaultLease) throws {
@@ -192,6 +199,10 @@ public actor VaultRepository {
       try db.execute("DELETE FROM vault_photos")
       try db.execute("DELETE FROM vault_movements")
       try db.execute("DELETE FROM vault_state")
+      try db.execute("DELETE FROM vault_pending_key")
+      for table in VaultBackupFile.tables {
+        try db.execute("DROP TABLE IF EXISTS recovery_\(table)")
+      }
     }
   }
   public func delete(ids: [String], lease: VaultLease) throws {

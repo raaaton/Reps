@@ -37,7 +37,10 @@ final class PhotoVaultStore: ObservableObject {
   var videoRequest = UUID()
   var videoPlaybacks: [UUID: VaultVideoPlayback] = [:]
   init() {
-    do { try VaultVideoStaging.removeAbandoned() } catch {
+    do {
+      try PortableBackupWorkspace.removeAbandoned()
+      try VaultVideoStaging.removeAbandoned()
+    } catch {
       self.error =
         "An interrupted video import could not be cleaned up. Restart Reps and try again."
     }
@@ -119,16 +122,8 @@ final class PhotoVaultStore: ObservableObject {
           key = try VaultKeychain.load(id: id, context: context)
           try VaultCryptography.verify(key: key, keyID: id, encrypted: state.verification)
         } else {
-          id = UUID().uuidString
-          key = try VaultKeychain.create(id: id, context: context)
-          do {
-            let verification = try VaultCryptography.seal(
-              Data("Sport vault v1".utf8), key: key, keyID: id, id: "vault", role: "verification")
-            try await repo.initialize(keyID: id, verification: verification)
-          } catch {
-            VaultKeychain.discardNewKey(id: id)
-            throw error
-          }
+          (id, key) = try await VaultKeychain.initializeEmptyVault(
+            repository: repo, context: context)
         }
         guard gate.accepts(token) else { return }
         let lease = VaultLease(keyID: id)
@@ -495,5 +490,56 @@ enum VaultDates {
       return nil
     }
     return date
+  }
+}
+
+extension PhotoVaultStore {
+  func backupPath() throws -> String {
+    let support = try FileManager.default.url(
+      for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+    return support.appendingPathComponent("PhotoVault-v1/vault.sqlite").path
+  }
+  // A transfer unlock does not load a gallery, run a migration, or export the biometric key.
+  func authenticateBackup() async throws -> PortableBackupAccess {
+    guard !busy else { throw PortableBackupFailure.interrupted }
+    lock()
+    guard let token = gate.begin() else { throw VaultFailure.locked }
+    let auth = LAContext()
+    auth.localizedFallbackTitle = ""
+    do {
+      guard auth.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil),
+        auth.biometryType == .faceID
+      else { throw VaultMediaError.faceIDUnavailable }
+      guard
+        try await auth.evaluatePolicy(
+          .deviceOwnerAuthenticationWithBiometrics,
+          localizedReason: "Access your Private Vault for this backup transfer."),
+        gate.accepts(token)
+      else { throw VaultFailure.locked }
+      let repo = try database()
+      let state = try await repo.state()
+      guard gate.accepts(token) else { throw VaultFailure.locked }
+      let id: String
+      let secret: SymmetricKey
+      if let state {
+        id = state.keyID
+        secret = try VaultKeychain.load(id: id, context: auth)
+        try VaultCryptography.verify(key: secret, keyID: id, encrypted: state.verification)
+      } else {
+        (id, secret) = try await VaultKeychain.initializeEmptyVault(repository: repo, context: auth)
+      }
+      guard gate.complete(token) else { throw VaultFailure.locked }
+      let lease = VaultLease(keyID: id)
+      self.key = secret
+      self.lease = lease
+      let stamp = try await repo.backupStamp()
+      guard current(lease) else { throw VaultFailure.locked }
+      auth.invalidate()
+      return try PortableBackupAccess(key: secret, lease: lease, path: backupPath(), stamp: stamp)
+    } catch {
+      auth.invalidate()
+      lock()
+      throw error
+    }
   }
 }

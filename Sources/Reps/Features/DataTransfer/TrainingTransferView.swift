@@ -6,10 +6,14 @@ import UniformTypeIdentifiers
 private enum ParsedTrainingFile: Sendable {
   case csv([WorkoutSession])
   case archive(TrainingArchive)
+  case encrypted(URL)
 }
 
 struct TrainingTransferView: View {
   @EnvironmentObject private var store: TrainingStore
+  @EnvironmentObject private var vault: PhotoVaultStore
+  @StateObject private var backup = PortableBackupStore()
+  @State private var includeVault = false
   @State private var importing = false
   @State private var exporting = false
   @State private var document = TrainingFileDocument(data: Data())
@@ -26,12 +30,15 @@ struct TrainingTransferView: View {
           importing = true
         }
         Button("Export to Files", systemImage: "square.and.arrow.up") {
-          prepareExport()
+          chooseExport()
         }
+        Toggle("Include Private Vault", systemImage: "lock.fill", isOn: $includeVault)
       } footer: {
         VStack(alignment: .leading, spacing: 8) {
           Text(
-            "Exports include workouts, skills and practice history, exercises, schedule, inventory, goals and training settings. Active state is preserved. Private photos are excluded."
+            includeVault
+              ? "Includes all training data and your entire Private Vault. A nonempty vault requires Face ID and an export password. An empty vault exports without a password."
+              : "Includes all training data and settings, without a password. Private Vault photos, videos and movements are excluded."
           )
           if let message { Text(message) }
         }
@@ -42,10 +49,17 @@ struct TrainingTransferView: View {
       if busy { ProgressView("Preparing…") }
     }
     .navigationTitle("Import and Export").navigationBarTitleDisplayMode(.inline)
-    .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText]) {
+    .fileImporter(
+      isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText, .data]
+    ) {
       result in
       switch result {
-      case .success(let url): read(url)
+      case .success(let url):
+        if url.pathExtension.lowercased() == "repsbackup" {
+          backup.beginImport(url)
+        } else {
+          read(url)
+        }
       case .failure(let failure):
         if !isCancellation(failure) { error = "Unable to open the selected file." }
       }
@@ -66,6 +80,9 @@ struct TrainingTransferView: View {
     .sheet(item: $preview) { value in
       TrainingImportPreviewView(preview: value) { message = $0 }
     }
+    .sheet(isPresented: $backup.presented, onDismiss: { backup.cancel(vault: vault) }) {
+      PortableBackupFlowView(backup: backup)
+    }
     .alert(
       "Unable to Transfer",
       isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })
@@ -77,6 +94,38 @@ struct TrainingTransferView: View {
   }
   private func isCancellation(_ error: Error) -> Bool {
     (error as NSError).code == NSUserCancelledError
+  }
+  private func chooseExport() {
+    guard includeVault else {
+      prepareExport()
+      return
+    }
+    guard !busy else { return }
+    guard !vault.busy else {
+      error = "Finish the vault operation before exporting."
+      return
+    }
+    busy = true
+    Task {
+      do {
+        let inventory = try await vault.database().backupInventory()
+        guard !vault.busy else { throw PortableBackupFailure.interrupted }
+        if inventory.isEmpty {
+          if try await vault.database().state() != nil {
+            _ = try await vault.authenticateBackup()
+            vault.lock()
+          }
+          busy = false
+          prepareExport()
+        } else {
+          busy = false
+          backup.beginExport()
+        }
+      } catch {
+        busy = false
+        self.error = "The vault could not be read. No partial backup was exported."
+      }
+    }
   }
   private func prepareExport() {
     guard !busy else { return }
@@ -112,6 +161,8 @@ struct TrainingTransferView: View {
               "Unable to read this file. Check its availability in Files.")
           }
           defer { try? handle.close() }
+          if try handle.read(upToCount: 8) == PortableBackupHeader.prefix { return .encrypted(url) }
+          try handle.seek(toOffset: 0)
           guard let data = try handle.read(upToCount: TrainingTransfer.maximumBytes + 1),
             data.count <= TrainingTransfer.maximumBytes
           else {
@@ -124,6 +175,7 @@ struct TrainingTransferView: View {
         switch parsed {
         case .csv(let records): preview = try await store.previewCSVImport(records)
         case .archive(let archive): preview = try await store.previewArchiveImport(archive)
+        case .encrypted(let url): backup.beginImport(url)
         }
       } catch {
         self.error =

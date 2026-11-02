@@ -1,3 +1,5 @@
+> Local candidate 1.5.4 (123): optional complete encrypted vault backup. Source implementation, 427 host tests, strict lint, 13 metadata checks and native bundle inspection pass. Installation is blocked by Apple provisioning error 409; the iPhone remains on 1.5.3 (122). Native crypto/Files/Face ID and personal-media acceptance remain unverified. See [implementation record](docs/exec-plans/2026-11-02-portable-backup-implementation.md).
+
 <img src="https://github.com/user-attachments/assets/592e7645-aa5b-4b73-a24c-8ea2925e3516" />
 
 
@@ -112,11 +114,11 @@ Each release provides the IPA directly. See [building and distribution](docs/BUI
 - Imported vault copies permanently omit audio without recompressing the video. Existing clips are converted after the next Face ID unlock; an interrupted or unsupported conversion keeps the encrypted original and retries on a later unlock. Photos originals stay unchanged.
 - Saved videos remain available after their Skill is completed, archived or deleted.
 
-The vault uses a device-bound key protected by the current biometric enrollment. It is not a portable media backup. Training exports contain **no vault photos, videos, custom movements or vault key**. See [security](docs/SECURITY.md).
+The vault uses a device-bound key protected by the current biometric enrollment. In Import and Export, **Include Private Vault** adds every photo, video, thumbnail and movement to a password-encrypted portable backup. Without that option, or with an empty vault, export remains a training JSON with no password. The biometric key is never exported. See [security](docs/SECURITY.md).
 
 ### Own your training data
 
-- **Import from Files** and **Export to Files**. Export directly saves one JSON file containing current training data and settings, without format choices.
+- **Import from Files** and **Export to Files**, with an optional **Include Private Vault** toggle. Training-only/empty-vault exports remain password-free JSON. A nonempty vault produces one encrypted `.repsbackup` file after Face ID and password confirmation; losing the password makes that backup unrecoverable.
 - The JSON archive includes calisthenics skills, personal roadmaps, practice results and resumable active state, alongside workouts, working sets, historical goals, warm-up/stretch results, catalogue, schedule, inventory, goals, body-weight measurements and training settings. Legacy CSV import remains supported.
 - CSV import replaces training history after preview and confirmation, preserving your configuration.
 - JSON restore replaces training data and settings after preview and confirmation.
@@ -131,9 +133,9 @@ The vault uses a device-bound key protected by the current biometric enrollment.
 - No third-party runtime SDKs.
 - Local SQLite storage with transactional migrations.
 - Explicit camera, Face ID, and photo-export permissions.
-- Private photos excluded from training transfers and system backups.
+- Private media stay excluded from training-only transfers and automatic system backups. Including the vault in an explicit export encrypts the complete archive, including training.
 
-Reps itself does not upload your data or contact a server. Training data may be included in iOS device backups according to your system settings; the private vault is explicitly excluded. Exports and saving a photo to Photos are user-controlled. The source repository and release IPAs contain no on-device history, private photos, signing keys, or personal provisioning profiles.
+Reps itself does not upload your data or contact a server. Training data may be included in iOS device backups according to your system settings; the private vault is explicitly excluded. Complete encrypted exports and saving a photo to Photos are user-controlled. Legacy JSON/CSV imports preserve the current vault; complete encrypted restores replace both training and vault after preview and confirmation. The source repository and release IPAs contain no on-device history, private photos, signing keys, or personal provisioning profiles.
 
 ---
 
