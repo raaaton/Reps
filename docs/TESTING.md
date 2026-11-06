@@ -1,5 +1,12 @@
 # What Reps's tests prove
 
+Exercise ordering follow-up:447XCTest +10SwiftTesting (457total) pass. Three new
+behavioral tests cover restart and JSON-restore persistence, schedule/goal/active
+snapshot preservation, rejection of incomplete/duplicate/unknown/stale ID sets and
+full rollback when a second-phase SQLite position update fails. These tests exercise
+the real repository, not SwiftUI drag gestures. The native build and toolbar scope
+review do not prove on-screen Edit/Done, drag handles or VoiceOver interactions.
+
 6 November 2026: the final suite passes 444 XCTest cases plus 10 Swift Testing
 cases, and 13 metadata/branding checks. New coverage includes archive persistence
 without history, frozen active/history snapshots, transactional purge and rollback,

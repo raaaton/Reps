@@ -1,5 +1,15 @@
 # Reps — design et interactions
 
+6 November2026 — catalogue ordering: Progress and Settings → Exercises offer the
+same native Edit/Done reorder controls. A shared optimistic controller persists one
+catalogue order through existing position columns, rolling back the displayed draft
+on failure. The entire ID set must match the current catalogue, so stale screens
+cannot resurrect archived/deleted exercises. The existing List identity workaround
+now keys sorted membership, retaining its deletion protection without resetting on
+each move. Exercise details/creation, schedule order, active/history snapshots and
+archives retain their separate semantics. Native drag/scroll/VoiceOver remain owner
+checks; this is a Reps product decision using the HIG native table-editing pattern.
+
 ## 6 November 2026 — archives, stencil alignment and Feeling
 
 Settings → Exercises exposes confirmed Archive, removes future assignments and

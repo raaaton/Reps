@@ -117,6 +117,10 @@ final class TrainingStore: ObservableObject {
     try await commit { try await $0.saveExercise(exercise) }
   }
 
+  func reorderExercises(ids: [String]) async throws {
+    try await commit { try await $0.reorderExercises(ids: ids) }
+  }
+
   func saveRest(seconds: Int) async throws {
     try await commit { try await $0.saveRest(seconds: seconds) }
   }

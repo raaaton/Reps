@@ -1,5 +1,15 @@
 # Candidate 1.5.4 (123) — optional encrypted vault backup
 
+Shared exercise order follow-up1.5.8(130):447XCTest +10SwiftTesting pass, strict
+lint and13metadata checks pass. Native build26.42s +compiler-derived metadata
+embedding2.69s and unsigned app/widget inspection pass. Independent code review
+finds no actionable issue. No schema, transfer-format, crypto or permission change.
+Initial preflight had no connected Apple USB device; delivery resumed once the
+owner reconnected it. Standard device-run.sh exits0 with installation/verification
+100%. Direct postflight verifies130with the same identity, signer, entitlements and
+cached certificate. Native Edit/Done/drag/VoiceOver remain owner acceptance. See
+exec-plans/2026-11-06-exercise-order.md and /tmp/reps130-*.log.
+
 Current6November2026:1.5.7(129) is installed and directly verified with unchanged
 effective identity, signer, entitlements and exact cached signing certificate.444
 XCTest +10SwiftTesting pass, as do13metadata checks, strict lint and unsigned

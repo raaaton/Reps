@@ -7,12 +7,14 @@ struct ExercisesView: View {
   @State private var deleting: TrainingExercise?
   @State private var busy = false
   @State private var error: String?
+  @StateObject private var exerciseOrder = ExerciseOrderEditor()
 
   var body: some View {
     TrainingContent { snapshot in
+      let exercises = exerciseOrder.displayed(snapshot.exercises)
       List {
         Section {
-          ForEach(snapshot.exercises) { exercise in
+          ForEach(exercises) { exercise in
             Button {
               editing = exercise
             } label: {
@@ -30,6 +32,10 @@ struct ExercisesView: View {
               Button("Edit", systemImage: "pencil") { editing = exercise }
               Button("Archive", systemImage: "archivebox") { deleting = exercise }
             }
+            .moveDisabled(exerciseOrder.saving || busy)
+          }
+          .onMove { source, destination in
+            exerciseOrder.move(from: source, to: destination, exercises: exercises, store: store)
           }
           if snapshot.exercises.isEmpty {
             ContentUnavailableView(
@@ -42,8 +48,8 @@ struct ExercisesView: View {
           )
         }
       }
-      .id(snapshot.exercises.map(\.id))
-      .disabled(busy)
+      .id(snapshot.exercises.map(\.id).sorted())
+      .disabled(busy || exerciseOrder.saving)
       .sheet(item: $editing) { exercise in
         NavigationStack {
           ExerciseEditor(
@@ -83,6 +89,7 @@ struct ExercisesView: View {
       }
     }
     .navigationTitle("Exercises")
+    .modifier(ExerciseOrderControls(editor: exerciseOrder))
   }
 
   private func archiveMessage(_ exercise: TrainingExercise, snapshot: TrainingSnapshot) -> String {

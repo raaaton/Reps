@@ -1,4 +1,6 @@
-> Installed 1.5.7 (129): exercise archives in Progress, load increases below Feeling9 only after all maximum targets, green contour stencil and optional post-capture similarity alignment.454host tests,13metadata checks, strict lint, native build/inspection and actual generated-image renderer/encrypted-metadata probe pass. Real camera and UI remain owner checks. See [implementation and device evidence](docs/exec-plans/2026-11-06-archives-stencil-progression.md).
+> Installed 1.5.8 (130): native Edit/Done reordering in Progress and Settings → Exercises, sharing one persisted catalogue order.457host tests,13metadata checks, strict lint and native build/inspection pass; direct USB postflight confirms unchanged identity/certificate/capabilities. Native drag/UI await owner review. See [implementation and delivery](docs/exec-plans/2026-11-06-exercise-order.md).
+
+> Previous 1.5.7 (129): exercise archives in Progress, load increases below Feeling9 only after all maximum targets, green contour stencil and optional post-capture similarity alignment.454host tests,13metadata checks, strict lint, native build/inspection and actual generated-image renderer/encrypted-metadata probe pass. Real camera and UI remain owner checks. See [implementation and device evidence](docs/exec-plans/2026-11-06-archives-stencil-progression.md).
 
 > Previous 1.5.6 (127): photo stencil at50% adjustable opacity and Photo Session with one step per photo in the latest daily folder, including repeated/unassigned types.436host tests, native generated-image/crypto checks, lint, metadata and build inspection pass. Real camera framing/mirror/timer and UI await owner review. See [implementation and device evidence](docs/exec-plans/2026-11-02-photo-stencil.md).
 
@@ -17,6 +19,10 @@
 </p>
 
 # Reps
+
+Use **Edit** in Progress or Settings → Exercises, drag the native handles, then tap
+**Done** to change the shared exercise-list order. The order is retained after
+relaunch and included in backups; individual workout exercise order stays separate.
 
 6 November 2026: explicit exercise archiving is available in Settings → Exercises,
 with retained results in Progress → Archived Exercises, including exercises with no
@@ -200,7 +206,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **454 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **457 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

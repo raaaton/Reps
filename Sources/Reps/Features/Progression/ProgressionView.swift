@@ -10,8 +10,10 @@ struct ProgressionView: View {
   @State private var bodyWeightVisible = false
   @State private var awaitingBodyWeightDismissal = false
   @State private var selectedDay: AttendanceDay?
+  @StateObject private var exerciseOrder = ExerciseOrderEditor()
   var body: some View {
     TrainingContent { snapshot in
+      let exercises = exerciseOrder.displayed(snapshot.exercises)
       TimelineView(.periodic(from: .now, by: 60)) { context in
         let scheduledWeekdays = Set(
           snapshot.schedules.filter {
@@ -57,7 +59,7 @@ struct ProgressionView: View {
             }
           }
           Section("Exercises") {
-            ForEach(snapshot.exercises) { exercise in
+            ForEach(exercises) { exercise in
               NavigationLink {
                 ExerciseProgressView(exercise: exercise)
               } label: {
@@ -72,6 +74,10 @@ struct ProgressionView: View {
                   }
                 }
               }
+              .moveDisabled(exerciseOrder.saving)
+            }
+            .onMove { source, destination in
+              exerciseOrder.move(from: source, to: destination, exercises: exercises, store: store)
             }
           }
           Section {
@@ -91,10 +97,11 @@ struct ProgressionView: View {
         }
         // Keep the native list out of the invalid deletion batch seen on iPhone.
         // Goal, attendance and timer updates retain identity and scroll position.
-        .id(snapshot.exercises.map(\.id))
+        .id(snapshot.exercises.map(\.id).sorted())
       }
     }
     .navigationTitle("Progress")
+    .modifier(ExerciseOrderControls(editor: exerciseOrder))
     .navigationDestination(isPresented: $bodyWeightOpen) {
       BodyWeightView()
         .onAppear { bodyWeightVisible = true }
