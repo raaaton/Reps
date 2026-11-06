@@ -1,5 +1,26 @@
 # Reps — design et interactions
 
+## 6 November 2026 — archives, stencil alignment and Feeling
+
+Settings → Exercises exposes confirmed Archive, removes future assignments and
+disables workouts left empty, while current and historical workout snapshots stay
+frozen. Progress lists current exercises and links to Archived Exercises, combining
+persisted archive definitions with legacy history-only exercises. Permanent deletion
+is separate and refuses an exercise still present in an active workout.
+
+Repetition load increases require every required set at the maximum and Feeling <9,
+including bodyweight. Submaximum repetition suggestions and timed exercises retain
+their existing behavior. Green camera feedback requires three consecutive contour
+matches at roughly 3Hz, with independent central-region support. Green multiplies
+only the stencil image; status text communicates the same state accessibly.
+
+After capture, bounded contour registration estimates translation, rotation and
+uniform scale only. Uncertain matches retain the original; reliable matches offer
+Aligned/Original and a reference overlay before explicit Save. Common-region crop
+coordinates and the reference ID are encrypted with photo metadata; direct reference
+comparison uses the same crop without rewriting the earlier original. Alignment is
+an aid, not a guarantee against changes in pose, lighting or camera perspective.
+
 Local follow-up1.5.3(122): complete the movie index within the encrypted stream to preserve independently cropped ends without reencoding.419host tests,13metadata checks, strict lint, native build/metadata/bundle inspection and independent review pass. Installed iPhone122passes all four native cropped fixtures with2ms duration agreement and exact first/middle/last-frame hashes, plus the full encrypted video probe. The owner confirms both new original videos import successfully; public release remains120. See [the current plan](exec-plans/2026-10-25-trimmed-video-tail.md).
 
 Published version consolidation: the original-file video-import correction is version1.5.3(120). Intermediate1.5.4–1.5.7 names below record local diagnostic builds; they are not separate published changes.

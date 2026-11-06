@@ -4,7 +4,7 @@ enum TrainingSchema {
   static func migrate(_ database: SQLiteDatabase) throws {
     try database.transaction {
       let version = try database.query("PRAGMA user_version").first?.integer("user_version") ?? 0
-      guard version <= 20 else { throw TrainingError.newerSchema }
+      guard version <= 21 else { throw TrainingError.newerSchema }
       if version == 0 {
         for statement in statements { try database.execute(statement) }
         try seed(database)
@@ -204,6 +204,12 @@ enum TrainingSchema {
           )
         }
         try database.execute("PRAGMA user_version=20")
+      }
+      if version < 21 {
+        try database.execute(
+          "CREATE TABLE IF NOT EXISTS archived_exercises(id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+        )
+        try database.execute("PRAGMA user_version=21")
       }
     }
   }

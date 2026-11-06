@@ -154,7 +154,7 @@ struct GoalEditor: View {
     switch reason {
     case .initial: "A starting target to adapt to your preferred load."
     case .increaseLoad:
-      "Feeling below 8: try the next available load at the minimum repetition target."
+      "All sets at maximum repetitions and Feeling below 9: try the next available load at the minimum repetition target."
     case .decreaseLoad:
       "Feeling above 9: try the next lighter available load with the same targets."
     case .addRepetition: "Keep the same load and add one repetition to a weaker set."

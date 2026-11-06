@@ -78,7 +78,8 @@ enum VaultCryptography {
     return result as Data
   }
   static func prepare(
-    _ data: Data, day: String, pose: VaultPhotoPose?, key: SymmetricKey, keyID: String
+    _ data: Data, day: String, pose: VaultPhotoPose?, key: SymmetricKey, keyID: String,
+    alignment: VaultPhotoRegistration? = nil
   ) throws
     -> VaultEncryptedPhoto
   {
@@ -87,7 +88,9 @@ enum VaultCryptography {
       throw VaultFailure.invalidPhoto
     }
     let id = UUID().uuidString
-    let meta = try JSONEncoder().encode(VaultPhotoMetadata(dayKey: day, type: type, pose: pose))
+    var metadata = VaultPhotoMetadata(dayKey: day, type: type, pose: pose)
+    metadata.alignment = alignment
+    let meta = try JSONEncoder().encode(metadata)
     let thumbnail = try preview(data, pixels: 500)
     return try VaultEncryptedPhoto(
       id: id,

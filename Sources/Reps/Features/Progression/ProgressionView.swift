@@ -9,13 +9,9 @@ struct ProgressionView: View {
   @State private var bodyWeightOpen = false
   @State private var bodyWeightVisible = false
   @State private var awaitingBodyWeightDismissal = false
-  @State private var archived: [TrainingExercise] = []
-  @State private var error: String?
   @State private var selectedDay: AttendanceDay?
-  @State private var deletingArchived: TrainingExercise?
   var body: some View {
     TrainingContent { snapshot in
-      let old = archived.filter { item in !snapshot.exercises.contains { $0.id == item.id } }
       TimelineView(.periodic(from: .now, by: 60)) { context in
         let scheduledWeekdays = Set(
           snapshot.schedules.filter {
@@ -61,7 +57,7 @@ struct ProgressionView: View {
             }
           }
           Section("Exercises") {
-            ForEach(snapshot.exercises + old) { exercise in
+            ForEach(snapshot.exercises) { exercise in
               NavigationLink {
                 ExerciseProgressView(exercise: exercise)
               } label: {
@@ -72,29 +68,18 @@ struct ProgressionView: View {
                   } else if let goal = snapshot.primaryGoal(for: exercise) {
                     GoalDescription(goal: goal).font(.subheadline)
                   } else {
-                    Text(
-                      snapshot.exercises.contains { $0.id == exercise.id }
-                        ? "Goal and Progress" : "Archived exercise"
-                    ).font(.subheadline).foregroundStyle(.secondary)
-                  }
-                }
-              }
-              .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                if !snapshot.exercises.contains(where: { $0.id == exercise.id }) {
-                  Button("Delete", systemImage: "trash", role: .destructive) {
-                    deletingArchived = exercise
-                  }.tint(.red).labelStyle(.titleAndIcon)
-                }
-              }
-              .contextMenu {
-                if !snapshot.exercises.contains(where: { $0.id == exercise.id }) {
-                  RepsDestructiveButton("Delete", systemImage: "trash") {
-                    deletingArchived = exercise
+                    Text("Goal and Progress").font(.subheadline).foregroundStyle(.secondary)
                   }
                 }
               }
             }
-            if let error { Text(error).foregroundStyle(.secondary) }
+          }
+          Section {
+            NavigationLink {
+              ArchivedExercisesView()
+            } label: {
+              Label("Archived Exercises", systemImage: "archivebox")
+            }
           }
           Section {
             Button {
@@ -106,7 +91,7 @@ struct ProgressionView: View {
         }
         // Keep the native list out of the invalid deletion batch seen on iPhone.
         // Goal, attendance and timer updates retain identity and scroll position.
-        .id([snapshot.exercises.map(\.id), old.map(\.id)])
+        .id(snapshot.exercises.map(\.id))
       }
     }
     .navigationTitle("Progress")
@@ -121,16 +106,7 @@ struct ProgressionView: View {
     .task(id: scenePhase) {
       if scenePhase == .active { await vault.refreshPhotoActivity() }
     }
-    .modifier(ArchivedExerciseDeletion(selection: $deletingArchived))
     .fullScreenCover(isPresented: $vaultOpen, onDismiss: vaultDismissed) { PhotoVaultView() }
-    .task(id: store.historyRevision) {
-      do {
-        let data = try await store.historyExercises()
-        guard !Task.isCancelled else { return }
-        archived = data
-        error = nil
-      } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
-    }
     .sheet(item: $selectedDay, onDismiss: modalDismissed) { day in
       NavigationStack {
         AttendanceDayView(day: day).toolbar {

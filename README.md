@@ -1,4 +1,6 @@
-> Installed 1.5.6 (127): photo stencil at50% adjustable opacity and Photo Session with one step per photo in the latest daily folder, including repeated/unassigned types.436host tests, native generated-image/crypto checks, lint, metadata and build inspection pass. Real camera framing/mirror/timer and UI await owner review. See [implementation and device evidence](docs/exec-plans/2026-11-02-photo-stencil.md).
+> Installed 1.5.7 (129): exercise archives in Progress, load increases below Feeling9 only after all maximum targets, green contour stencil and optional post-capture similarity alignment.454host tests,13metadata checks, strict lint, native build/inspection and actual generated-image renderer/encrypted-metadata probe pass. Real camera and UI remain owner checks. See [implementation and device evidence](docs/exec-plans/2026-11-06-archives-stencil-progression.md).
+
+> Previous 1.5.6 (127): photo stencil at50% adjustable opacity and Photo Session with one step per photo in the latest daily folder, including repeated/unassigned types.436host tests, native generated-image/crypto checks, lint, metadata and build inspection pass. Real camera framing/mirror/timer and UI await owner review. See [implementation and device evidence](docs/exec-plans/2026-11-02-photo-stencil.md).
 
 > Import memory correction 1.5.5 (126), installed on iPhone: actual synthetic imports pass at32MiB (peak47MiB) and500MiB (peak55MiB), compared with146MiB before correction for32MiB. Export disk-full was confirmed SQLite13/13 and resolved by the owner freeing space. The owner confirms the original import now succeeds. See [measurements and scope](docs/exec-plans/2026-11-02-backup-import-memory.md).
 
@@ -15,6 +17,16 @@
 </p>
 
 # Reps
+
+6 November 2026: explicit exercise archiving is available in Settings → Exercises,
+with retained results in Progress → Archived Exercises, including exercises with no
+recorded sessions. Repetition load increases require every set to meet its maximum
+and Feeling strictly below 9, including bodyweight. The private camera offers a
+green contour-match stencil and optional post-capture translation, rotation and
+uniform-scale alignment, with original/aligned review before saving. Uncertain
+matches retain the original; alignment never deforms the body. Shared reference
+crops are retained in encrypted metadata for direct photo comparisons. Source and
+synthetic checks do not replace testing the real camera on iPhone.
 
 **Reps** is a native, local-first iPhone workout app built for focused training, clear progression, and full ownership of your data.
 
@@ -188,7 +200,7 @@ The icon and App Intents metadata steps use the configured Linux tools described
 
 ## Testing and validation
 
-The current suite contains **411 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
+The current suite contains **454 host tests** for the real Swift domain and SQLite code, plus **13 metadata, branding and Skills style checks**. Builds and package inspections also check the real app and widget.
 
 The tests exercise scenarios such as reopening saved data, migrations, rollback, duplicate actions, stale commands, paused rest timers, malformed imports, and workout transitions. Assertions compare the results of those scenarios with the required behavior.
 

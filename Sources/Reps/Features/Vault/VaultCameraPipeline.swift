@@ -1,12 +1,23 @@
 import AVFoundation
+import CoreImage
 import Foundation
+import RepsCore
 
 // Mutable capture state is confined to queue. Only the documented AVCaptureSession
 // reference is shared with the main-thread preview layer; UI never mutates the session.
-final class VaultCameraPipeline: NSObject, @unchecked Sendable, AVCapturePhotoCaptureDelegate {
+final class VaultCameraPipeline: NSObject, @unchecked Sendable, AVCapturePhotoCaptureDelegate,
+  AVCaptureVideoDataOutputSampleBufferDelegate
+{
   let session = AVCaptureSession()
   private let queue = DispatchQueue(label: "com.raaaton.sport.private-camera")
   private let output = AVCapturePhotoOutput()
+  private let frames = AVCaptureVideoDataOutput()
+  private let imageContext = CIContext(options: [.cacheIntermediates: false])
+  private var reference: VaultAlignmentImage?
+  private var aspect = 0.75
+  private var alignment: (@MainActor @Sendable (Bool) -> Void)?
+  private var lastFrameTime = -Double.infinity
+  private var stableMatches = 0
   private var input: AVCaptureDeviceInput?
   private var pending: (id: Int64, completion: @MainActor @Sendable (Data?) -> Void)?
   private var enabled = false
@@ -41,10 +52,20 @@ final class VaultCameraPipeline: NSObject, @unchecked Sendable, AVCapturePhotoCa
           session.addOutput(output)
           output.maxPhotoQualityPrioritization = .quality
         }
+        if !session.outputs.contains(frames) {
+          guard session.canAddOutput(frames) else { throw VaultMediaError.captureFailed }
+          frames.alwaysDiscardsLateVideoFrames = true
+          frames.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+          ]
+          frames.setSampleBufferDelegate(self, queue: queue)
+          session.addOutput(frames)
+        }
         try device.lockForConfiguration()
         device.videoZoomFactor = 1
         device.unlockForConfiguration()
-        if let c = output.connection(with: .video) {
+        for connection in [output.connection(with: .video), frames.connection(with: .video)] {
+          guard let c = connection else { continue }
           if c.isVideoRotationAngleSupported(90) { c.videoRotationAngle = 90 }
           if c.isVideoMirroringSupported {
             c.automaticallyAdjustsVideoMirroring = false
@@ -67,8 +88,48 @@ final class VaultCameraPipeline: NSObject, @unchecked Sendable, AVCapturePhotoCa
     queue.async { [self] in
       enabled = false
       pending = nil
+      reference = nil
+      alignment = nil
+      stableMatches = 0
+      lastFrameTime = -Double.infinity
       if session.isRunning { session.stopRunning() }
     }
+  }
+  func setReference(
+    _ reference: VaultAlignmentImage?, aspect: Double,
+    completion: @escaping @MainActor @Sendable (Bool) -> Void
+  ) {
+    queue.async { [self] in
+      self.reference = reference
+      self.aspect = aspect
+      alignment = completion
+      stableMatches = 0
+      lastFrameTime = -Double.infinity
+    }
+  }
+  func captureOutput(
+    _ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
+    from connection: AVCaptureConnection
+  ) {
+    let time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds
+    guard enabled, let reference, let alignment, time - lastFrameTime >= 0.3,
+      let buffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+    else { return }
+    lastFrameTime = time
+    let matches =
+      (try? BackupAutoreleasePool.withPool {
+        let frame = CIImage(cvPixelBuffer: buffer)
+        guard let image = imageContext.createCGImage(frame, from: frame.extent) else {
+          return false
+        }
+        return VaultPhotoAlignment.evaluate(
+          reference: reference,
+          moving: try VaultCameraAlignment.grayscale(image, aspect: aspect)
+        ).isReliable
+      }) ?? false
+    stableMatches = matches ? min(stableMatches + 1, 3) : 0
+    let stable = stableMatches >= 3
+    Task { @MainActor in alignment(stable) }
   }
   func capture(completion: @escaping @MainActor @Sendable (Data?) -> Void) {
     queue.async { [self] in
@@ -81,6 +142,9 @@ final class VaultCameraPipeline: NSObject, @unchecked Sendable, AVCapturePhotoCa
       settings.photoQualityPrioritization = .quality
       output.capturePhoto(with: settings, delegate: self)
     }
+  }
+  func cancelCapture() {
+    queue.async { [self] in pending = nil }
   }
   func photoOutput(
     _ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?

@@ -55,11 +55,10 @@ public enum Progression {
         let feeling = feelingTenths ?? previous.feelingTenths, (0...100).contains(feeling),
         previous.sets.allSatisfy({ $0.durationMS == nil && ($0.repetitions ?? 0) > 0 })
       else { return missing }
-      let easyBodyweight = reference == 0 && feeling < 80
-      guard easyBodyweight || previous.sets.allSatisfy({ ($0.repetitions ?? 0) >= maximum }) else {
+      guard previous.sets.allSatisfy({ ($0.repetitions ?? 0) >= maximum }) else {
         return result(.maintain)
       }
-      guard feeling < 80 else { return result(.achieved) }
+      guard feeling < 90 else { return result(.achieved) }
       guard let next = choices.filter({ $0.grams > reference }).min(by: { $0.grams < $1.grams })
       else { return result(.noHeavierLoad) }
       return result(.increase, next)

@@ -1,4 +1,30 @@
+import Foundation
+
 extension RepsRepository {
+  public func archiveExercise(id: String) throws {
+    try database.transaction {
+      let snapshot = try readSnapshot()
+      guard let exercise = snapshot.exercises.first(where: { $0.id == id }) else {
+        throw TrainingError.invalid("This exercise is no longer in the catalog.")
+      }
+      guard snapshot.archivedExercises.count < 1000 else {
+        throw TrainingError.invalid(
+          "The archive is full. Delete an archived exercise before archiving another.")
+      }
+      try database.execute(
+        "INSERT INTO archived_exercises VALUES(?,?)",
+        [.text(id), .text(String(decoding: try JSONEncoder().encode(exercise), as: UTF8.self))])
+      // Catalogue assignments change; active and historical workout snapshots remain frozen.
+      try removeCatalogueExercise(id: id, snapshot: snapshot)
+    }
+  }
+
+  func readArchivedExercises() throws -> [TrainingExercise] {
+    try database.query("SELECT payload FROM archived_exercises ORDER BY rowid").map {
+      try JSONDecoder().decode(TrainingExercise.self, from: Data($0.text("payload").utf8))
+    }
+  }
+
   public func deleteArchivedExercise(id: String) throws {
     try database.transaction {
       guard try database.query("SELECT id FROM exercises WHERE id=?", [.text(id)]).isEmpty else {
@@ -14,6 +40,7 @@ extension RepsRepository {
         throw TrainingError.invalid(
           "Finish or cancel the active workout before deleting this archived exercise.")
       }
+      try database.execute("DELETE FROM archived_exercises WHERE id=?", [.text(id)])
       let affected = try database.query(
         "SELECT DISTINCT workout_id FROM workout_exercises WHERE catalogue_id=?", [.text(id)]
       )

@@ -93,6 +93,9 @@ public actor RepsRepository {
     let exercise = try proposed.validated()
     try database.transaction {
       var snapshot = try readSnapshot()
+      guard !snapshot.archivedExercises.contains(where: { $0.id == exercise.id }) else {
+        throw TrainingError.invalid("This exercise has been archived. Add a new exercise instead.")
+      }
       if let index = snapshot.exercises.firstIndex(where: { $0.id == exercise.id }) {
         snapshot.exercises[index] = exercise
       } else {
@@ -150,14 +153,17 @@ public actor RepsRepository {
 
   public func deleteExercise(id: String) throws {
     try database.transaction {
-      let snapshot = try readSnapshot()
-      let emptied = snapshot.schedulesEmptied(removingExerciseID: id)
-      try database.execute("DELETE FROM schedule_exercises WHERE exercise_id=?", [.text(id)])
-      for schedule in emptied {
-        try database.execute("UPDATE schedules SET enabled=0 WHERE id=?", [.text(schedule.id)])
-      }
-      try database.execute("DELETE FROM exercises WHERE id=?", [.text(id)])
+      try removeCatalogueExercise(id: id, snapshot: readSnapshot())
     }
+  }
+
+  func removeCatalogueExercise(id: String, snapshot: TrainingSnapshot) throws {
+    let emptied = snapshot.schedulesEmptied(removingExerciseID: id)
+    try database.execute("DELETE FROM schedule_exercises WHERE exercise_id=?", [.text(id)])
+    for schedule in emptied {
+      try database.execute("UPDATE schedules SET enabled=0 WHERE id=?", [.text(schedule.id)])
+    }
+    try database.execute("DELETE FROM exercises WHERE id=?", [.text(id)])
   }
 
   func readSnapshot() throws -> TrainingSnapshot {
@@ -194,6 +200,7 @@ public actor RepsRepository {
       stretchingEnabled: try rest.integer("stretching_enabled") == 1,
       skills: try readSkills(), skillProgress: try readSkillProgress(),
       maximumWeightObjects: try rest.integer("maximum_weight_objects"),
-      backpackWeightGrams: try rest.integer("backpack_weight_grams"))
+      backpackWeightGrams: try rest.integer("backpack_weight_grams"),
+      archivedExercises: try readArchivedExercises())
   }
 }

@@ -5,14 +5,11 @@ struct ExercisesView: View {
   @EnvironmentObject private var store: TrainingStore
   @State private var editing: TrainingExercise?
   @State private var deleting: TrainingExercise?
-  @State private var archived: [TrainingExercise] = []
-  @State private var deletingArchived: TrainingExercise?
   @State private var busy = false
   @State private var error: String?
 
   var body: some View {
     TrainingContent { snapshot in
-      let old = archived.filter { item in !snapshot.exercises.contains { $0.id == item.id } }
       List {
         Section {
           ForEach(snapshot.exercises) { exercise in
@@ -25,14 +22,13 @@ struct ExercisesView: View {
             }
             .buttonStyle(.plain)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-              Button("Delete", systemImage: "trash", role: .destructive) { deleting = exercise }
-                .tint(.red)
+              Button("Archive", systemImage: "archivebox") { deleting = exercise }
                 .labelStyle(.titleAndIcon)
                 .buttonStyle(.automatic)
             }
             .contextMenu {
               Button("Edit", systemImage: "pencil") { editing = exercise }
-              RepsDestructiveButton("Delete", systemImage: "trash") { deleting = exercise }
+              Button("Archive", systemImage: "archivebox") { deleting = exercise }
             }
           }
           if snapshot.exercises.isEmpty {
@@ -45,31 +41,8 @@ struct ExercisesView: View {
             "Set the number of sets in each workout. After adding an exercise, select it in Workouts."
           )
         }
-        if !old.isEmpty {
-          Section("Archived") {
-            ForEach(old) { exercise in
-              NavigationLink {
-                ExerciseProgressView(exercise: exercise)
-              } label: {
-                TrainingListRow(title: exercise.name, subtitle: "Archived exercise")
-              }
-              .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button("Delete", systemImage: "trash", role: .destructive) {
-                  deletingArchived = exercise
-                }.tint(.red).labelStyle(.titleAndIcon)
-              }
-              .contextMenu {
-                RepsDestructiveButton("Delete", systemImage: "trash") {
-                  deletingArchived = exercise
-                }
-              }
-            }
-          }
-        }
       }
-      // iOS List batch updates crashed when deletion moved a row into/out of Archivés.
-      // Recreate only this List when its membership changes; keep alerts and editor outside.
-      .id([snapshot.exercises.map(\.id), old.map(\.id)])
+      .id(snapshot.exercises.map(\.id))
       .disabled(busy)
       .sheet(item: $editing) { exercise in
         NavigationStack {
@@ -88,18 +61,18 @@ struct ExercisesView: View {
         }
       }
       .repsConfirmation(
-        "Delete This Exercise?",
+        "Archive This Exercise?",
         isPresented: Binding(
           get: { deleting != nil }, set: { if !$0 { deleting = nil } }
         ), presenting: deleting
       ) { exercise in
-        Button("Delete Exercise", role: .destructive) { delete(exercise) }
+        Button("Archive Exercise") { archive(exercise) }
         Button("Cancel", role: .cancel) { deleting = nil }
       } message: { exercise in
-        Text(deletionMessage(exercise, snapshot: snapshot))
+        Text(archiveMessage(exercise, snapshot: snapshot))
       }
       .alert(
-        "Unable to Delete",
+        "Unable to Archive",
         isPresented: Binding(
           get: { error != nil }, set: { if !$0 { error = nil } }
         )
@@ -110,19 +83,11 @@ struct ExercisesView: View {
       }
     }
     .navigationTitle("Exercises")
-    .modifier(ArchivedExerciseDeletion(selection: $deletingArchived))
-    .task(id: store.historyRevision) {
-      do {
-        let result = try await store.historyExercises()
-        guard !Task.isCancelled else { return }
-        archived = result
-      } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
-    }
   }
 
-  private func deletionMessage(_ exercise: TrainingExercise, snapshot: TrainingSnapshot) -> String {
-    var message = "“\(exercise.name)” will be deleted."
-    message += " Its past results will remain in Archived exercises."
+  private func archiveMessage(_ exercise: TrainingExercise, snapshot: TrainingSnapshot) -> String {
+    var message = "“\(exercise.name)” will be archived."
+    message += " Its results will remain in Progress → Archived Exercises."
     let affected = snapshot.schedules.filter { $0.exerciseIDs.contains(exercise.id) }
     if !affected.isEmpty {
       message +=
@@ -136,11 +101,11 @@ struct ExercisesView: View {
     return message
   }
 
-  private func delete(_ exercise: TrainingExercise) {
+  private func archive(_ exercise: TrainingExercise) {
     busy = true
     Task {
       defer { busy = false }
-      do { try await store.deleteExercise(id: exercise.id) } catch {
+      do { try await store.archiveExercise(id: exercise.id) } catch {
         self.error = error.localizedDescription
       }
     }

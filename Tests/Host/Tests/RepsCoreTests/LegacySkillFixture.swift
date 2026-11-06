@@ -25,6 +25,14 @@ func removingNewTrainingFields(_ raw: [String: Any]) -> [String: Any] {
     contents["configuration"] = configuration
     root["contents"] = contents
   }
+  if (root["version"] as? Int ?? 10) < 10,
+    var contents = root["contents"] as? [String: Any],
+    var configuration = contents["configuration"] as? [String: Any]
+  {
+    configuration.removeValue(forKey: "archivedExercises")
+    contents["configuration"] = configuration
+    root["contents"] = contents
+  }
   guard (root["version"] as? Int ?? 6) < 6, var contents = root["contents"] as? [String: Any] else {
     return root
   }

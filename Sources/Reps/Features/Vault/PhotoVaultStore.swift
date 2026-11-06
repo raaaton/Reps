@@ -286,19 +286,26 @@ final class PhotoVaultStore: ObservableObject {
       try await saveImage(transfer.data, day: day, pose: pose, lease: lease, key: key)
     } catch { if current(lease) { self.error = message(error) } }
   }
-  func importCamera(_ bytes: Data, day: Date, pose: VaultPhotoPose?, session: UUID) async {
+  func importCamera(
+    _ bytes: Data, day: Date, pose: VaultPhotoPose?, session: UUID,
+    alignment: VaultPhotoRegistration? = nil
+  ) async {
     guard allows(session) else { return }
     guard let lease, let key, current(lease), !busy else { return }
     busy = true
     error = nil
     notice = nil
     defer { if current(lease) { busy = false } }
-    do { try await saveImage(bytes, day: day, pose: pose, lease: lease, key: key) } catch {
+    do {
+      try await saveImage(
+        bytes, day: day, pose: pose, lease: lease, key: key, alignment: alignment)
+    } catch {
       if current(lease) { self.error = message(error) }
     }
   }
   private func saveImage(
-    _ bytes: Data, day: Date, pose: VaultPhotoPose?, lease: VaultLease, key: SymmetricKey
+    _ bytes: Data, day: Date, pose: VaultPhotoPose?, lease: VaultLease, key: SymmetricKey,
+    alignment: VaultPhotoRegistration? = nil
   )
     async throws
   {
@@ -306,7 +313,7 @@ final class PhotoVaultStore: ObservableObject {
     let record = try await Task.detached {
       try lease.check()
       return try VaultCryptography.prepare(
-        bytes, day: dayKey, pose: pose, key: key, keyID: lease.keyID)
+        bytes, day: dayKey, pose: pose, key: key, keyID: lease.keyID, alignment: alignment)
     }.value
     guard current(lease) else { return }
     try await database().insert(record, dayKey: dayKey, lease: lease)
@@ -421,7 +428,13 @@ final class PhotoVaultStore: ObservableObject {
         }.value
         guard current(lease), comparisonRequest == request, !Task.isCancelled else { return }
         guard let image = UIImage(data: bytes) else { throw VaultFailure.invalidPhoto }
-        images[id] = image
+        let registration = id == firstID ? second.metadata.alignment : first.metadata.alignment
+        if let registration, registration.referenceID == id {
+          images[id] = try VaultCameraAlignment.cropReference(
+            image, crop: registration.referenceCrop)
+        } else {
+          images[id] = image
+        }
       }
       guard current(lease), comparisonRequest == request, !Task.isCancelled else { return }
       comparisonImages = images

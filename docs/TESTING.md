@@ -1,5 +1,18 @@
 # What Reps's tests prove
 
+6 November 2026: the final suite passes 444 XCTest cases plus 10 Swift Testing
+cases, and 13 metadata/branding checks. New coverage includes archive persistence
+without history, frozen active/history snapshots, transactional purge and rollback,
+JSON v10/legacy compatibility, archive-limit exportability, strict Feeling <9 and
+bodyweight maximums. Seven alignment tests use known synthetic similarity transforms,
+brightness variation, unrelated/flat images, common-crop corner coverage and rejection
+of background-only alignment when the central silhouette moves. Two metadata tests
+cover older photos and persistence of reference crops. These host tests do not run
+UIKit/AVFoundation. The native generated-image probe checks grayscale orientation,
+the actual JPEG registration renderer/crop and encrypted metadata; its device result
+must be read back with an exact build/run token. Live camera, mirroring, countdown
+and photo-comparison rendering still need physical owner testing.
+
 An assertion is the final check, not the whole test. Its value depends on the setup and actions that happen before it.
 
 ## Real scenarios

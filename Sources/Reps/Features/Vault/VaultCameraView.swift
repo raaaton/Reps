@@ -32,11 +32,15 @@ struct VaultCameraView: View {
   @State private var referenceReady = false
   @State private var saved = 0
   @State private var retry = UUID()
+  @State private var showReviewReference = false
   private var step: VaultPhotoCapturePlan.Step? {
     guard let steps = route.plan?.steps, steps.indices.contains(index) else { return nil }
     return steps[index]
   }
   private var aspect: Double {
+    if let image = camera.capturedImage, image.size.height > 0 {
+      return Double(image.size.width / image.size.height)
+    }
     guard referenceReady, let image = vault.preview, image.size.height > 0 else { return 0.75 }
     return Double(image.size.width / image.size.height)
   }
@@ -145,8 +149,15 @@ struct VaultCameraView: View {
           VaultCameraPreview(session: camera.pipeline.session, front: camera.front)
           if let image = camera.capturedImage {
             Image(uiImage: image).resizable().scaledToFit()
+            if showReviewReference,
+              let reference = camera.usesAlignment ? camera.alignedReference : vault.preview
+            {
+              Image(uiImage: reference).resizable().scaledToFit().opacity(opacity)
+                .allowsHitTesting(false).accessibilityHidden(true)
+            }
           } else if stencilVisible, let image = vault.preview, referenceReady {
-            Image(uiImage: image).resizable().scaledToFit().opacity(opacity)
+            Image(uiImage: image).resizable().scaledToFit()
+              .colorMultiply(camera.stencilAligned ? .green : .white).opacity(opacity)
               .allowsHitTesting(false).accessibilityHidden(true)
           }
           if let value = camera.countdown {
@@ -176,6 +187,26 @@ struct VaultCameraView: View {
   }
   private var reviewControls: some View {
     VStack(spacing: 12) {
+      if camera.alignmentAvailable {
+        Picker(
+          "Framing",
+          selection: Binding(
+            get: { camera.usesAlignment }, set: { camera.selectAligned($0) })
+        ) {
+          Text("Aligned").tag(true)
+          Text("Original").tag(false)
+        }.pickerStyle(.segmented)
+        Text(
+          "Aligned by moving, rotating and uniformly scaling the photo. Shared edges are cropped."
+        )
+        .font(.caption).foregroundStyle(.secondary)
+      } else if camera.alignmentAttempted {
+        Text("Alignment uncertain. Original framing kept; you can retake the photo.")
+          .font(.caption).foregroundStyle(.secondary)
+      }
+      if step?.reference != nil {
+        Toggle("Show Reference", isOn: $showReviewReference)
+      }
       if saving { ProgressView("Encrypting and saving…") }
       Button(route.sequential ? "Save and Continue" : "Save Photo", systemImage: "checkmark") {
         Task { await save() }
@@ -187,6 +218,11 @@ struct VaultCameraView: View {
   private func liveControls(_ step: VaultPhotoCapturePlan.Step) -> some View {
     VStack(spacing: 12) {
       if step.reference != nil {
+        Label(
+          camera.stencilAligned ? "Contours Aligned" : "Match the Reference Contours",
+          systemImage: camera.stencilAligned ? "checkmark.circle.fill" : "viewfinder"
+        ).font(.caption).foregroundStyle(camera.stencilAligned ? .green : .secondary)
+          .accessibilityAddTraits(.updatesFrequently)
         Toggle("Stencil", isOn: $stencilVisible).disabled(!referenceReady)
         HStack {
           Slider(value: $opacity, in: 0...1).accessibilityLabel("Stencil opacity")
@@ -215,7 +251,9 @@ struct VaultCameraView: View {
         Button("Cancel Timer", systemImage: "xmark") { camera.cancelCountdown() }
       } else {
         Button("Take Photo", systemImage: "camera.shutter.button.fill") {
-          camera.shoot(delay: timerSeconds, aspect: aspect)
+          camera.shoot(
+            delay: timerSeconds, aspect: aspect, reference: vault.preview,
+            referenceID: step.reference?.id)
         }.repsProminentButton().controlSize(.large)
           .disabled(!camera.ready || camera.working || !referenceReady)
       }
@@ -239,19 +277,23 @@ struct VaultCameraView: View {
     } else {
       referenceReady = true
     }
+    camera.setReference(vault.preview, aspect: aspect)
   }
   private func save() async {
     guard !saving, vault.allows(route.session), !vault.busy,
       let step, let bytes = camera.capture
     else { return }
     saving = true
-    await vault.importCamera(bytes, day: route.day, pose: step.pose, session: route.session)
+    await vault.importCamera(
+      bytes, day: route.day, pose: step.pose, session: route.session,
+      alignment: camera.selectedRegistration)
     saving = false
     guard vault.allows(route.session), vault.error == nil else { return }
     saved += 1
     advance()
   }
   private func advance() {
+    showReviewReference = false
     camera.retake()
     vault.clearPreview()
     referenceReady = false

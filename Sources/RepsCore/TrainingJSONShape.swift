@@ -5,7 +5,8 @@ extension TrainingTransfer {
   static func checkJSONShape(_ data: Data) throws {
     let root = try JSONSerialization.jsonObject(with: data)
     let archiveVersion = (root as? [String: Any])?["version"] as? Int
-    let hasBackpack = archiveVersion == 9
+    let hasArchives = archiveVersion == 10
+    let hasBackpack = archiveVersion == 9 || hasArchives
     let hasMaximum = archiveVersion == 8 || hasBackpack
     let hasQuantities = archiveVersion == 7 || hasMaximum
     let hasSkills = archiveVersion == 6 || hasQuantities
@@ -56,7 +57,8 @@ extension TrainingTransfer {
       ["exercises", "schedules", "restSeconds", "weightItems", "goals", "stretchingEnabled"]
         + (hasSkills ? ["skills", "skillProgress"] : [])
         + (hasMaximum ? ["maximumWeightObjects"] : [])
-        + (hasBackpack ? ["backpackWeightGrams"] : []))
+        + (hasBackpack ? ["backpackWeightGrams"] : [])
+        + (hasArchives ? ["archivedExercises"] : []))
     if hasMaximum, c["maximumWeightObjects"] == nil { throw invalid }
     if hasBackpack, c["backpackWeightGrams"] == nil { throw invalid }
     if archiveVersion == 5 || hasSkills, !(c["stretchingEnabled"] is Bool) {
@@ -70,6 +72,9 @@ extension TrainingTransfer {
       }
     }
     for ex in try array(c["exercises"]) { try definition(ex) }
+    if hasArchives {
+      for ex in try array(c["archivedExercises"]) { try definition(ex) }
+    }
     for schedule in try array(c["schedules"]) {
       let value = try object(
         schedule,

@@ -120,14 +120,15 @@ extension TrainingTransfer {
       _ = try weight.validated(now: WorkoutClock.now)
     }
     let c = data.configuration
-    guard c.exercises.count <= 1000, c.weightItems.count <= 1000, c.schedules.count <= 7,
+    guard c.exercises.count <= 1000, c.archivedExercises.count <= 1000, c.weightItems.count <= 1000,
+      c.schedules.count <= 7,
       c.restSeconds > 0, (1...1000).contains(c.maximumWeightObjects), c.backpackWeightGrams > 0
     else { throw invalid }
-    try unique(c.exercises.map(\.id))
+    try unique((c.exercises + c.archivedExercises).map(\.id))
     try unique(c.weightItems.map(\.id))
     try unique(c.schedules.map(\.id))
     try unique(c.goals.map { $0.definition.id })
-    for ex in c.exercises { try definition(ex) }
+    for ex in c.exercises + c.archivedExercises { try definition(ex) }
     for item in c.weightItems {
       try text(item.name)
       guard item.grams > 0, (1...1000).contains(item.quantity),

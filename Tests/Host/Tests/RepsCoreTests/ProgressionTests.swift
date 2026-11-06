@@ -34,27 +34,47 @@ final class ProgressionTests: XCTestCase {
     XCTAssertEqual(result.referenceGrams, 3200)
     XCTAssertEqual(result.nextLoad?.grams, 3500)
   }
-  func testInclusiveThresholdAndMixedLoadsUseStrictlyHeavierChoice() {
+  func testMixedLoadsUseStrictlyHeavierChoice() {
     let result = Progression.assess(target: target, previous: previous(), loads: loads)
     XCTAssertEqual(result.status, .increase)
     XCTAssertEqual(result.referenceGrams, 4500)
     XCTAssertEqual(result.nextLoad?.grams, 5100)
     XCTAssertEqual(
-      Progression.assess(target: target, previous: previous(feeling: 80), loads: loads).status,
+      Progression.assess(target: target, previous: previous(feeling: 90), loads: loads).status,
       .achieved)
     XCTAssertEqual(
       Progression.assess(target: target, previous: previous(reps: [12, 11, 12, 12]), loads: loads)
         .status, .maintain)
   }
-  func testFeelingJustBelowEightQualifiesWithoutRoundingOldValues() {
-    for feeling in [75, 79] {
+  func testFeelingStrictlyBelowNineQualifiesWithoutRoundingOldValues() {
+    for feeling in [75, 79, 80, 85, 89] {
       XCTAssertEqual(
         Progression.assess(target: target, previous: previous(feeling: feeling), loads: loads)
           .status, .increase)
     }
     XCTAssertEqual(
-      Progression.assess(target: target, previous: previous(feeling: 80), loads: loads).status,
+      Progression.assess(target: target, previous: previous(feeling: 90), loads: loads).status,
       .achieved)
+  }
+  func testGoalProposalUsesStrictFeelingBoundaryForWeightedAndBodyweightMaximums() {
+    for grams in [0, 3900] {
+      for feeling in [80, 85, 89, 90] {
+        let record = previous(feeling: feeling, weights: Array(repeating: grams, count: 4))
+        let goal = GoalEngine.suggestion(target: target, previous: record, loads: loads)
+        XCTAssertEqual(goal?.reason, feeling < 90 ? .increaseLoad : .keep)
+        XCTAssertEqual(goal?.goal.load.grams, feeling < 90 ? (grams == 0 ? 3000 : 4500) : grams)
+        XCTAssertEqual(goal?.goal.repetitions, feeling < 90 ? [8, 8, 8, 8] : [12, 12, 12, 12])
+      }
+    }
+  }
+  func testSubmaximumBodyweightNeverProposesAddedLoad() {
+    for feeling in [75, 80, 85, 89, 90] {
+      let record = previous(reps: [12, 12, 11, 12], feeling: feeling, weights: [0, 0, 0, 0])
+      let goal = GoalEngine.suggestion(target: target, previous: record, loads: loads)
+      XCTAssertEqual(goal?.goal.load.grams, 0)
+      XCTAssertEqual(goal?.reason, feeling < 80 ? .addRepetition : .keep)
+      XCTAssertEqual(goal?.goal.repetitions, feeling < 80 ? [12, 12, 12, 12] : [12, 12, 11, 12])
+    }
   }
   func testIncompleteMissingOrInconsistentRecordsNeverInventRecommendation() {
     XCTAssertEqual(
@@ -101,8 +121,8 @@ final class ProgressionTests: XCTestCase {
 }
 
 extension ProgressionTests {
-  func testEasyBodyweightUsesSmallestPositiveLoadBeforeMaximumReps() {
-    let actual = previous(reps: [10, 9, 9, 8], feeling: 79, weights: [0, 0, 0, 0])
+  func testBodyweightAtMaximumUsesSmallestPositiveLoad() {
+    let actual = previous(reps: [12, 12, 12, 12], feeling: 89, weights: [0, 0, 0, 0])
     let choices = [5100, 0, 3900, 3000].map { AvailableLoad(grams: $0, components: []) }
     let assessment = Progression.assess(target: target, previous: actual, loads: choices)
     XCTAssertEqual(assessment.status, .increase)
@@ -112,8 +132,8 @@ extension ProgressionTests {
     XCTAssertEqual(goal?.goal.repetitions, [8, 8, 8, 8])
     XCTAssertEqual(goal?.reason, .increaseLoad)
   }
-  func testFirstLoadRequiresFeelingBelowEightAndCompleteBodyweightSets() {
-    for effort in [80, 90] {
+  func testFirstLoadRequiresEveryBodyweightSetAtMaximumAndCompleteSets() {
+    for effort in [0, 75, 79, 80, 85, 89, 90] {
       let actual = previous(reps: [10, 9, 9, 8], feeling: effort, weights: [0, 0, 0, 0])
       let result = Progression.assess(target: target, previous: actual, loads: loads)
       XCTAssertEqual(result.status, .maintain)
@@ -128,7 +148,7 @@ extension ProgressionTests {
     }
   }
   func testEasyBodyweightWithoutAvailableLoadDoesNotInventOne() {
-    let actual = previous(reps: [10, 9, 9, 8], feeling: 75, weights: [0, 0, 0, 0])
+    let actual = previous(reps: [12, 12, 12, 12], feeling: 89, weights: [0, 0, 0, 0])
     let result = Progression.assess(target: target, previous: actual, loads: [.bodyweight])
     XCTAssertEqual(result.status, .noHeavierLoad)
     XCTAssertNil(result.nextLoad)

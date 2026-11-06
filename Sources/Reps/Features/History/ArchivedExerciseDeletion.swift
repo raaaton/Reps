@@ -13,11 +13,11 @@ struct ArchivedExerciseDeletion: ViewModifier {
         isPresented: Binding(get: { selection != nil }, set: { if !$0 { selection = nil } }),
         presenting: selection
       ) { exercise in
-        Button("Delete Past Results", role: .destructive) { remove(exercise) }
+        Button("Delete Exercise and Results", role: .destructive) { remove(exercise) }
         Button("Cancel", role: .cancel) { selection = nil }
       } message: { exercise in
         Text(
-          "All past results for “\(exercise.name)” will be permanently deleted. Workouts containing only this exercise will also be deleted. Other exercises will be kept."
+          "“\(exercise.name)” and all its past results will be permanently deleted. Workouts containing only this exercise will also be deleted. Other exercises will be kept."
         )
       }
       .alert(

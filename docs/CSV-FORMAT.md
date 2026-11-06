@@ -1,5 +1,14 @@
 # Données d’entraînement — CSV Reps v1 et archive JSON v1
 
+6 November 2026: the current training JSON is version 10. Configuration adds
+`archivedExercises`, an array of preserved exercise definitions disjoint from the
+active catalogue (at most 1,000). Versions 1–9 import with an empty explicit archive;
+their historical exercise snapshots remain available. Version 10 requires the
+array and validates its members. Complete encrypted backups embed the same training
+archive. CSV remains version 1, replaces history only and preserves the current
+catalogue and explicit archives. Private photo registration/crop metadata travels
+only inside encrypted vault backups, never in training JSON or CSV.
+
 Reps0.7.4 : remplacement complet de l’historique CSV demandé et confirmé par l’utilisateur ;124tests hôte/lint/build réussis, installationUSB et postflight réussis ; recette iPhone attendue. Formats CSV/JSON inchangés ; voir ExecPlan cumul/remplacement.
 
 ## Photos privées

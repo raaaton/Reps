@@ -102,6 +102,10 @@ final class TrainingStore: ObservableObject {
     try await commit { try await $0.deleteSchedule(id: id) }
   }
 
+  func archiveExercise(id: String) async throws {
+    try await commit { try await $0.archiveExercise(id: id) }
+  }
+
   func deleteExercise(id: String) async throws {
     try await commit { try await $0.deleteExercise(id: id) }
   }

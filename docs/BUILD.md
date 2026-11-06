@@ -1,5 +1,23 @@
 # Candidate 1.5.4 (123) — optional encrypted vault backup
 
+Current6November2026:1.5.7(129) is installed and directly verified with unchanged
+effective identity, signer, entitlements and exact cached signing certificate.444
+XCTest +10SwiftTesting pass, as do13metadata checks, strict lint and unsigned
+app/widget inspection. Native129build10.47s +metadata embedding2.43s pass. The
+generated-image native probe first reproduced a grayscale vertical inversion on128;
+129removes the redundant bitmap CTM flip and passes the exact asymmetric orientation,
+similarity registration/shared crop, blank rejection and encrypted metadata tests.
+Report token:timeline-stencil-129-final-20261106. No personal images or automatic
+camera shutter used. Real camera/mirroring/UI remain physical owner checks.
+
+Standard USB helper delivered128successfully;129classic transfers stalled before
+replacement. Read-only diagnostics found a lost usbmuxd device and then a persistent
+iOS install coordinator. No daemon restart, app uninstall, data deletion, certificate
+or profile replacement. After owner full power-cycle, the already-signed verified
+129IPA installed through the existing streaming client. App/widget CMS profiles are
+valid >24h with the same certificate. Direct final inventory confirms129. Full
+evidence and remaining checks:exec-plans/2026-11-06-archives-stencil-progression.md.
+
 2 November 2026: source implementation and independent security review completed; 419 existing XCTest cases plus 8 Swift Testing backup cases pass, with strict lint, 13 metadata checks, actual xtool compilation, compiler-derived App Intent metadata and unsigned bundle inspection. Native backup proof compiles but has not run.
 
 Connected iPhone preflight: installed1.5.3(122), matching existing signer/certificate valid beyond24h. Standard device-run.sh stops at Apple profile creation with409 ENTITY_ERROR: “There are no current IOS devices on this team matching the provided device IDs.” Read-only xtool ds devices list succeeds with an empty inventory. No certificate/profile was revoked or replaced. Postflight confirms122 remains with the same signer and entitlements. The synthetic request marker is removed, so the old app opens normally. Do not retry provisioning without resolving the registration issue under AGENTS.md; no native-runtime/Files/Face ID acceptance claim or public release.

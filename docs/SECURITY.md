@@ -18,6 +18,18 @@ Independent review found and prompted fixes for busy/empty export fallback, aban
 
 # Reps — sécurité
 
+6 November 2026: camera contour analysis uses discarded, throttled video frames in
+memory; it adds no microphone input, permission, network request or media file.
+Only an explicit shutter produces the unsaved photo, and only explicit Save inserts
+encrypted data. Original/aligned bytes, previews, reference pixels and request
+callbacks are cleared or invalidated on stop/lock/inactivity; detached registration
+checks cancellation between bounded search stages. Per-shot generations reject
+cancelled or superseded capture callbacks. Optional registration reference/crop data
+is encrypted inside existing metadata and excluded from training exports. Existing
+keys, AAD, biometric policy and installed identity stay unchanged. A fresh independent
+review checked cancellation, similarity/crop geometry and archive/transfer changes;
+real camera and Face ID interactions still require owner review.
+
 25 October — candidate1.5.3(122) completes the movie index in the encrypted streaming sink. Media payload never passes through a new clear file: provisional movie/fragment headers become same-size free boxes, sample metadata stays bounded in memory, final movie index is appended through the same AES-GCM chunk accumulator, lease checks and500MiB limit. Parser caps100000samples and16MiBsegments, checks offsets/timings before publishing, and failures remove encrypted staging. Native writer cancellation occurs after unlocking; original safe sink errors reach the private import form. Independent review approves bounds, byte offsets, encryption/key/lease/lock/error paths.419host tests and build/installation pass. Integrated native122passes four cropped fixtures, exact-frame/duration checks and the complete encrypted/tamper/revocation probe; the owner confirms both new original videos import without errors. Synthetic-only exported probe files stay limited to fixed generated patterns.
 
 25 October — trimmed-video119: MP4 initialization metadata is restored inside the existing encrypted segment sink, before authenticated chunk sealing. Compressed media fragments, encryption, key/lease checks, permissions and strict duration/audio/transform/dimension/seek guards remain unchanged. Both original and rewritten initialization are capped at16MiB; checked box parsing supports the writer's32-bit headers and v0/v1 timing fields. DEBUG cache-triggered tests access only fixed bundled synthetic fixtures and their bounded synthetic cache outputs; no real vault media/database export. Independent code review finds no blocker; native119passes encrypted playback, tamper/reorder rejection and revocation plus both trimmed fixtures. The owner confirms the original-file import succeeds.

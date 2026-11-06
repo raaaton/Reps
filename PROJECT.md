@@ -1,5 +1,15 @@
 # Reps — Product Specification
 
+6 November 2026 amendment: explicit Archive preserves exercises and results in
+Progress → Archived Exercises, including definitions with no history. All required
+repetition sets must reach their maximum and Feeling must be strictly below 9 before
+a load increase, including bodyweight; this supersedes historical <8 load thresholds.
+Private photo capture adds green contour feedback and post-capture similarity
+registration (translation, rotation, uniform scale only), optional Original/Aligned
+review and explicit save. No body deformation or guarantee across pose/perspective
+changes. Matching reference crop metadata stays encrypted with the new photo; older
+originals stay intact. Uncertain matches preserve original framing.
+
 > Native implementation decision, 11 October 2026: Swift/SwiftUI + Swift Package Manager + xtool on Linux, no Expo/React Native/JavaScript/macOS build service. This document describes the target product, not shipped features. See README.md and docs/ROADMAP.md for current implementation and physical-device validation. The interface must feel as familiar, restrained and coherent as a first-party Apple app; verify that experience on iPhone at every milestone.
 
 ## 1. Product

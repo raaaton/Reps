@@ -90,7 +90,8 @@ extension RepsRepository {
     }
     if preview.isRestoration {
       for table in [
-        "schedules", "exercises", "weight_items", "skill_progress", "skill_definitions",
+        "schedules", "exercises", "archived_exercises", "weight_items", "skill_progress",
+        "skill_definitions",
       ] {
         try database.execute("DELETE FROM \(table)")
       }
@@ -107,6 +108,14 @@ extension RepsRepository {
     for practice in final.skillSessions { try writeSkillSession(practice) }
   }
   private func insertConfiguration(_ c: TrainingSnapshot) throws {
+    for exercise in c.archivedExercises {
+      try database.execute(
+        "INSERT INTO archived_exercises VALUES(?,?)",
+        [
+          .text(exercise.id),
+          .text(String(decoding: try JSONEncoder().encode(exercise), as: UTF8.self)),
+        ])
+    }
     for definition in c.skills {
       try database.execute(
         "INSERT INTO skill_definitions VALUES(?,?)",

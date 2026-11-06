@@ -8,10 +8,23 @@ public struct VaultPhotoMetadata: Codable, Sendable, Equatable {
   public var dayKey: String
   public let type: String
   public var pose: VaultPhotoPose?
+  public var alignment: VaultPhotoRegistration?
   public init(dayKey: String, type: String, pose: VaultPhotoPose? = nil) {
     self.dayKey = dayKey
     self.type = type
     self.pose = pose
+    self.alignment = nil
+  }
+}
+
+// Encrypted alongside the existing metadata. Only the matching reference is cropped;
+// its original remains intact, and unrelated comparisons retain their original frame.
+public struct VaultPhotoRegistration: Codable, Sendable, Equatable {
+  public let referenceID: String
+  public let referenceCrop: VaultAlignmentRect
+  public init(referenceID: String, referenceCrop: VaultAlignmentRect) {
+    self.referenceID = referenceID
+    self.referenceCrop = referenceCrop
   }
 }
 

@@ -89,7 +89,7 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     try await r.saveMaximumWeightObjects(20)
     let archive = try await r.exportTraining(now: now)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 9)
+    XCTAssertEqual(decoded.version, 10)
     let target = try RepsRepository(path: ":memory:")
     let preview = try await target.previewArchiveImport(decoded, now: now)
     try await target.applyTrainingImport(preview, now: now)
@@ -108,14 +108,17 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     config.removeValue(forKey: "backpackWeightGrams")
     contents["configuration"] = config
     root["contents"] = contents
-    let old = try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root))
+    let old = try TrainingArchive.decode(
+      JSONSerialization.data(withJSONObject: removingNewTrainingFields(root)))
     XCTAssertEqual(old.contents.configuration.maximumWeightObjects, 10)
     root["version"] = 8
     for invalid: Any in [0, -1, 1001, 1.5, NSNull()] {
       config["maximumWeightObjects"] = invalid
       contents["configuration"] = config
       root["contents"] = contents
-      XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
+      XCTAssertThrowsError(
+        try TrainingArchive.decode(
+          JSONSerialization.data(withJSONObject: removingNewTrainingFields(root))))
     }
   }
 
@@ -130,6 +133,6 @@ final class WeightLimitPreferenceTests: XCTestCase, @unchecked Sendable {
     let reopened = try RepsRepository(path: path)
     let after = try await reopened.exportTraining(now: now)
     XCTAssertEqual(after.contents, before.contents)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 20)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 21)
   }
 }

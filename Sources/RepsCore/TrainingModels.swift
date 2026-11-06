@@ -109,6 +109,7 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
 
 public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public var exercises: [TrainingExercise]
+  public var archivedExercises: [TrainingExercise] = []
   public var schedules: [TrainingSchedule]
   public var restSeconds: Int
   public var weightItems: [WeightItem] = []
@@ -123,9 +124,11 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
     exercises: [TrainingExercise], schedules: [TrainingSchedule], restSeconds: Int,
     weightItems: [WeightItem] = [], goals: [ExerciseGoal] = [], stretchingEnabled: Bool = true,
     skills: [SkillDefinition] = [], skillProgress: [SkillProgress] = [],
-    maximumWeightObjects: Int = 10, backpackWeightGrams: Int = 3000
+    maximumWeightObjects: Int = 10, backpackWeightGrams: Int = 3000,
+    archivedExercises: [TrainingExercise] = []
   ) {
     self.exercises = exercises
+    self.archivedExercises = archivedExercises
     self.schedules = schedules
     self.restSeconds = restSeconds
     self.weightItems = weightItems
@@ -138,13 +141,16 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   }
 
   enum CodingKeys: String, CodingKey {
-    case exercises, schedules, restSeconds, weightItems, goals, stretchingEnabled, skills,
+    case exercises, archivedExercises, schedules, restSeconds, weightItems, goals,
+      stretchingEnabled, skills,
       skillProgress, maximumWeightObjects, backpackWeightGrams
   }
 
   public init(from decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     exercises = try c.decode([TrainingExercise].self, forKey: .exercises)
+    archivedExercises =
+      try c.decodeIfPresent([TrainingExercise].self, forKey: .archivedExercises) ?? []
     schedules = try c.decode([TrainingSchedule].self, forKey: .schedules)
     restSeconds = try c.decode(Int.self, forKey: .restSeconds)
     weightItems = try c.decode([WeightItem].self, forKey: .weightItems)

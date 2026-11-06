@@ -10,6 +10,7 @@
   @MainActor
   enum VaultPhotoStencilProbe {
     static func run() throws -> String {
+      try VaultCameraAlignmentProbe.run()
       let format = UIGraphicsImageRendererFormat()
       format.scale = 1
       let source = UIGraphicsImageRenderer(size: CGSize(width: 12, height: 16), format: format)
@@ -41,15 +42,18 @@
       let key = SymmetricKey(size: .bits256)
       let keyID = UUID().uuidString
       var photos: [VaultPhotoEntry] = []
+      let alignment = VaultPhotoRegistration(
+        referenceID: "generated-reference",
+        referenceCrop: VaultAlignmentRect(x: 0.05, y: 0.05, width: 0.9, height: 0.9))
       for pose: VaultPhotoPose? in [.back, .back, nil] {
         let record = try VaultCryptography.prepare(
-          square, day: "2026-11-02", pose: pose, key: key, keyID: keyID)
+          square, day: "2026-11-02", pose: pose, key: key, keyID: keyID, alignment: alignment)
         let metadata = try JSONDecoder().decode(
           VaultPhotoMetadata.self,
           from:
             VaultCryptography.open(
               record.metadata, key: key, keyID: keyID, id: record.id, role: "metadata"))
-        guard metadata.pose == pose,
+        guard metadata.pose == pose, metadata.alignment == alignment,
           try VaultCryptography.open(
             record.original, key: key, keyID: keyID, id: record.id, role: "original") == square
         else { throw VaultFailure.damaged }
@@ -62,7 +66,7 @@
         plan?.steps.filter({ $0.pose == nil }).count == 1
       else { throw VaultFailure.damaged }
       return
-        "PASS stencil: centered crop, EXIF rotation normalization, encrypted photo and unassigned metadata round-trip, one step per photo including duplicate types; generated pixels only, no camera or personal vault access."
+        "PASS stencil: native similarity registration and shared crop, top-left grayscale, flat-image rejection, centered crop, EXIF normalization, encrypted metadata round-trip and per-photo steps; generated pixels only, no camera or personal vault access."
     }
   }
 #endif
