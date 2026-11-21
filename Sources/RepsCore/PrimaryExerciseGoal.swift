@@ -6,10 +6,9 @@ extension TrainingSnapshot {
     var selected: ExerciseGoal?
     var selectedPriority = -1
     var selectedTotal = Decimal.zero
-    for schedule in schedules where schedule.exerciseIDs.contains(exercise.id) {
-      var target = exercise
-      target.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
-      guard let goal = schedule.goals[exercise.id], goal.isCompatible(with: target),
+    for assignment in workoutTargets(for: exercise) {
+      let target = assignment.exercise
+      guard let goal = assignment.goal, goal.isCompatible(with: target),
         (try? goal.validated()) != nil
       else { continue }
 

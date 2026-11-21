@@ -112,7 +112,10 @@ public actor RepsRepository {
         }
       }
       for item in snapshot.variantGoals where item.scheduleID == schedule.id {
-        if let count = schedule.setCounts[item.goal.definition.id] {
+        if let slotID = schedule.exerciseIDs.first(where: {
+          (schedule.variantIDs[$0] ?? snapshot.definition(exerciseID: $0)?.variantID)
+            == item.variantID
+        }), let count = schedule.setCounts[slotID] {
           var target = item.goal.definition
           target.setCount = count
           try database.execute(
@@ -290,21 +293,26 @@ public actor RepsRepository {
       "SELECT id FROM targeted_exercise_merges ORDER BY id"
     ).map { try $0.text("id") }
     for index in snapshot.schedules.indices {
-      for (id, variantID) in snapshot.schedules[index].variantIDs
-      where variantID
-        != ExerciseVariant.baseID(for: snapshot.definition(exerciseID: id)?.parentExerciseID ?? id)
-      {
-        if let goal = try variantGoal(
-          variantID: variantID, scheduleID: snapshot.schedules[index].id),
-          var target = snapshot.definition(exerciseID: id, variantID: variantID)
-        {
-          target.setCount = snapshot.schedules[index].setCounts[id] ?? target.setCount
-          snapshot.schedules[index].goals[id] = ExerciseGoal(
-            definition: target, load: goal.load, repetitions: goal.repetitions,
-            durationsMS: goal.durationsMS)
-        } else {
-          snapshot.schedules[index].goals[id] = nil
+      let schedule = snapshot.schedules[index]
+      for (id, variantID) in schedule.variantIDs {
+        guard var target = snapshot.definition(exerciseID: id, variantID: variantID) else {
+          continue
         }
+        let parentID = target.parentExerciseID
+        let baseID = ExerciseVariant.baseID(for: parentID)
+        // The canonical base's legacy cache remains authoritative, including stale
+        // goals that need review. Aliased slots resolve that base, never their old V cache.
+        if variantID == baseID && id == parentID { continue }
+        let goal: ExerciseGoal?
+        if variantID == baseID {
+          goal =
+            try schedule.baseGoals[parentID]
+            ?? variantGoal(variantID: variantID, scheduleID: schedule.id)
+        } else {
+          goal = try variantGoal(variantID: variantID, scheduleID: schedule.id)
+        }
+        target.setCount = schedule.setCounts[id] ?? target.setCount
+        snapshot.schedules[index].goals[id] = goal?.assigned(to: target)
       }
     }
     return snapshot

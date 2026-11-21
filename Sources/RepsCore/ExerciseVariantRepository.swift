@@ -140,3 +140,37 @@ extension RepsRepository {
     }
   }
 }
+
+extension RepsRepository {
+  /// A progression menu changes only this assignment, never sibling settings/goals.
+  public func setScheduleVariant(scheduleID: String, exerciseID: String, variantID: String) throws {
+    try database.transaction {
+      let snapshot = try readSnapshot()
+      guard let schedule = snapshot.schedules.first(where: { $0.id == scheduleID }),
+        schedule.exerciseIDs.contains(exerciseID),
+        let parent = snapshot.definition(exerciseID: exerciseID),
+        snapshot.variants.contains(where: {
+          $0.id == variantID && $0.exerciseID == parent.parentExerciseID && !$0.isArchived
+        })
+      else { throw TrainingError.invalid("Choose an available progression for this workout.") }
+      try database.execute(
+        "INSERT INTO schedule_variants VALUES(?,?,?) ON CONFLICT(schedule_id,exercise_id) DO UPDATE SET variant_id=excluded.variant_id",
+        [.text(scheduleID), .text(exerciseID), .text(variantID)])
+    }
+  }
+}
+
+extension ExerciseGoal {
+  // Rebind an aliased assignment and resize its sets without masking stale settings.
+  func assigned(to exercise: TrainingExercise) -> Self {
+    let resized = resized(to: exercise)
+    var definition = resized.definition
+    if definition.id != exercise.id || definition.parentExerciseID != exercise.parentExerciseID {
+      definition.variant = exercise.variant
+    }
+    definition.id = exercise.id
+    return Self(
+      definition: definition, load: resized.load,
+      repetitions: resized.repetitions, durationsMS: resized.durationsMS)
+  }
+}

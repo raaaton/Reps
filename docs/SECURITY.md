@@ -1,5 +1,14 @@
 # Optional portable Private Vault backup — 2 November 2026
 
+## 21 November 2026 — Next Workout follow-up
+
+The Progress picker updates one validated schedule/progression assignment inside
+a transaction. No schema, backup format, vault, biometric, permission or capability
+change. A training-only USB copy was taken before installation for data-preservation
+comparison; no private-vault file was read. Goals remain isolated per progression,
+and aliased base selections retain canonical-parent metadata without overwriting
+sibling goals. Delivery retains the existing signer and certificate.
+
 ## 21 November 2026 — exercise progression migration
 
 Training schema/transfer changes do not alter the encrypted vault, Keychain,

@@ -518,3 +518,12 @@ extension TrainingStore {
     }
   }
 }
+
+extension TrainingStore {
+  func setScheduleVariant(scheduleID: String, exerciseID: String, variantID: String) async throws {
+    try await commit {
+      try await $0.setScheduleVariant(
+        scheduleID: scheduleID, exerciseID: exerciseID, variantID: variantID)
+    }
+  }
+}

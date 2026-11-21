@@ -1,5 +1,21 @@
 > Installed 1.5.8 (130): native Edit/Done reordering in Progress and Settings → Exercises, sharing one persisted catalogue order.457host tests,13metadata checks, strict lint and native build/inspection pass; direct USB postflight confirms unchanged identity/certificate/capabilities. Native drag/UI await owner review. See [implementation and delivery](docs/exec-plans/2026-11-06-exercise-order.md).
 
+## Progress next-workout correction — 1.5.10 (132)
+
+Exercise Progress uses a smaller native top content margin. The exercise summary
+and Next Workout resolve the program's selected progression, independent of the
+progression being inspected in the charts. A native Next Workout menu changes
+only that program assignment; goals remain separate. Choose a Goal is hidden
+when a progression already has a saved goal. Genuine stale or unavailable goals
+still require review.
+
+472 XCTest plus 10 Swift Testing pass, including the verified personal-copy
+regression and merged dual-assignment selections. Full Swift lint, 13 metadata
+checks, native build and unsigned app/widget inspection pass. USB delivery and postflight verify 1.5.10 (132), unchanged identity, entitlements
+and certificate; all 28 training tables are unchanged. Details:
+docs/exec-plans/2026-11-21-progress-next-workout.md. Native top spacing,
+menu behavior, Dynamic Type and VoiceOver remain owner checks.
+
 ## Exercise progressions — 1.5.9 (131)
 
 Exercises now have named manual progressions with optional fixed decimal measurements

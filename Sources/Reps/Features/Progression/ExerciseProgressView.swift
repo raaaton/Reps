@@ -202,6 +202,7 @@ struct ExerciseProgressView: View {
         }
       }
     }
+    .contentMargins(.top, 8, for: .scrollContent)
     .navigationTitle(exercise.name).navigationBarTitleDisplayMode(.inline)
     .onChange(of: selectedVariantID) { _, _ in
       projection = nil

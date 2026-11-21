@@ -64,7 +64,9 @@ extension RepsRepository {
     }
     exercise = resolved
     let slotID =
-      schedule?.exerciseIDs.first(where: { slot in
+      (exerciseID != exercise.parentExerciseID && schedule?.exerciseIDs.contains(exerciseID) == true
+        ? exerciseID : nil)
+      ?? schedule?.exerciseIDs.first(where: { slot in
         (schedule?.variantIDs[slot] ?? ExerciseVariant.baseID(for: slot)) == selection
           && snapshot.definition(exerciseID: slot)?.parentExerciseID == exercise.parentExerciseID
       }) ?? exerciseID
@@ -78,13 +80,22 @@ extension RepsRepository {
     let snapshot = try readSnapshot()
     let (exercise, schedule) = try goalTarget(
       exerciseID: exerciseID, scheduleID: scheduleID, snapshot: snapshot, variantID: variantID)
+    let parentID = exercise.parentExerciseID
+    let isBase = exercise.variantID == ExerciseVariant.baseID(for: parentID)
+    let storedGoal: ExerciseGoal?
+    if isBase {
+      let legacy =
+        schedule.map { $0.baseGoals[parentID] }
+        ?? snapshot.goals.first {
+          $0.definition.id == parentID && $0.definition.variantID == exercise.variantID
+        }
+      storedGoal =
+        try legacy ?? variantGoal(variantID: exercise.variantID, scheduleID: schedule?.id)
+    } else {
+      storedGoal = try variantGoal(variantID: exercise.variantID, scheduleID: schedule?.id)
+    }
     let goal =
-      try variantGoal(variantID: exercise.variantID, scheduleID: schedule?.id)
-      ?? (exercise.variantID == ExerciseVariant.baseID(for: exerciseID)
-        ? (schedule.map { $0.baseGoals[exerciseID] }
-          ?? snapshot.goals.first {
-            $0.definition.id == exerciseID && $0.definition.variantID == exercise.variantID
-          }) : nil)
+      (!isBase || exercise.id != parentID) ? storedGoal?.assigned(to: exercise) : storedGoal
     let loads = try WeightInventory.loads(
       items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects,
       backpackGrams: snapshot.backpackWeightGrams)
@@ -134,6 +145,14 @@ extension RepsRepository {
       else {
         throw TrainingError.invalid("The exercise has changed. Open its goal again.")
       }
+      guard
+        try readGoalContext(
+          exerciseID: originalExercise.id, scheduleID: scheduleID,
+          variantID: originalExercise.variantID
+        ).adopted == original
+      else {
+        throw TrainingError.invalid("The goal has changed. Open its details again.")
+      }
       if originalExercise.variant != nil {
         guard var variant = snapshot.variants.first(where: { $0.id == originalExercise.variantID })
         else { throw TrainingError.storage }
@@ -154,7 +173,11 @@ extension RepsRepository {
       {
         try writeVariant(ExerciseVariant.base(for: TrainingExercise.read(parent)))
       }
-      try writeGoal(goal, original: original, scheduleID: scheduleID)
+      let refreshedOriginal = try readGoalContext(
+        exerciseID: originalExercise.id, scheduleID: scheduleID,
+        variantID: originalExercise.variantID
+      ).adopted
+      try writeGoal(goal, original: refreshedOriginal, scheduleID: scheduleID)
       try GoalReconciliation.updateAll(database)
     }
   }

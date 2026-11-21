@@ -1,5 +1,22 @@
 # Candidate 1.5.4 (123) — optional encrypted vault backup
 
+## 21 November 2026 — Progress correction 1.5.10 (132)
+
+472 XCTest / zero failures (10.971 s) plus 10 Swift Testing / zero failures
+(0.067 s), strict recursive Swift lint and 13 metadata checks pass. Real native
+build 25.00 s, compiler metadata generation and embedding build 2.11 s pass;
+unsigned app/widget inspection verifies 1.5.10 (132) and existing capabilities.
+No schema/format/SDK/dependency changes. Independent review identified alias-slot
+metadata loss and whole-program picker save hazards; a narrow transactional
+selection and regressions preserve both goals/counts and sibling choices.
+
+Standard USB helper exits 0/install+verification100%; direct postflight verifies
+1.5.10(132), unchanged effective identity/signer/entitlements/exact certificate and
+CMS-valid app/widget profiles. All 28 training tables have unchanged rows.
+Physical spacing/menu/accessibility remains owner acceptance; see the ExecPlan.
+Evidence: /tmp/reps132-{host-final,lint-final,metadata-final,build-final,
+embedded-build,inspection,install}.log. No GitHub publication requested.
+
 ## 21 November 2026 — progressions 1.5.9 (131)
 
 467 XCTest pass (10.18 s) plus 10 Swift Testing (0.066 s), strict recursive Swift

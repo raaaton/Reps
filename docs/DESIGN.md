@@ -1,5 +1,23 @@
 # Reps — design et interactions
 
+## 21 November 2026 — shared Next Workout presentation, 1.5.10
+
+User correction: browsing L-sit or V-sit history must show the same Next Workout
+for the parent exercise. This block now follows each program's saved progression
+and offers its own native menu; browsing a chart does not change the program.
+The menu writes only the selected assignment in a SQLite transaction, so sibling
+settings and goals cannot be overwritten by a stale full-program snapshot.
+Targets preserve the assignment's set count, including legacy aliased slots.
+
+Progress summary review and main-goal ranking use that same resolved program
+target, fixing the false Review needed caused by comparing a V goal with L base
+settings. Choose a Goal is suppressed when any progression has a saved goal;
+other progressions' numeric targets are never copied or adopted for presentation.
+True incompatibility and inventory availability checks remain intact. Chart/data
+filters retain their own selected progression. The top List content margin is
+8 points, following the existing native workout-list treatment; physical spacing
+and accessibility remain owner checks.
+
 ## 21 November 2026 — manual exercise progressions
 
 Exercise editing opens a native Progressions list and focused Form editor. Each

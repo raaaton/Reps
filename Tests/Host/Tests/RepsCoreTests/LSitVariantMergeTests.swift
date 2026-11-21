@@ -162,3 +162,47 @@ extension LSitVariantMergeTests {
     XCTAssertFalse(history.contains { $0.id == "actual-v-uuid" })
   }
 }
+
+extension LSitVariantMergeTests {
+  func testProgressPickerChangesOnlyItsSlotAndRetainsBothVariantsGoals() async throws {
+    let repository = try await fixture(bothAssigned: true)
+    for identity in ["l-sit", "actual-v-uuid"] {
+      let context = try await repository.goalContext(exerciseID: identity, scheduleID: "pull-abs")
+      let goal = ExerciseGoal(
+        definition: context.exercise, load: .bodyweight, repetitions: nil,
+        durationsMS: Array(
+          repeating: identity == "l-sit" ? 15000 : 5000, count: context.exercise.setCount))
+      try await repository.saveGoal(goal, original: context.adopted, scheduleID: "pull-abs")
+    }
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+    defer { try? FileManager.default.removeItem(atPath: path) }
+    _ = try await repository.mergeLSitAndVSit(
+      LSitMergeManifest(lSitID: "l-sit", vSitID: "actual-v-uuid"), recoveryPath: path)
+    let before = try await repository.snapshot()
+    let parent = try XCTUnwrap(before.exercises.first { $0.id == "l-sit" })
+    try await repository.setScheduleVariant(
+      scheduleID: "pull-abs", exerciseID: "actual-v-uuid", variantID: "l-sit:base")
+    let changed = try await repository.snapshot()
+    let targets = changed.workoutTargets(for: parent)
+    XCTAssertEqual(targets.count, 2)
+    XCTAssertEqual(targets.map { $0.exercise.variantID }, ["l-sit:base", "l-sit:base"])
+    XCTAssertEqual(targets.map { $0.exercise.setCount }, [3, 5])
+    XCTAssertEqual(targets.last?.goal?.durationsMS, [15000, 15000, 15000, 15000, 15000])
+    XCTAssertEqual(changed.variantGoals, before.variantGoals)
+    let context = try await repository.goalContext(
+      exerciseID: "actual-v-uuid", scheduleID: "pull-abs", variantID: "l-sit:base")
+    XCTAssertEqual(context.exercise.setCount, 5)
+    XCTAssertEqual(context.adopted?.durationsMS, [15000, 15000, 15000, 15000, 15000])
+    try await repository.setScheduleVariant(
+      scheduleID: "pull-abs", exerciseID: "l-sit", variantID: "actual-v-uuid:base")
+    try await repository.setScheduleVariant(
+      scheduleID: "pull-abs", exerciseID: "actual-v-uuid", variantID: "actual-v-uuid:base")
+    let final = try await repository.snapshot()
+    XCTAssertEqual(
+      final.workoutTargets(for: parent).map { $0.exercise.variantID },
+      ["actual-v-uuid:base", "actual-v-uuid:base"])
+    XCTAssertEqual(final.variantGoals, before.variantGoals)
+    let workout = try await repository.startWorkout(scheduleID: "pull-abs", now: now)
+    XCTAssertEqual(workout.exercises.map { $0.goal?.durationsMS?.count }, [3, 5])
+  }
+}

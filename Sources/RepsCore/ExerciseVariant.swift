@@ -74,7 +74,8 @@ public struct ExerciseVariant: Identifiable, Codable, Equatable, Sendable {
     result.maximumReps = maximumReps
     result.durationSeconds = durationSeconds
     // Unchanged base definitions remain compatible with older snapshots and goals.
-    result.variant = isBase && name == exercise.name && measure == nil ? nil : self
+    result.variant =
+      isBase && exercise.id == exerciseID && name == exercise.name && measure == nil ? nil : self
     return result
   }
 }

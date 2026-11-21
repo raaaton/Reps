@@ -112,14 +112,9 @@ extension TrainingSnapshot {
   public func needsGoalReview(for exercise: TrainingExercise, availableLoads _: [AvailableLoad])
     -> Bool
   {
-    schedules.contains { schedule in
-      guard schedule.exerciseIDs.contains(exercise.id), let goal = schedule.goals[exercise.id]
-      else {
-        return false
-      }
-      var target = exercise
-      target.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
-      return !goal.isCompatible(with: target)
+    workoutTargets(for: exercise).contains { assignment in
+      guard let goal = assignment.goal else { return false }
+      return !goal.isCompatible(with: assignment.exercise)
         || !WeightInventory.isAvailable(
           goal.load, items: weightItems, maximumObjects: maximumWeightObjects,
           backpackGrams: backpackWeightGrams)

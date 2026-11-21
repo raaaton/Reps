@@ -25,6 +25,10 @@ struct ExerciseGoalRow: View {
   @State private var context: GoalContext?
   @State private var editing = false
   @State private var error: String?
+  private var shouldPromptForGoal: Bool {
+    guard case .ready(let snapshot) = store.phase else { return true }
+    return !snapshot.hasProgressionGoal(for: exercise)
+  }
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       if let context {
@@ -42,7 +46,9 @@ struct ExerciseGoalRow: View {
                 }
               } else {
                 Text(TrainingLabels.target(exercise)).font(.subheadline).foregroundStyle(.secondary)
-                Text("Choose a Goal").font(.subheadline).foregroundStyle(.tint)
+                if shouldPromptForGoal {
+                  Text("Choose a Goal").font(.subheadline).foregroundStyle(.tint)
+                }
               }
             }
             Spacer()
@@ -56,7 +62,10 @@ struct ExerciseGoalRow: View {
     }
     .repsAnimation(value: context?.adopted)
     .task(id: [scheduleID ?? "", exercise.id, exercise.variantID, String(store.historyRevision)]) {
-      if let context, context.scheduleID != scheduleID || context.exercise.id != exercise.id {
+      if let context,
+        context.scheduleID != scheduleID || context.exercise.id != exercise.id
+          || context.exercise.variantID != exercise.variantID
+      {
         self.context = nil
         editing = false
       }
@@ -341,32 +350,72 @@ struct WorkoutGoalLabel: View {
   }
 }
 
-// Exercise history remains unified; future goals are shown in their workout context.
+// Next Workout always follows the program, independently of the chart's progression.
 struct ExerciseWorkoutGoals: View {
   @EnvironmentObject private var store: TrainingStore
   let exercise: TrainingExercise
 
   var body: some View {
     if case .ready(let snapshot) = store.phase {
-      let schedules = snapshot.schedules.filter { $0.exerciseIDs.contains(exercise.id) }
-      if schedules.isEmpty {
+      let targets = snapshot.workoutTargets(for: exercise)
+      if targets.isEmpty {
         Text("Add this exercise to a workout to configure its sets and goals.")
           .font(.subheadline).foregroundStyle(.secondary)
       } else {
-        ForEach(schedules) { schedule in
-          VStack(alignment: .leading, spacing: 4) {
-            Text("\(schedule.name) · \(TrainingLabels.weekday(schedule.weekday))")
-              .font(.subheadline).foregroundStyle(.secondary)
-            if var definition = snapshot.definition(
-              exerciseID: exercise.id, variantID: exercise.variantID)
-            {
-              let _ = {
-                definition.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
-              }()
-              ExerciseGoalRow(exercise: definition, scheduleID: schedule.id)
-            }
-          }
+        ForEach(targets) { target in
+          ExerciseNextWorkoutTarget(target: target)
         }
+      }
+    }
+  }
+}
+
+private struct ExerciseNextWorkoutTarget: View {
+  @EnvironmentObject private var store: TrainingStore
+  let target: ExerciseWorkoutTarget
+  @State private var saving = false
+  @State private var error: String?
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("\(target.schedule.name) · \(TrainingLabels.weekday(target.schedule.weekday))")
+        .font(.subheadline).foregroundStyle(.secondary)
+      if case .ready(let snapshot) = store.phase {
+        let variants = snapshot.variants.filter {
+          $0.exerciseID == target.exercise.parentExerciseID
+            && (!$0.isArchived || $0.id == target.exercise.variantID)
+        }
+        if variants.count > 1 {
+          Picker(
+            "Progression",
+            selection: Binding(
+              get: { target.exercise.variantID }, set: { select($0) }
+            )
+          ) {
+            ForEach(variants) { variant in
+              Text(variant.displayName + (variant.isArchived ? " (Archived)" : "")).tag(variant.id)
+            }
+          }.pickerStyle(.menu).disabled(saving)
+            .accessibilityHint("Choose the progression planned for this workout")
+        }
+      }
+      ExerciseGoalRow(exercise: target.exercise, scheduleID: target.schedule.id)
+        .id(target.exercise.variantID)
+      if let error { Text(error).font(.subheadline).foregroundStyle(.secondary) }
+    }
+  }
+
+  private func select(_ variantID: String) {
+    guard !saving else { return }
+    saving = true
+    error = nil
+    Task {
+      defer { saving = false }
+      do {
+        try await store.setScheduleVariant(
+          scheduleID: target.schedule.id, exerciseID: target.exercise.id, variantID: variantID)
+      } catch {
+        self.error = error.localizedDescription
       }
     }
   }
