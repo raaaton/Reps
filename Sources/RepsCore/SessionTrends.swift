@@ -12,7 +12,7 @@ public struct SessionTrendContext: Hashable, Sendable {
   public let restSeconds: Int?
 }
 public struct SessionTrendPoint: Identifiable, Sendable {
-  public var id: String { performance.workoutID }
+  public var id: String { performance.exercise.id }
   public var workoutID: String { performance.workoutID }
   public let performance: ExercisePerformance
   public let date: Date

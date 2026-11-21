@@ -1,5 +1,24 @@
 > Installed 1.5.8 (130): native Edit/Done reordering in Progress and Settings → Exercises, sharing one persisted catalogue order.457host tests,13metadata checks, strict lint and native build/inspection pass; direct USB postflight confirms unchanged identity/certificate/capabilities. Native drag/UI await owner review. See [implementation and delivery](docs/exec-plans/2026-11-06-exercise-order.md).
 
+## Historical progression editing — 1.5.11 (133)
+
+Existing historical workouts now offer Progression in each exercise editor,
+including archived choices. Saving a new choice preserves workout/exercise/set
+IDs, results, loads and Feeling; records move to that progression's history.
+Unchanged identities retain their original frozen name/measurement. Changing
+repetitions ↔ duration confirms clearing only the local result text for explicit
+re-entry. The program and future goals remain unchanged.
+
+Retained recorded rests and untouched interrupted-set timing/load snapshots are
+preserved. Retagged legacy L/V occurrences keep distinct chart points while the
+session is counted once. Old goal/decision snapshots are invalidated only on the
+occurrence whose progression changes. No schema/transfer-format migration.
+
+480 XCTest and 10 Swift Testing cases, strict Swift lint, 13 metadata tests,
+actual native app/widget builds and unsigned inspection pass. USB postflight verifies 1.5.11 (133), unchanged identity/capabilities/certificate
+and all 28 training tables unchanged. Physical menu/confirmation/accessibility
+acceptance is tracked in docs/exec-plans/2026-11-21-history-progression-edit.md.
+
 ## Progress next-workout correction — 1.5.10 (132)
 
 Exercise Progress uses a smaller native top content margin. The exercise summary

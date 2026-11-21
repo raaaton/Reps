@@ -1,5 +1,22 @@
 # Candidate 1.5.4 (123) — optional encrypted vault backup
 
+## 21 November 2026 — historical progression editor 1.5.11 (133)
+
+480 XCTest / zero failures (10.656 s), 10 Swift Testing / zero failures,
+strict recursive Swift lint, 13 metadata checks and diff whitespace checks pass.
+Two independent review findings reproduced RED then GREEN: dropped recorded rests/
+unrelated interrupted sets, and duplicate point identities for legacy occurrences
+retagged to one progression. The targeted41tests pass after fixes.
+
+Native SwiftUI compilation exposed a type-check timeout in chart label text;
+typed String helpers resolve it. Corrected real native build10.83s, metadata
+regeneration, embedding2.21s and unsigned 1.5.11(133) app/widget inspection pass.
+No schema/format/dependency/SDK/capability change. Standard USB helper exits0/install+verification100%; direct postflight confirms
+1.5.11(133), unchanged identity/signer/entitlements/exact certificate, valid app/widget
+CMS profiles, and identical rows in all 28 training tables. See the ExecPlan. Logs: /tmp/reps133-{host-final,lint-final,
+metadata-final,build-corrected,embedded-build-final,inspection,install}.log.
+No GitHub push or public release requested. Physical acceptance remains pending.
+
 ## 21 November 2026 — Progress correction 1.5.10 (132)
 
 472 XCTest / zero failures (10.971 s) plus 10 Swift Testing / zero failures

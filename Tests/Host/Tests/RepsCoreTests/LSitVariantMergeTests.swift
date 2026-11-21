@@ -206,3 +206,39 @@ extension LSitVariantMergeTests {
     XCTAssertEqual(workout.exercises.map { $0.goal?.durationsMS?.count }, [3, 5])
   }
 }
+
+extension LSitVariantMergeTests {
+  func testRetaggingBothLegacyOccurrencesToOneVariantKeepsDistinctChartPoints() async throws {
+    let repository = try await fixture()
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+    defer { try? FileManager.default.removeItem(atPath: path) }
+    _ = try await repository.mergeLSitAndVSit(
+      LSitMergeManifest(lSitID: "l-sit", vSitID: "actual-v-uuid"), recoveryPath: path)
+    let original = try await repository.workout(id: "both")
+    let edit = ManualWorkout(
+      id: original.id, name: original.name, performedAt: original.startedAt,
+      exercises: original.exercises.map { exercise in
+        ManualWorkoutExercise(
+          catalogueID: exercise.definition.id, tracking: exercise.definition.tracking,
+          sets: exercise.sets.map {
+            ManualWorkoutSet(
+              repetitions: $0.repetitions, durationMS: $0.durationMS, weightGrams: $0.weightGrams,
+              sourceID: $0.id)
+          },
+          feelingTenths: exercise.feelingTenths, variantID: "l-sit:base")
+      })
+    try await repository.updateHistoricalWorkout(edit, original: original, now: now)
+    let records = try await repository.exerciseHistory(exerciseID: "l-sit", variantID: "l-sit:base")
+    XCTAssertEqual(records.count, 2)
+    XCTAssertEqual(records.first?.exercise.id, original.exercises[1].id)
+    let previous = try await repository.previousPerformance(
+      exerciseID: "l-sit", excludingWorkoutID: "", variantID: "l-sit:base")
+    XCTAssertEqual(previous?.id, original.exercises[1].id)
+    let points = SessionTrends.points(
+      records: records, metric: .duration, tracking: .duration, weight: nil, since: .distantPast)
+    XCTAssertEqual(points.count, 2)
+    XCTAssertEqual(Set(points.map(\.id)).count, 2)
+    XCTAssertEqual(Set(points.map(\.workoutID)).count, 1)
+    XCTAssertEqual(try SessionTrends.total(points: points), 45000)
+  }
+}

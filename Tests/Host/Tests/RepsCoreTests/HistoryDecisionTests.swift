@@ -111,3 +111,41 @@ final class HistoryDecisionTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(seeded?.repetitions, [9, 9])
   }
 }
+
+extension HistoryDecisionTests {
+  func testProgressionCorrectionDropsOldGoalAndDecisionWithoutChangingFutureGoals() async throws {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+    defer { try? FileManager.default.removeItem(atPath: path) }
+    let repository = try RepsRepository(path: path)
+    let completed = try await completedWithDecision(repository)
+    let exercise = try XCTUnwrap(completed.exercises.first)
+    let database = try SQLiteDatabase(path: path)
+    let captured = ExerciseGoal(
+      definition: exercise.definition, load: .bodyweight, repetitions: [8])
+    try database.execute(
+      "INSERT INTO workout_goals VALUES(?,?)",
+      [.text(exercise.id), try ExerciseGoal.encode(captured)])
+    let original = try await repository.workout(id: completed.id)
+    let before = try await repository.snapshot()
+    var variant = ExerciseVariant.base(for: exercise.definition)
+    variant.id = "alternate"
+    variant.name = "Alternate"
+    try await repository.saveVariant(variant)
+    let beforeGoal = try await goal(repository)
+    var edit = draft(original)
+    edit.exercises[0].variantID = variant.id
+    try await repository.updateHistoricalWorkout(edit, original: original, now: now + 3000)
+    let changed = try await repository.workout(id: original.id)
+    XCTAssertEqual(changed.exercises.first?.id, exercise.id)
+    XCTAssertEqual(changed.exercises.first?.sets, exercise.sets)
+    XCTAssertNil(changed.exercises.first?.goal)
+    XCTAssertTrue(
+      try database.query(
+        "SELECT * FROM workout_goal_decisions WHERE exercise_id=?", [.text(exercise.id)]
+      ).isEmpty)
+    let afterGoal = try await goal(repository)
+    XCTAssertEqual(afterGoal, beforeGoal)
+    let after = try await repository.snapshot()
+    XCTAssertEqual(after.schedules, before.schedules)
+  }
+}

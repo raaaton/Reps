@@ -30,7 +30,7 @@ enum LatestExerciseGoals {
           """
           SELECT e.*,w.schedule_id FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id
           WHERE \(hasVariants ? "(e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?))" : "e.catalogue_id=?") AND \(hasVariants ? "COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND" : "") w.status='completed' AND e.feeling_tenths IS NOT NULL
-          ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1
+          ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC,e.position DESC LIMIT 1
           """,
           hasVariants
             ? [

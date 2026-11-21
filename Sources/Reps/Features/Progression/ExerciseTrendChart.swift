@@ -40,7 +40,7 @@ struct ExerciseTrendChart: View {
           RepsAccentColors(accentChoice).tint
         )
         .zIndex(selectedIndex == index ? 2 : 1)
-        .accessibilityLabel("Workout \(index + 1), \(WorkoutLabels.day(point.performance.dayKey))")
+        .accessibilityLabel("Entry \(index + 1), \(WorkoutLabels.day(point.performance.dayKey))")
         .accessibilityValue(
           "\(TrendPresentation.chartValue(point.value(for: metric), metric: metric)), \(TrendPresentation.setCount(point.context.seriesCount)); workout total \(TrendPresentation.value(point.total, metric: metric))"
         )
@@ -107,7 +107,7 @@ struct ExerciseTrendChart: View {
     }
     .chartLegend(.hidden).frame(height: height)
     .accessibilityLabel(
-      "Chart of \(TrendPresentation.title(metric).lowercased()). One value per workout, from oldest to newest."
+      "Chart of \(TrendPresentation.title(metric).lowercased()). One value per recorded exercise, from oldest to newest."
     )
     // A new filter gets a new chart: update marks/axes immediately, fade only its presentation.
     .transaction { $0.animation = nil }

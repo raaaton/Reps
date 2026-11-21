@@ -76,7 +76,7 @@ extension RepsRepository {
       guard current.status == .completed, current.scheduleID != "manual" else { return [] }
       return try current.exercises.map { exercise in
         let rows = try database.query(
-          "SELECT e.*,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND w.schedule_id!='manual' AND (w.day_key<? OR (w.day_key=? AND (w.started_at<? OR (w.started_at=? AND w.rowid<(SELECT rowid FROM workouts WHERE id=?))))) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC",
+          "SELECT e.*,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND w.schedule_id!='manual' AND (w.day_key<? OR (w.day_key=? AND (w.started_at<? OR (w.started_at=? AND w.rowid<(SELECT rowid FROM workouts WHERE id=?))))) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC,e.position DESC",
           [
             .text(exercise.definition.parentExerciseID),
             .text(exercise.definition.parentExerciseID),

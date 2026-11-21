@@ -29,7 +29,7 @@ extension RepsRepository {
     -> WorkoutExercise?
   {
     try database.query(
-      "SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=? AND (? IS NULL OR w.schedule_id=? OR w.schedule_id='manual') AND (? IS NULL OR e.set_count=?) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1",
+      "SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=? AND (? IS NULL OR w.schedule_id=? OR w.schedule_id='manual') AND (? IS NULL OR e.set_count=?) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC,e.position DESC LIMIT 1",
       [
         .text(exerciseID), .text(exerciseID), .text(exerciseID),
         .text(variantID ?? ExerciseVariant.baseID(for: exerciseID)),

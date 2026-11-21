@@ -1,5 +1,19 @@
 # Optional portable Private Vault backup — 2 November 2026
 
+## 21 November 2026 — explicit historical retagging
+
+The progression change validates the selected stable ID against the historical
+exercise's canonical parent in the same SQLite transaction as the correction.
+Unknown/cross-parent choices fail atomically. Source workout/exercise/set IDs are
+retained; unchanged histories retain frozen metadata, recorded rests and pending
+set state. Only the explicitly changed occurrence loses its obsolete derived goal/
+decision. No real history is reclassified automatically by installation.
+
+Tracking changes affect the local draft after confirmation and require explicit
+new results; no implicit conversion, new capability, schema or transfer format.
+The vault, Keychain, biometrics and media paths are untouched. Training-only USB
+copies support pre/postflight data preservation checks and stay outside Git.
+
 ## 21 November 2026 — Next Workout follow-up
 
 The Progress picker updates one validated schedule/progression assignment inside

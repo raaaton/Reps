@@ -33,7 +33,7 @@ extension RepsRepository {
   {
     try database.transaction {
       try database.query(
-        "SELECT e.*,w.id AS session_id,w.name AS session_name,w.day_key,w.status,w.schedule_id,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND (? IS NULL OR COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=?) AND w.status!='active' ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC",
+        "SELECT e.*,w.id AS session_id,w.name AS session_name,w.day_key,w.status,w.schedule_id,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND (? IS NULL OR COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=?) AND w.status!='active' ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC,e.position DESC",
         [
           .text(exerciseID), .text(exerciseID), .text(exerciseID),
           variantID.map(SQLValue.text) ?? .null,
@@ -76,11 +76,18 @@ extension RepsRepository {
         SELECT d.* FROM workout_goal_decisions d JOIN workout_exercises e ON d.exercise_id=e.id
         WHERE e.workout_id=?
         """, [.text(draft.id)])
+      let recordedRests = try database.query(
+        "SELECT * FROM workout_rests WHERE workout_id=? ORDER BY rowid", [.text(draft.id)])
       let definitions = try draft.exercises.map { entry -> TrainingExercise in
-        let definition =
+        let captured =
           stored.exercises.first { $0.definition.id == entry.catalogueID }?.definition
           ?? snapshot.exercises.first { $0.id == entry.catalogueID }
-        guard let definition, definition.tracking == entry.tracking else {
+        guard let captured else {
+          throw TrainingError.invalid("A selected exercise is no longer available.")
+        }
+        let definition = try snapshot.historicalDefinition(
+          captured, selecting: entry.variantID ?? captured.variantID)
+        guard definition.tracking == entry.tracking else {
           throw TrainingError.invalid(
             "A selected exercise is no longer available or its tracking mode changed.")
         }
@@ -123,8 +130,9 @@ extension RepsRepository {
         let definition = definitions[position]
         let prior = stored.exercises.first { $0.definition.id == entry.catalogueID }
         let exerciseID = prior?.id ?? UUID().uuidString
+        let pending = prior.flatMap { entry.preservesDecision(for: $0) ? $0 : nil }
         try database.execute(
-          "INSERT INTO workout_exercises VALUES(?,?,?,?,?,?,?,?,?,?,?,NULL,NULL,NULL,NULL)",
+          "INSERT INTO workout_exercises VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
           [
             .text(exerciseID), .text(draft.id), .text(definition.id), .text(definition.name),
             .text(definition.tracking.rawValue), .integer(definition.setCount),
@@ -132,9 +140,15 @@ extension RepsRepository {
             definition.maximumReps.map(SQLValue.integer) ?? .null,
             definition.durationSeconds.map(SQLValue.integer) ?? .null, .integer(position),
             entry.feelingTenths.map(SQLValue.integer) ?? .null,
+            pending?.setStartedAt.map(SQLValue.integer) ?? .null,
+            pending?.setWeightGrams.map(SQLValue.integer) ?? .null,
+            pending?.setEndedAt.map(SQLValue.integer) ?? .null,
+            try WeightInventory.encode(pending?.setComponents),
           ])
         try writeWorkoutVariant(definition, occurrenceID: exerciseID, locked: true)
-        if let goal = prior?.goal { try writeWorkoutGoal(goal, exerciseID: exerciseID) }
+        if let prior, definition.variantID == prior.definition.variantID, let goal = prior.goal {
+          try writeWorkoutGoal(goal, exerciseID: exerciseID)
+        }
         if let prior, entry.preservesDecision(for: prior),
           let decision = try decisions.first(where: { try $0.text("exercise_id") == prior.id })
         {
@@ -159,13 +173,35 @@ extension RepsRepository {
             ])
         }
       }
+      for rest in recordedRests {
+        let occurrenceID = try rest.text("exercise_id")
+        guard let prior = stored.exercises.first(where: { $0.id == occurrenceID }),
+          let entry = draft.exercises.first(where: { $0.catalogueID == prior.definition.id })
+        else { continue }
+        let number = try rest.integer("after_set")
+        if number > 0 {
+          // Retain a recorded rest only while the same source set occupies its slot.
+          guard prior.sets.indices.contains(number - 1), entry.sets.indices.contains(number - 1),
+            entry.sets[number - 1].sourceID == prior.sets[number - 1].id
+          else { continue }
+        }
+        try database.execute(
+          "INSERT INTO workout_rests VALUES(?,?,?,?,?,?,?)",
+          [
+            .text(try rest.text("id")), .text(draft.id), .text(occurrenceID), .integer(number),
+            .text(try rest.text("status")),
+            try rest.optionalInteger("deadline").map(SQLValue.integer) ?? .null,
+            try rest.optionalInteger("remaining_ms").map(SQLValue.integer) ?? .null,
+          ])
+      }
     }
   }
 }
 
 extension ManualWorkoutExercise {
   fileprivate func preservesDecision(for prior: WorkoutExercise) -> Bool {
-    tracking == prior.definition.tracking && feelingTenths == prior.feelingTenths
+    (variantID ?? prior.definition.variantID) == prior.definition.variantID
+      && tracking == prior.definition.tracking && feelingTenths == prior.feelingTenths
       && sets.count == prior.sets.count
       && zip(sets, prior.sets).allSatisfy { proposed, stored in
         proposed.sourceID == stored.id && proposed.repetitions == stored.repetitions

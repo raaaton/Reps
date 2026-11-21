@@ -174,3 +174,33 @@ extension ExerciseGoal {
       repetitions: resized.repetitions, durationsMS: resized.durationsMS)
   }
 }
+
+extension TrainingSnapshot {
+  /// The original snapshot remains authoritative until another identity is chosen.
+  public func historicalDefinition(_ original: TrainingExercise, selecting variantID: String) throws
+    -> TrainingExercise
+  {
+    if variantID == original.variantID { return original }
+    let parentID =
+      identityAliases.first(where: { $0.sourceID == original.id })?.exerciseID
+      ?? original.parentExerciseID
+    guard let variant = variants.first(where: { $0.id == variantID && $0.exerciseID == parentID })
+    else {
+      throw TrainingError.invalid("This progression is no longer available for this exercise.")
+    }
+    return variant.applying(to: original)
+  }
+
+  public func historicalDefinitions(for original: TrainingExercise) -> [TrainingExercise] {
+    let parentID =
+      identityAliases.first(where: { $0.sourceID == original.id })?.exerciseID
+      ?? original.parentExerciseID
+    var choices = variants.filter { $0.exerciseID == parentID }.map {
+      $0.id == original.variantID ? original : $0.applying(to: original)
+    }
+    if !choices.contains(where: { $0.variantID == original.variantID }) {
+      choices.insert(original, at: 0)
+    }
+    return choices
+  }
+}

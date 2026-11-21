@@ -1,5 +1,28 @@
 # Reps — design et interactions
 
+## 21 November 2026 — historical progression correction, 1.5.11
+
+History → workout → Edit → exercise now shows a native Progression menu for both
+new and existing past workouts. Choices include archived variants and the original
+frozen identity even when it is no longer in the catalogue. Keeping the same ID
+never refreshes its old name/measurement. An explicit other ID captures that
+variant's settings on the existing occurrence, keeping the parent snapshot,
+set count, occurrence/set IDs, timestamps, weights and Feeling.
+
+A different tracking metric presents a native confirmation before clearing only
+local performance fields, then requires entered results in that metric. The source
+set IDs/count, weight fields and Feeling stay in the draft. Cancel and leaving
+without Save do not change stored data. The menu/confirmation uses native SwiftUI
+controls; HIG Alerts was consulted for handling potential loss of entered text.
+
+The old variant-specific captured goal and decision are removed only when that
+occurrence is explicitly retagged. Future goals and program choices are unchanged.
+Recorded rests retain their IDs while their original source set stays in its slot;
+untouched occurrences retain interrupted-set timing/load/components. Multiple
+legacy occurrences assigned to one progression keep distinct points and details;
+workout counts use distinct session IDs, with stable intra-session ordering.
+Physical menu/cancellation/large-text/VoiceOver checks await owner acceptance.
+
 ## 21 November 2026 — shared Next Workout presentation, 1.5.10
 
 User correction: browsing L-sit or V-sit history must show the same Next Workout

@@ -10,6 +10,7 @@ private struct HistoricalSetDraft: Identifiable {
 
 private struct HistoricalExerciseDraft: Identifiable {
   var definition: TrainingExercise
+  var originalDefinition: TrainingExercise? = nil
   var id: String { definition.id }
   var sets = [HistoricalSetDraft()]
   var feeling = ""
@@ -85,7 +86,7 @@ struct ManualWorkoutEditor: View {
     _exercises = State(
       initialValue: workout.exercises.map { exercise in
         HistoricalExerciseDraft(
-          definition: exercise.definition,
+          definition: exercise.definition, originalDefinition: exercise.definition,
           sets: exercise.sets.map { set in
             HistoricalSetDraft(
               performance: set.repetitions.map(String.init)
@@ -115,7 +116,7 @@ struct ManualWorkoutEditor: View {
           Section("Completed Exercises") {
             ForEach($exercises) { $exercise in
               NavigationLink {
-                HistoricalExerciseEditor(allowsVariantChange: original == nil, exercise: $exercise)
+                HistoricalExerciseEditor(exercise: $exercise)
               } label: {
                 VStack(alignment: .leading, spacing: 4) {
                   Text(exercise.definition.displayName).foregroundStyle(.primary)
@@ -279,35 +280,37 @@ private struct HistoricalExercisePicker: View {
 
 private struct HistoricalExerciseEditor: View {
   @EnvironmentObject private var store: TrainingStore
-  var allowsVariantChange = false
   @Binding var exercise: HistoricalExerciseDraft
+  @State private var pendingProgression: TrainingExercise?
+  @State private var progressionError: String?
   @FocusState private var focused: Bool
 
   var body: some View {
     Form {
-      if allowsVariantChange, case .ready(let snapshot) = store.phase {
-        Section {
-          Picker(
-            "Progression",
-            selection: Binding(
-              get: { exercise.definition.variantID },
-              set: { id in
-                if let definition = snapshot.definition(
-                  exerciseID: exercise.definition.id, variantID: id)
-                {
-                  if definition.tracking != exercise.definition.tracking {
-                    exercise.sets = [HistoricalSetDraft()]
-                  }
-                  exercise.definition = definition
-                }
-              })
-          ) {
-            ForEach(
-              snapshot.variants.filter {
-                $0.exerciseID == exercise.definition.parentExerciseID && !$0.isArchived
+      if case .ready(let snapshot) = store.phase {
+        let choices = snapshot.historicalDefinitions(
+          for: exercise.originalDefinition ?? exercise.definition)
+        if choices.count > 1 {
+          Section {
+            Picker(
+              "Progression",
+              selection: Binding(
+                get: { exercise.definition.variantID }, set: { selectProgression($0, in: snapshot) }
+              )
+            ) {
+              ForEach(choices, id: \.variantID) { definition in
+                let archived =
+                  snapshot.variants.first(where: { $0.id == definition.variantID })?.isArchived
+                  == true
+                Text(definition.variantDisplayName + (archived ? " (Archived)" : "")).tag(
+                  definition.variantID)
               }
-            ) { variant in Text(variant.displayName).tag(variant.id) }
-          }.pickerStyle(.menu)
+            }.pickerStyle(.menu)
+          } footer: {
+            Text(
+              "This correction changes this workout only. Your planned progression stays unchanged."
+            )
+          }
         }
       }
       Section {
@@ -362,6 +365,34 @@ private struct HistoricalExerciseEditor: View {
         )
       }
     }
+    .confirmationDialog(
+      "Change Result Type?",
+      isPresented: Binding(
+        get: { pendingProgression != nil }, set: { if !$0 { pendingProgression = nil } }
+      ), titleVisibility: .visible
+    ) {
+      if let pendingProgression {
+        Button("Change Progression", role: .destructive) {
+          applyProgression(pendingProgression)
+          self.pendingProgression = nil
+        }
+      }
+      Button("Cancel", role: .cancel) { pendingProgression = nil }
+    } message: {
+      Text(
+        "Enter the results again for this metric. Sets, added weight and Feeling will be kept. Changes are stored only when you save the workout."
+      )
+    }
+    .alert(
+      "Unable to Change Progression",
+      isPresented: Binding(
+        get: { progressionError != nil }, set: { if !$0 { progressionError = nil } }
+      )
+    ) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(progressionError ?? "")
+    }
     .navigationTitle(exercise.definition.displayName)
     .navigationBarTitleDisplayMode(.inline)
     .scrollDismissesKeyboard(.interactively)
@@ -375,4 +406,28 @@ private struct HistoricalExerciseEditor: View {
       }
     }
   }
+  private func selectProgression(_ id: String, in snapshot: TrainingSnapshot) {
+    do {
+      let source = exercise.originalDefinition ?? exercise.definition
+      let selected = try snapshot.historicalDefinition(source, selecting: id)
+      focused = false
+      if selected.tracking != exercise.definition.tracking,
+        exercise.sets.contains(where: {
+          !$0.performance.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        })
+      {
+        pendingProgression = selected
+      } else {
+        applyProgression(selected)
+      }
+    } catch { progressionError = error.localizedDescription }
+  }
+
+  private func applyProgression(_ definition: TrainingExercise) {
+    if definition.tracking != exercise.definition.tracking {
+      for index in exercise.sets.indices { exercise.sets[index].performance = "" }
+    }
+    exercise.definition = definition
+  }
+
 }

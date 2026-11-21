@@ -56,6 +56,7 @@ struct ExerciseProgressView: View {
     projection.flatMap { ChartPeriod(rawValue: $0.request.months) } ?? period
   }
   private var points: [SessionTrendPoint] { projection?.points ?? [] }
+  private var workoutCount: Int { Set(points.map(\.workoutID)).count }
   private var selected: SessionTrendPoint? {
     if let selectedIndex, points.indices.contains(selectedIndex) { return points[selectedIndex] }
     return points.last
@@ -113,14 +114,16 @@ struct ExerciseProgressView: View {
               ).font(
                 .subheadline
               ).foregroundStyle(.secondary)
-              if displayedMetric != .volume, let first = points.first, points.count > 1 {
-                let delta = last.value(for: displayedMetric) - first.value(for: displayedMetric)
-                Text(
-                  "\(displayedMetric != .load ? "Last workout: " : "")\(delta > 0 ? "+" : delta < 0 ? "−" : "")\(TrendPresentation.chartValue(abs(delta), metric: displayedMetric)) since the first workout shown"
-                ).font(.subheadline).foregroundStyle(.secondary)
+              if displayedMetric != .volume, let first = points.first, workoutCount > 1 {
+                Text(changeDescription(from: first, to: last))
+                  .font(.subheadline).foregroundStyle(.secondary)
               }
-              Text("\(points.count) \(points.count == 1 ? "workout" : "workouts") in this period")
+              Text("\(workoutCount) \(workoutCount == 1 ? "workout" : "workouts") in this period")
                 .font(.caption).foregroundStyle(.secondary)
+              if points.count != workoutCount {
+                Text("\(points.count) recorded exercise entries").font(.caption).foregroundStyle(
+                  .secondary)
+              }
             }
             ExerciseTrendChart(
               points: points, metric: displayedMetric, selectedIndex: $selectedIndex
@@ -132,7 +135,7 @@ struct ExerciseProgressView: View {
             Text(
               displayedMetric == .volume
                 ? "The curve shows average volume per set, from oldest to newest."
-                : "Workouts are evenly spaced from oldest to newest."
+                : "Recorded exercises are evenly spaced from oldest to newest."
             ).font(
               .caption
             ).foregroundStyle(.secondary)
@@ -144,12 +147,8 @@ struct ExerciseProgressView: View {
               )
               .font(.caption).foregroundStyle(.secondary)
             }
-            if points.count == 1 {
-              Text(
-                displayedMetric == .volume
-                  ? "Only one recorded workout in this period."
-                  : "Only one workout: another workout is needed to show change."
-              ).font(.caption).foregroundStyle(.secondary)
+            if workoutCount == 1 {
+              Text(singleWorkoutDescription).font(.caption).foregroundStyle(.secondary)
             }
           }
         } else {
@@ -213,6 +212,21 @@ struct ExerciseProgressView: View {
       metric = mode == .duration ? .duration : .volume
     }
     .task(id: request) { await load() }
+  }
+  private func changeDescription(from first: SessionTrendPoint, to last: SessionTrendPoint)
+    -> String
+  {
+    let delta = last.value(for: displayedMetric) - first.value(for: displayedMetric)
+    let prefix = displayedMetric == .load ? "" : "Last workout: "
+    let sign = delta > 0 ? "+" : delta < 0 ? "−" : ""
+    return prefix + sign + TrendPresentation.chartValue(abs(delta), metric: displayedMetric)
+      + " since the first entry shown"
+  }
+  private var singleWorkoutDescription: String {
+    if points.count > 1 { return "These entries come from one workout." }
+    return displayedMetric == .volume
+      ? "Only one recorded workout in this period."
+      : "Only one workout: another workout is needed to show change."
   }
   private var metricPicker: some View {
     Picker("Metric", selection: $metric) {
