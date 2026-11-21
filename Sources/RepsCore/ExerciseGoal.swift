@@ -16,7 +16,9 @@ public struct ExerciseGoal: Codable, Equatable, Sendable {
   }
   // The catalogue edit accepts the new definition, while each workout keeps its load and count.
   func reconciled(to target: TrainingExercise) throws -> Self {
-    guard definition.id == target.id, (1...1000).contains(target.setCount) else {
+    guard definition.id == target.id, definition.variantID == target.variantID,
+      (1...1000).contains(target.setCount)
+    else {
       throw TrainingError.storage
     }
     let repetitions: [Int]?
@@ -68,7 +70,9 @@ public struct ExerciseGoal: Codable, Equatable, Sendable {
     return Self(definition: definition, load: load, repetitions: reps, durationsMS: durations)
   }
   public func isCompatible(with exercise: TrainingExercise) -> Bool {
-    definition.id == exercise.id && definition.tracking == exercise.tracking
+    definition.parentExerciseID == exercise.parentExerciseID
+      && definition.variantID == exercise.variantID
+      && definition.tracking == exercise.tracking
       && definition.setCount == exercise.setCount && definition.minimumReps == exercise.minimumReps
       && definition.maximumReps == exercise.maximumReps
       && definition.durationSeconds == exercise.durationSeconds
@@ -133,7 +137,9 @@ public enum GoalEngine {
   public static func lastSessionGoal(
     target: TrainingExercise, previous: WorkoutExercise, loads: [AvailableLoad]
   ) -> ExerciseGoal? {
-    guard previous.definition.id == target.id, previous.definition.tracking == target.tracking,
+    guard previous.definition.parentExerciseID == target.parentExerciseID,
+      previous.definition.variantID == target.variantID,
+      previous.definition.tracking == target.tracking,
       (1...1000).contains(target.setCount), !previous.sets.isEmpty,
       previous.sets.count == previous.definition.setCount, previous.feelingTenths != nil,
       previous.sets.enumerated().allSatisfy({
@@ -177,7 +183,9 @@ public enum GoalEngine {
     target: TrainingExercise, previous: WorkoutExercise, loads: [AvailableLoad],
     proposedLoad: AvailableLoad? = nil
   ) -> ExerciseGoal? {
-    guard previous.definition.id == target.id, previous.definition.tracking == target.tracking,
+    guard previous.definition.parentExerciseID == target.parentExerciseID,
+      previous.definition.variantID == target.variantID,
+      previous.definition.tracking == target.tracking,
       previous.definition.setCount == target.setCount,
       previous.definition.minimumReps == target.minimumReps,
       previous.definition.maximumReps == target.maximumReps,
@@ -235,7 +243,8 @@ public enum GoalEngine {
     }
     guard let minimum = target.minimumReps, let maximum = target.maximumReps else { return nil }
     let baseline = Array(repeating: minimum, count: target.setCount)
-    guard let previous, previous.definition.id == target.id,
+    guard let previous, previous.definition.parentExerciseID == target.parentExerciseID,
+      previous.definition.variantID == target.variantID,
       previous.definition.tracking == target.tracking, previous.definition.minimumReps == minimum,
       previous.definition.maximumReps == maximum, previous.sets.count == target.setCount,
       let feeling = previous.feelingTenths, (0...100).contains(feeling),

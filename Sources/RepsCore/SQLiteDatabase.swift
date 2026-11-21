@@ -122,6 +122,28 @@ final class SQLiteDatabase {
     }
   }
 
+  func recoveryCopy(to path: String) throws {
+    guard !FileManager.default.fileExists(atPath: path) else {
+      throw TrainingError.invalid("The recovery copy already exists. Choose a new recovery file.")
+    }
+    var destination: OpaquePointer?
+    guard
+      sqlite3_open_v2(
+        path, &destination, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_EXCLUSIVE, nil)
+        == SQLITE_OK, let destination
+    else {
+      if let destination { sqlite3_close(destination) }
+      throw TrainingError.storage
+    }
+    defer { sqlite3_close(destination) }
+    guard let backup = sqlite3_backup_init(destination, "main", handle, "main") else {
+      throw TrainingError.storage
+    }
+    let status = sqlite3_backup_step(backup, -1)
+    let finished = sqlite3_backup_finish(backup)
+    guard status == SQLITE_DONE, finished == SQLITE_OK else { throw TrainingError.storage }
+  }
+
   private func recordFailure(_ status: Int32) {
     // Keep the initiating failure: SQLite may have rolled back automatically, in which
     // case our cleanup ROLLBACK/DETACH can fail too and must not hide FULL/IOERR/etc.

@@ -86,7 +86,8 @@ struct ActiveSetForm: View {
         }
         do {
           let previous = try await store.previousPerformance(
-            exerciseID: exercise.definition.id, excludingWorkoutID: workout.id)
+            exerciseID: exercise.definition.id, excludingWorkoutID: workout.id,
+            variantID: exercise.definition.variantID)
           guard !Task.isCancelled else { return }
           previousSet = previous?.sets.first { $0.number == exercise.sets.count + 1 }
         } catch { self.error = error.localizedDescription }
@@ -293,6 +294,7 @@ struct PreviousPerformanceRow: View {
   @EnvironmentObject private var store: TrainingStore
   let exerciseID: String
   let workoutID: String
+  var variantID: String? = nil
   @State private var performance: WorkoutExercise?
   @State private var loading = true
   @State private var error: String?
@@ -314,13 +316,13 @@ struct PreviousPerformanceRow: View {
         Text("No Previous Result").foregroundStyle(.secondary)
       }
     }
-    .task(id: store.historyRevision) {
+    .task(id: [variantID ?? "", String(store.historyRevision)]) {
       loading = true
       error = nil
       performance = nil
       do {
         let result = try await store.previousPerformance(
-          exerciseID: exerciseID, excludingWorkoutID: workoutID)
+          exerciseID: exerciseID, excludingWorkoutID: workoutID, variantID: variantID)
         guard !Task.isCancelled else { return }
         performance = result
       } catch {

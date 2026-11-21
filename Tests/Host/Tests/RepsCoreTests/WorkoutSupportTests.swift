@@ -283,7 +283,8 @@ extension WorkoutSupportTests {
     workouts[0]["support"] = support
     contents["workouts"] = workouts
     root["contents"] = contents
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
   }
 }
 

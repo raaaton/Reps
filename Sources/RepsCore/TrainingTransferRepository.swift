@@ -30,8 +30,16 @@ extension RepsRepository {
       let current = try readTransferData()
       let existing = Dictionary(uniqueKeysWithValues: current.workouts.map { ($0.id, $0) })
       let identical = records.filter { existing[$0.id] == $0 }.count
+      var configuration = current.configuration
+      for variant in records.flatMap(\.exercises).compactMap({ $0.definition.variant }) {
+        if let existing = configuration.variants.first(where: { $0.id == variant.id }) {
+          guard existing.exerciseID == variant.exerciseID else { throw TrainingTransfer.invalid }
+        } else {
+          configuration.variants.append(variant)
+        }
+      }
       let incoming = TrainingDataSet(
-        configuration: current.configuration, notifications: current.notifications,
+        configuration: configuration, notifications: current.notifications,
         workouts: records, bodyWeights: current.bodyWeights,
         skillSessions: try detachedSkillsForCSV(current: current, incoming: records))
       _ = try TrainingArchive(createdAt: now, contents: incoming).encoded()
@@ -90,7 +98,9 @@ extension RepsRepository {
     }
     if preview.isRestoration {
       for table in [
-        "schedules", "exercises", "archived_exercises", "weight_items", "skill_progress",
+        "variant_goals", "exercise_variants", "exercise_identity_aliases",
+        "targeted_exercise_merges", "schedules", "exercises", "archived_exercises", "weight_items",
+        "skill_progress",
         "skill_definitions",
       ] {
         try database.execute("DELETE FROM \(table)")
@@ -104,10 +114,31 @@ extension RepsRepository {
           [.text(weight.id), .text(weight.dayKey), .integer(weight.grams)])
       }
     }
+    if !preview.isRestoration {
+      for variant in final.configuration.variants
+      where !current.configuration.variants.contains(where: { $0.id == variant.id }) {
+        try writeVariant(variant)
+      }
+    }
     for workout in preview.incoming.workouts { try insertTransferredWorkout(workout) }
     for practice in final.skillSessions { try writeSkillSession(practice) }
   }
   private func insertConfiguration(_ c: TrainingSnapshot) throws {
+    for variant in c.variants { try writeVariant(variant) }
+    for item in c.variantGoals {
+      try database.execute(
+        "INSERT INTO variant_goals VALUES(?,?,?)",
+        [.text(item.variantID), .text(item.scheduleID), try ExerciseGoal.encode(item.goal)])
+    }
+    for alias in c.identityAliases {
+      try database.execute(
+        "INSERT INTO exercise_identity_aliases VALUES(?,?,?)",
+        [.text(alias.sourceID), .text(alias.exerciseID), .text(alias.variantID)])
+    }
+    for id in c.completedExerciseMerges {
+      try database.execute(
+        "INSERT INTO targeted_exercise_merges VALUES(?,?)", [.text(id), .text("restored")])
+    }
     for exercise in c.archivedExercises {
       try database.execute(
         "INSERT INTO archived_exercises VALUES(?,?)",
@@ -133,6 +164,24 @@ extension RepsRepository {
           .integer(exercise.isEnabled ? 1 : 0), .integer(position),
         ])
     }
+    var hiddenPosition = c.exercises.count
+    for alias in c.identityAliases
+    where alias.sourceID != alias.exerciseID
+      && c.schedules.contains(where: { $0.exerciseIDs.contains(alias.sourceID) })
+    {
+      if let source = c.definition(exerciseID: alias.sourceID) {
+        try database.execute(
+          "INSERT INTO exercises VALUES(?,?,?,?,?,?,?,?,?)",
+          [
+            .text(source.id), .text(source.name), .text(source.tracking.rawValue),
+            .integer(source.setCount), source.minimumReps.map(SQLValue.integer) ?? .null,
+            source.maximumReps.map(SQLValue.integer) ?? .null,
+            source.durationSeconds.map(SQLValue.integer) ?? .null,
+            .integer(source.isEnabled ? 1 : 0), .integer(hiddenPosition),
+          ])
+        hiddenPosition += 1
+      }
+    }
     for schedule in c.schedules {
       try database.execute(
         "INSERT INTO schedules VALUES(?,?,?,?,?)",
@@ -146,11 +195,23 @@ extension RepsRepository {
           "INSERT INTO schedule_exercises(schedule_id,exercise_id,position,set_count,goal_payload) VALUES(?,?,?,?,?)",
           [
             .text(schedule.id), .text(id), .integer(index), .integer(schedule.setCounts[id] ?? 4),
-            try schedule.goals[id].map(ExerciseGoal.encode) ?? .null,
+            try
+              (schedule.baseGoals[id]
+              ?? (schedule.variantIDs[id] == nil
+                || schedule.variantIDs[id] == ExerciseVariant.baseID(for: id)
+                ? schedule.goals[id] : nil))
+              .map(ExerciseGoal.encode) ?? .null,
           ])
       }
     }
-    for schedule in c.schedules { try writeScheduleSkills(schedule) }
+    for schedule in c.schedules {
+      for (id, variantID) in schedule.variantIDs {
+        try database.execute(
+          "INSERT INTO schedule_variants VALUES(?,?,?)",
+          [.text(schedule.id), .text(id), .text(variantID)])
+      }
+      try writeScheduleSkills(schedule)
+    }
     for item in c.weightItems {
       try database.execute(
         "INSERT INTO weight_items(id,name,grams,enabled,quantity) VALUES(?,?,?,?,?)",
@@ -194,6 +255,9 @@ extension RepsRepository {
           e.setWeightGrams.map(SQLValue.integer) ?? .null,
           e.setEndedAt.map(SQLValue.integer) ?? .null, try WeightInventory.encode(e.setComponents),
         ])
+      try writeWorkoutVariant(
+        d, occurrenceID: e.id,
+        locked: !e.sets.isEmpty || e.setStartedAt != nil || e.variantSelectionLocked == true)
       if let goal = e.goal { try writeWorkoutGoal(goal, exerciseID: e.id) }
       for set in e.sets {
         try database.execute(

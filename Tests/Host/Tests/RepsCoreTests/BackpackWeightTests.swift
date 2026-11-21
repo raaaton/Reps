@@ -103,7 +103,7 @@ final class BackpackWeightTests: XCTestCase, @unchecked Sendable {
     try await r.saveBackpackWeight(grams: 750)
     let archive = try await r.exportTraining(now: now)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 10)
+    XCTAssertEqual(decoded.version, 11)
     let target = try RepsRepository(path: ":memory:")
     let preview = try await target.previewArchiveImport(decoded, now: now)
     try await target.applyTrainingImport(preview, now: now)
@@ -122,7 +122,7 @@ final class BackpackWeightTests: XCTestCase, @unchecked Sendable {
     contents["configuration"] = config
     root["contents"] = contents
     let legacy = try TrainingArchive.decode(
-      JSONSerialization.data(withJSONObject: removingNewTrainingFields(root)))
+      LegacyTrainingFixture.data(withJSONObject: removingNewTrainingFields(root)))
     XCTAssertEqual(legacy.contents.configuration.backpackWeightGrams, 3000)
     root["version"] = 9
     for bad: Any in [0, -1, 1.5, NSNull()] {
@@ -131,7 +131,7 @@ final class BackpackWeightTests: XCTestCase, @unchecked Sendable {
       root["contents"] = contents
       XCTAssertThrowsError(
         try TrainingArchive.decode(
-          JSONSerialization.data(withJSONObject: removingNewTrainingFields(root))))
+          LegacyTrainingFixture.data(withJSONObject: removingNewTrainingFields(root))))
     }
   }
 
@@ -146,6 +146,6 @@ final class BackpackWeightTests: XCTestCase, @unchecked Sendable {
     let reopened = try RepsRepository(path: path)
     let after = try await reopened.exportTraining(now: now)
     XCTAssertEqual(after.contents, before.contents)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 21)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 22)
   }
 }

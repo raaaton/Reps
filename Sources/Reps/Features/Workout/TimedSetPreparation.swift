@@ -67,7 +67,8 @@ struct TimedSetPreparation: View {
       }
       do {
         let previous = try await store.previousPerformance(
-          exerciseID: exercise.definition.id, excludingWorkoutID: workout.id)
+          exerciseID: exercise.definition.id, excludingWorkoutID: workout.id,
+          variantID: exercise.definition.variantID)
         guard !Task.isCancelled else { return }
         previousSet = previous?.sets.first { $0.number == exercise.sets.count + 1 }
       } catch { self.error = error.localizedDescription }

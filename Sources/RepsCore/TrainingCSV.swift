@@ -7,7 +7,7 @@ public enum TrainingCSV {
     "mode", "set_count", "min_reps", "max_reps", "duration_target_seconds", "feeling", "set_id",
     "set_number", "repetitions", "duration_seconds", "weight_kg", "completed_at_ms",
     "components_json", "goal_json", "pending_start_ms", "pending_weight_kg", "pending_end_ms",
-    "pending_components_json", "support_json",
+    "pending_components_json", "support_json", "variant_json",
   ]
   private static func decimal(_ value: Int) -> String {
     let fraction = value % 1000
@@ -50,7 +50,7 @@ public enum TrainingCSV {
     try append(columns)
     for w in workouts {
       let base = [
-        "2", "workout", w.id, w.name, w.dayKey, w.status.rawValue, w.scheduleID,
+        "3", "workout", w.id, w.name, w.dayKey, w.status.rawValue, w.scheduleID,
         String(w.startedAt), w.endedAt.map(String.init) ?? "", String(w.restSeconds),
       ]
       if w.exercises.isEmpty {
@@ -64,7 +64,7 @@ public enum TrainingCSV {
             d.minimumReps.map(String.init) ?? "", d.maximumReps.map(String.init) ?? "",
             d.durationSeconds.map(String.init) ?? "",
             e.feelingTenths.map { String($0 / 10) + "." + String($0 % 10) } ?? "",
-          ] + Array(repeating: "", count: 13)
+          ] + Array(repeating: "", count: 14)
         row[1] = "exercise"
         row[26] = try json(e.goal)
         row[27] = e.setStartedAt.map(String.init) ?? ""
@@ -72,6 +72,7 @@ public enum TrainingCSV {
         row[29] = e.setEndedAt.map(String.init) ?? ""
         row[30] = try json(e.setComponents)
         row[31] = try json(w.support)
+        row[32] = try json(d.variant)
         if e.sets.isEmpty { try append(row) }
         for set in e.sets {
           var line = row
@@ -92,15 +93,15 @@ public enum TrainingCSV {
   }
   public static func decode(_ data: Data) throws -> [WorkoutSession] {
     var rows = try parse(data)
-    if rows.first == Array(columns.dropLast()) {
-      rows = rows.map { $0 + [""] }
+    for legacyCount in [31, 32] where rows.first == Array(columns.prefix(legacyCount)) {
+      rows = rows.map { $0 + Array(repeating: "", count: columns.count - legacyCount) }
       rows[0] = columns
     }
     guard rows.first == columns else { throw TrainingTransfer.invalid }
     let records = Array(rows.dropFirst()).map { $0.map(unprotected) }
     guard
       records.allSatisfy({
-        $0.count == columns.count && ["1", "2"].contains($0[0])
+        $0.count == columns.count && ["1", "2", "3"].contains($0[0])
           && ["set", "exercise", "workout"].contains($0[1])
       })
     else { throw TrainingTransfer.invalid }
@@ -136,12 +137,14 @@ public enum TrainingCSV {
         guard
           lines.allSatisfy({
             Array($0[10...18]) == Array(ex[10...18]) && Array($0[26...30]) == Array(ex[26...30])
+              && $0[32] == ex[32]
           }), let mode = TrackingMode(rawValue: ex[13])
         else { throw TrainingTransfer.invalid }
-        let definition = TrainingExercise(
+        var definition = TrainingExercise(
           id: ex[11], name: ex[12], tracking: mode, setCount: try integer(ex[14]),
           minimumReps: try optionalInteger(ex[15]), maximumReps: try optionalInteger(ex[16]),
           durationSeconds: try optionalInteger(ex[17]), isEnabled: true)
+        definition.variant = try decodeJSON(ex[32])
         var sets: [WorkoutSet] = []
         for row in lines {
           if row[1] == "exercise" {
@@ -218,7 +221,7 @@ public enum TrainingCSV {
       if let header = rows.first {
         guard row.count == header.count else { throw TrainingTransfer.invalid }
       } else {
-        guard row.count == columns.count || row.count == columns.count - 1 else {
+        guard (31...columns.count).contains(row.count) else {
           throw TrainingTransfer.invalid
         }
       }

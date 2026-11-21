@@ -13,7 +13,8 @@ public enum Progression {
   ) -> ProgressionAssessment {
     let choices = WeightInventory.spacedLoads(loads)
     let missing = ProgressionAssessment(status: .insufficient, referenceGrams: nil, nextLoad: nil)
-    guard let previous, previous.definition.id == target.id,
+    guard let previous, previous.definition.parentExerciseID == target.parentExerciseID,
+      previous.definition.variantID == target.variantID,
       previous.definition.tracking == target.tracking, target.setCount > 0,
       previous.sets.count == target.setCount,
       previous.sets.enumerated().allSatisfy({

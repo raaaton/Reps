@@ -27,6 +27,11 @@ extension TrainingTransfer {
   static func definition(_ value: TrainingExercise) throws {
     try text(value.id, limit: 256)
     try text(value.name)
+    if let variant = value.variant {
+      guard try variant.validated() == variant else {
+        throw invalid
+      }
+    }
     guard try value.validated() == value else { throw invalid }
   }
   static func goal(_ value: ExerciseGoal) throws {
@@ -128,6 +133,32 @@ extension TrainingTransfer {
     try unique(c.weightItems.map(\.id))
     try unique(c.schedules.map(\.id))
     try unique(c.goals.map { $0.definition.id })
+    guard c.variants.count <= 10000, c.variantGoals.count <= 100000,
+      c.identityAliases.count <= 10000
+    else { throw invalid }
+    try unique(c.variants.map(\.id))
+    try unique(c.identityAliases.map(\.sourceID))
+    try unique(c.completedExerciseMerges)
+    for variant in c.variants { guard try variant.validated() == variant else { throw invalid } }
+    var goalKeys = Set<String>()
+    for item in c.variantGoals {
+      guard
+        c.variants.contains(where: {
+          $0.id == item.variantID && $0.exerciseID == item.goal.definition.id
+        }),
+        item.goal.definition.variantID == item.variantID,
+        item.scheduleID.isEmpty || c.schedules.contains(where: { $0.id == item.scheduleID }),
+        goalKeys.insert(item.variantID + "\0" + item.scheduleID).inserted
+      else { throw invalid }
+      try goal(item.goal)
+    }
+    for alias in c.identityAliases {
+      try text(alias.sourceID, limit: 256)
+      guard
+        c.variants.contains(where: { $0.id == alias.variantID && $0.exerciseID == alias.exerciseID }
+        )
+      else { throw invalid }
+    }
     for ex in c.exercises + c.archivedExercises { try definition(ex) }
     for item in c.weightItems {
       try text(item.name)
@@ -146,6 +177,21 @@ extension TrainingTransfer {
         schedule.setCounts.values.allSatisfy({ (1...1000).contains($0) }),
         Set(schedule.goals.keys).isSubset(of: Set(schedule.exerciseIDs))
       else { throw invalid }
+      for (id, variantID) in schedule.variantIDs {
+        guard schedule.exerciseIDs.contains(id),
+          c.variants.contains(where: {
+            $0.id == variantID && $0.exerciseID == c.definition(exerciseID: id)?.parentExerciseID
+          })
+        else { throw invalid }
+      }
+      guard Set(schedule.baseGoals.keys).isSubset(of: Set(schedule.exerciseIDs)) else {
+        throw invalid
+      }
+      for (id, goal) in schedule.baseGoals {
+        try self.goal(goal)
+        guard goal.definition.id == id, goal.definition.variantID == ExerciseVariant.baseID(for: id)
+        else { throw invalid }
+      }
       for (id, goal) in schedule.goals {
         try self.goal(goal)
         guard goal.definition.id == id else {
@@ -154,7 +200,7 @@ extension TrainingTransfer {
       }
       guard (1...7).contains(schedule.weekday),
         schedule.reminderMinutes.map({ (0..<1440).contains($0) }) ?? true,
-        schedule.exerciseIDs.allSatisfy({ id in c.exercises.contains { $0.id == id } }),
+        schedule.exerciseIDs.allSatisfy({ id in c.definition(exerciseID: id) != nil }),
         !schedule.isEnabled || !c.exercises(for: schedule).isEmpty
       else { throw invalid }
     }

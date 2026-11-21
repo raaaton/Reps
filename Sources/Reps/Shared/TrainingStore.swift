@@ -268,9 +268,11 @@ final class TrainingStore: ObservableObject {
     guard let repository else { throw TrainingError.storage }
     return try await repository.historyExercises()
   }
-  func exerciseHistory(exerciseID: String) async throws -> [ExercisePerformance] {
+  func exerciseHistory(exerciseID: String, variantID: String? = nil) async throws
+    -> [ExercisePerformance]
+  {
     guard let repository else { throw TrainingError.storage }
-    return try await repository.exerciseHistory(exerciseID: exerciseID)
+    return try await repository.exerciseHistory(exerciseID: exerciseID, variantID: variantID)
   }
 
   func deleteHistoricalWorkout(id: String) async throws {
@@ -282,17 +284,21 @@ final class TrainingStore: ObservableObject {
     return try await repository.workout(id: id)
   }
 
-  func previousPerformance(exerciseID: String, excludingWorkoutID: String) async throws
+  func previousPerformance(exerciseID: String, excludingWorkoutID: String, variantID: String? = nil)
+    async throws
     -> WorkoutExercise?
   {
     guard let repository else { throw TrainingError.storage }
     return try await repository.previousPerformance(
-      exerciseID: exerciseID, excludingWorkoutID: excludingWorkoutID)
+      exerciseID: exerciseID, excludingWorkoutID: excludingWorkoutID, variantID: variantID)
   }
 
-  func goalContext(exerciseID: String, scheduleID: String? = nil) async throws -> GoalContext {
+  func goalContext(exerciseID: String, scheduleID: String? = nil, variantID: String? = nil)
+    async throws -> GoalContext
+  {
     guard let repository else { throw TrainingError.storage }
-    return try await repository.goalContext(exerciseID: exerciseID, scheduleID: scheduleID)
+    return try await repository.goalContext(
+      exerciseID: exerciseID, scheduleID: scheduleID, variantID: variantID)
   }
   func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?, scheduleID: String? = nil)
     async throws
@@ -494,6 +500,21 @@ struct TrainingContent<Content: View>: View {
       } actions: {
         Button("Try Again") { Task { await store.reload() } }
       }
+    }
+  }
+}
+
+extension TrainingStore {
+  func saveVariant(_ variant: ExerciseVariant) async throws {
+    try await commit { try await $0.saveVariant(variant) }
+  }
+  func archiveVariant(id: String) async throws {
+    try await commit { try await $0.archiveVariant(id: id) }
+  }
+  func selectWorkoutVariant(workoutID: String, exerciseID: String, variantID: String) async throws {
+    try await commit {
+      try await $0.selectWorkoutVariant(
+        workoutID: workoutID, exerciseID: exerciseID, variantID: variantID)
     }
   }
 }

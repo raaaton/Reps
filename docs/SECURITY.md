@@ -1,5 +1,21 @@
 # Optional portable Private Vault backup — 2 November 2026
 
+## 21 November 2026 — exercise progression migration
+
+Training schema/transfer changes do not alter the encrypted vault, Keychain,
+biometric rules, permissions or capabilities. Only the training database was read
+through USB for the explicitly requested identity verification and recovery copy.
+No private-vault file was accessed. Copies remain outside Git; the retained host
+recovery directory has mode 0700 and the database mode 0600.
+
+Targeted fusion is limited to the verified pair of stable identities, takes a full
+sqlite3_backup recovery copy before writing, defers affected active workouts and
+commits the correspondence and marker atomically. Existing occurrence/set/rest/
+decision IDs remain intact; raw historical catalogue identities and labels stay
+forensic facts. History lookup resolves the parent without exposing an active
+variant as an independently deletable orphan. No general merge UI or new dependency.
+The iPhone postflight verifies identity, entitlements and certificate continuity.
+
 Candidate 1.5.4 (123). This feature supersedes the historical decision to exclude the vault from every user export; automatic device-backup exclusion remains. Include Private Vault off, or a genuinely empty vault, exports the existing training JSON without a password. A movement without media makes the vault nonempty. Access failures and in-progress vault operations never silently downgrade a requested complete export.
 
 Complete archives use an independent random AES-256 key. PBKDF2-HMAC-SHA256 (CommonCrypto, 600000 iterations, random 16-byte salt) derives a wrapping key from the chosen password; authenticated AES-GCM wraps the independent key. Passwords are memory-only, exact (no normalization), 12 characters minimum for new exports, 1024 UTF-8 bytes maximum. This minimum is not a strength guarantee. Lost password means no recovery.

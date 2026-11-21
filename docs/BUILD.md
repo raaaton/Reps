@@ -1,5 +1,28 @@
 # Candidate 1.5.4 (123) — optional encrypted vault backup
 
+## 21 November 2026 — progressions 1.5.9 (131)
+
+467 XCTest pass (10.18 s) plus 10 Swift Testing (0.066 s), strict recursive Swift
+lint, 13 metadata checks and whitespace checks. Actual app/widget xtool build
+15.02 s; compiler-derived App Intents metadata regenerated and embedded (2.24 s);
+unsigned inspection verifies 1.5.9 (131) and existing capabilities.
+
+Standard device-run.sh exits 0, installation/verification 100%. USB postflight
+verifies 131 with unchanged effective identity, signer, entitlement dictionary and
+exact existing certificate. CMS-verified app/widget profiles expire 28 November.
+Remote CoreDevice launch returned code 10002; the owner opened the app manually.
+Subsequent training-only readback verifies schema 22, one completed merge, one
+on-device recovery copy, six L-sit and one V-sit occurrences, and byte-equivalent
+SQLite rows in all preexisting workout/session/set/rest/decision/goal tables.
+
+Recovery is also retained under ignored outputs/recovery/2026-11-21-exercise-variants/.
+The optional real-copy host test uses REPS_VARIANT_COPY_TEST; ordinary test runs
+skip it unless a training-only fixture is explicitly supplied. Evidence is in
+/tmp/reps-variants-{host-verified,lint-verified,metadata-verified,install}.log and
+/tmp/reps-variants-{preflight,postflight,device-verification}.json.
+No SDK/cache/certificate replacement, uninstall, GitHub push or public release.
+Physical menus, chart interaction, Dynamic Type and VoiceOver await owner review.
+
 Shared exercise order follow-up1.5.8(130):447XCTest +10SwiftTesting pass, strict
 lint and13metadata checks pass. Native build26.42s +compiler-derived metadata
 embedding2.69s and unsigned app/widget inspection pass. Independent code review

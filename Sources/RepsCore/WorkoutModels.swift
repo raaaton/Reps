@@ -33,6 +33,10 @@ public struct WorkoutSet: Codable, Identifiable, Equatable, Sendable {
 public struct WorkoutExercise: Codable, Identifiable, Equatable, Sendable {
   public let id: String
   public let definition: TrainingExercise
+  public var variantSelectionLocked: Bool? = nil
+  public var canChangeVariant: Bool {
+    sets.isEmpty && setStartedAt == nil && feelingTenths == nil && variantSelectionLocked != true
+  }
   public let sets: [WorkoutSet]
   public let feelingTenths: Int?
   // For a timed set this can be a scheduled start, three seconds after Begin.

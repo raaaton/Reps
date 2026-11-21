@@ -5,7 +5,8 @@ extension TrainingTransfer {
   static func checkJSONShape(_ data: Data) throws {
     let root = try JSONSerialization.jsonObject(with: data)
     let archiveVersion = (root as? [String: Any])?["version"] as? Int
-    let hasArchives = archiveVersion == 10
+    let hasVariants = archiveVersion == 11
+    let hasArchives = archiveVersion == 10 || hasVariants
     let hasBackpack = archiveVersion == 9 || hasArchives
     let hasMaximum = archiveVersion == 8 || hasBackpack
     let hasQuantities = archiveVersion == 7 || hasMaximum
@@ -20,13 +21,22 @@ extension TrainingTransfer {
       guard let values = raw as? [Any] else { throw invalid }
       return values
     }
-    func definition(_ raw: Any) throws {
+    func variant(_ raw: Any) throws {
       _ = try object(
+        raw,
+        [
+          "id", "exerciseID", "name", "measure", "unit", "tracking", "minimumReps", "maximumReps",
+          "durationSeconds", "isArchived",
+        ])
+    }
+    func definition(_ raw: Any) throws {
+      let value = try object(
         raw,
         [
           "id", "name", "tracking", "setCount", "minimumReps", "maximumReps", "durationSeconds",
           "isEnabled",
-        ])
+        ] + (hasVariants ? ["variant"] : []))
+      if let raw = value["variant"], !(raw is NSNull) { try variant(raw) }
     }
     func components(_ raw: Any?) throws {
       guard let raw, !(raw is NSNull) else { return }
@@ -58,7 +68,20 @@ extension TrainingTransfer {
         + (hasSkills ? ["skills", "skillProgress"] : [])
         + (hasMaximum ? ["maximumWeightObjects"] : [])
         + (hasBackpack ? ["backpackWeightGrams"] : [])
-        + (hasArchives ? ["archivedExercises"] : []))
+        + (hasArchives ? ["archivedExercises"] : [])
+        + (hasVariants
+          ? ["variants", "variantGoals", "identityAliases", "completedExerciseMerges"] : []))
+    if hasVariants {
+      for raw in try array(c["variants"]) { try variant(raw) }
+      for raw in try array(c["variantGoals"]) {
+        let item = try object(raw, ["variantID", "scheduleID", "goal"])
+        try goal(item["goal"])
+      }
+      for raw in try array(c["identityAliases"]) {
+        _ = try object(raw, ["sourceID", "exerciseID", "variantID"])
+      }
+      guard c["completedExerciseMerges"] is [String] else { throw invalid }
+    }
     if hasMaximum, c["maximumWeightObjects"] == nil { throw invalid }
     if hasBackpack, c["backpackWeightGrams"] == nil { throw invalid }
     if archiveVersion == 5 || hasSkills, !(c["stretchingEnabled"] is Bool) {
@@ -81,9 +104,13 @@ extension TrainingTransfer {
         [
           "id", "name", "weekday", "isEnabled", "reminderMinutes", "exerciseIDs", "setCounts",
           "goals",
-        ] + (hasSkills ? ["skills", "skillPlacement"] : []))
+        ] + (hasSkills ? ["skills", "skillPlacement"] : [])
+          + (hasVariants ? ["variantIDs", "baseGoals"] : []))
       if hasSkills {
         for block in try array(value["skills"]) { try SkillTransfer.checkShape(assignment: block) }
+      }
+      if let baseGoals = value["baseGoals"] as? [String: Any] {
+        for item in baseGoals.values { try goal(item) }
       }
       if let goals = value["goals"] as? [String: Any] {
         for item in goals.values { try goal(item) }
@@ -138,7 +165,7 @@ extension TrainingTransfer {
           raw,
           [
             "id", "definition", "sets", "feelingTenths", "setStartedAt", "setWeightGrams",
-            "setEndedAt", "setComponents", "goal",
+            "setEndedAt", "setComponents", "goal", "variantSelectionLocked",
           ])
         try definition(e["definition"] ?? NSNull())
         try components(e["setComponents"])

@@ -29,14 +29,17 @@ public struct ManualWorkout: Sendable {
 
 public struct ManualWorkoutExercise: Sendable {
   public var catalogueID: String
+  public var variantID: String? = nil
   public var tracking: TrackingMode
   public var sets: [ManualWorkoutSet]
   public var feelingTenths: Int?
 
   public init(
-    catalogueID: String, tracking: TrackingMode, sets: [ManualWorkoutSet], feelingTenths: Int?
+    catalogueID: String, tracking: TrackingMode, sets: [ManualWorkoutSet], feelingTenths: Int?,
+    variantID: String? = nil
   ) {
     self.catalogueID = catalogueID
+    self.variantID = variantID
     self.tracking = tracking
     self.sets = sets
     self.feelingTenths = feelingTenths
@@ -93,7 +96,8 @@ extension RepsRepository {
       }
       let snapshot = try readSnapshot()
       let definitions = try draft.exercises.map { entry in
-        guard let definition = snapshot.exercises.first(where: { $0.id == entry.catalogueID }),
+        guard let parent = snapshot.exercises.first(where: { $0.id == entry.catalogueID }),
+          let definition = snapshot.definition(exerciseID: parent.id, variantID: entry.variantID),
           definition.tracking == entry.tracking
         else {
           throw TrainingError.invalid(
@@ -136,6 +140,7 @@ extension RepsRepository {
             definition.durationSeconds.map(SQLValue.integer) ?? .null,
             .integer(position), entry.feelingTenths.map(SQLValue.integer) ?? .null,
           ])
+        try writeWorkoutVariant(definition, occurrenceID: exerciseID, locked: true)
         for (index, set) in entry.sets.enumerated() {
           try database.execute(
             "INSERT INTO workout_sets(id,exercise_id,number,repetitions,duration_ms,weight_grams,completed_at) VALUES(?,?,?,?,?,?,?)",

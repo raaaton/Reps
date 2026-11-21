@@ -41,6 +41,12 @@ extension RepsRepository {
           .integer(snapshot.restSeconds),
         ])
       let definitions = snapshot.exercises(for: schedule)
+      for exercise in definitions {
+        guard !snapshot.variants.contains(where: { $0.id == exercise.variantID && $0.isArchived })
+        else {
+          throw TrainingError.invalid("Choose an active progression in Workouts before starting.")
+        }
+      }
       guard loadOverrides.keys.allSatisfy({ id in definitions.contains { $0.id == id } }) else {
         throw TrainingError.invalid("A backpack item has changed.")
       }
@@ -54,6 +60,7 @@ extension RepsRepository {
             exercise.minimumReps.sql, exercise.maximumReps.sql, exercise.durationSeconds.sql,
             .integer(position),
           ])
+        try writeWorkoutVariant(exercise, occurrenceID: exerciseID)
         if var goal = schedule.goals[exercise.id] {
           if let override = loadOverrides[exercise.id] { goal.load = override }
           guard goal.isCompatible(with: exercise) else {
@@ -380,7 +387,9 @@ extension RepsRepository {
     }
   }
 
-  public func previousPerformance(exerciseID: String, excludingWorkoutID: String) throws
+  public func previousPerformance(
+    exerciseID: String, excludingWorkoutID: String, variantID: String? = nil
+  ) throws
     -> WorkoutExercise?
   {
     try database.transaction {
@@ -388,9 +397,14 @@ extension RepsRepository {
         let row = try database.query(
           """
           SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id
-          WHERE e.catalogue_id=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=?
+          WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=?
           ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1
-          """, [.text(exerciseID), .text(excludingWorkoutID)]
+          """,
+          [
+            .text(exerciseID), .text(exerciseID), .text(exerciseID),
+            .text(variantID ?? ExerciseVariant.baseID(for: exerciseID)),
+            .text(excludingWorkoutID),
+          ]
         ).first
       else { return nil }
       return try readExercise(row)

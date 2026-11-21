@@ -144,33 +144,40 @@ struct ExerciseEditor: View {
         TextField("Exercise Name", text: $draft.name)
         Toggle("Exercise Enabled", isOn: $draft.isEnabled)
       }
-      Section("Goals") {
-        Picker("Metric", selection: $draft.tracking) {
-          Text("Repetitions").tag(TrackingMode.repetitions)
-          Text("Duration").tag(TrackingMode.duration)
+      if !isNew {
+        Section("Progressions") {
+          NavigationLink("Progressions") { ExerciseVariantsView(exercise: draft) }
         }
-        if draft.tracking == .repetitions {
-          LabeledContent("Minimum Repetitions") {
-            TextField("8", text: $minimum).keyboardType(.numberPad).multilineTextAlignment(
-              .trailing
-            )
-            .accessibilityLabel("Minimum Repetitions")
+      }
+      if isNew {
+        Section("Base Progression Targets") {
+          Picker("Metric", selection: $draft.tracking) {
+            Text("Repetitions").tag(TrackingMode.repetitions)
+            Text("Duration").tag(TrackingMode.duration)
           }
-          LabeledContent("Maximum Repetitions") {
-            TextField("12", text: $maximum).keyboardType(.numberPad).multilineTextAlignment(
-              .trailing
-            )
-            .accessibilityLabel("Maximum Repetitions")
+          if draft.tracking == .repetitions {
+            LabeledContent("Minimum Repetitions") {
+              TextField("8", text: $minimum).keyboardType(.numberPad).multilineTextAlignment(
+                .trailing
+              )
+              .accessibilityLabel("Minimum Repetitions")
+            }
+            LabeledContent("Maximum Repetitions") {
+              TextField("12", text: $maximum).keyboardType(.numberPad).multilineTextAlignment(
+                .trailing
+              )
+              .accessibilityLabel("Maximum Repetitions")
+            }
+          } else {
+            LabeledContent("Seconds per Set") {
+              TextField("Untimed", text: $duration).keyboardType(.numberPad).multilineTextAlignment(
+                .trailing
+              )
+              .accessibilityLabel("Seconds per set, optional")
+            }
+            Text("Leave the duration blank to time each set without a target.")
+              .font(.footnote).foregroundStyle(.secondary)
           }
-        } else {
-          LabeledContent("Seconds per Set") {
-            TextField("Untimed", text: $duration).keyboardType(.numberPad).multilineTextAlignment(
-              .trailing
-            )
-            .accessibilityLabel("Seconds per set, optional")
-          }
-          Text("Leave the duration blank to time each set without a target.")
-            .font(.footnote).foregroundStyle(.secondary)
         }
       }
     }
@@ -215,6 +222,14 @@ struct ExerciseEditor: View {
           throw TrainingError.invalid("Enter a duration in seconds, or leave it blank.")
         }
         exercise.durationSeconds = Int(value)
+      }
+      if !isNew, case .ready(let snapshot) = store.phase,
+        let latest = snapshot.exercises.first(where: { $0.id == draft.id })
+      {
+        exercise.tracking = latest.tracking
+        exercise.minimumReps = latest.minimumReps
+        exercise.maximumReps = latest.maximumReps
+        exercise.durationSeconds = latest.durationSeconds
       }
       let validated = try exercise.validated()
       saving = true

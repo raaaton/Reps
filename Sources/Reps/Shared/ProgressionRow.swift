@@ -42,10 +42,10 @@ struct ProgressionRow: View {
       }
     }
     .font(.subheadline)
-    .task(id: store.historyRevision) {
+    .task(id: [target.variantID, String(store.historyRevision)]) {
       do {
         let value = try await store.previousPerformance(
-          exerciseID: target.id, excludingWorkoutID: workoutID)
+          exerciseID: target.id, excludingWorkoutID: workoutID, variantID: target.variantID)
         guard !Task.isCancelled else { return }
         previous = value
         error = nil

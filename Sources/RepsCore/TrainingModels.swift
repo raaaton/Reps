@@ -14,6 +14,7 @@ public struct TrainingExercise: Identifiable, Codable, Equatable, Sendable {
   public var maximumReps: Int?
   public var durationSeconds: Int?
   public var isEnabled: Bool
+  public var variant: ExerciseVariant? = nil
 
   public init(
     id: String, name: String, tracking: TrackingMode, setCount: Int,
@@ -64,6 +65,8 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
   public var exerciseIDs: [String]
   public var setCounts: [String: Int]
   public var goals: [String: ExerciseGoal]
+  public var variantIDs: [String: String] = [:]
+  public var baseGoals: [String: ExerciseGoal] = [:]
   public var skills: [SkillAssignment] = []
   public var skillPlacement: SkillPlacement = .beforeForce
 
@@ -86,7 +89,9 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
   }
 
   enum CodingKeys: String, CodingKey {
-    case id, name, weekday, isEnabled, reminderMinutes, exerciseIDs, setCounts, goals, skills,
+    case id, name, weekday, isEnabled, reminderMinutes, exerciseIDs, setCounts, goals, variantIDs,
+      baseGoals,
+      skills,
       skillPlacement
   }
 
@@ -100,6 +105,10 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
     exerciseIDs = try c.decode([String].self, forKey: .exerciseIDs)
     setCounts = try c.decodeIfPresent([String: Int].self, forKey: .setCounts) ?? [:]
     goals = try c.decodeIfPresent([String: ExerciseGoal].self, forKey: .goals) ?? [:]
+    variantIDs = try c.decodeIfPresent([String: String].self, forKey: .variantIDs) ?? [:]
+    baseGoals =
+      try c.decodeIfPresent([String: ExerciseGoal].self, forKey: .baseGoals)
+      ?? goals.filter { $0.value.definition.variantID == ExerciseVariant.baseID(for: $0.key) }
     skills = try c.decodeIfPresent([SkillAssignment].self, forKey: .skills) ?? []
     skillPlacement =
       try c.decodeIfPresent(SkillPlacement.self, forKey: .skillPlacement) ?? .beforeForce
@@ -109,6 +118,10 @@ public struct TrainingSchedule: Codable, Identifiable, Equatable, Sendable {
 
 public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public var exercises: [TrainingExercise]
+  public var variants: [ExerciseVariant] = []
+  public var variantGoals: [VariantGoal] = []
+  public var identityAliases: [ExerciseIdentityAlias] = []
+  public var completedExerciseMerges: [String] = []
   public var archivedExercises: [TrainingExercise] = []
   public var schedules: [TrainingSchedule]
   public var restSeconds: Int
@@ -141,7 +154,8 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   }
 
   enum CodingKeys: String, CodingKey {
-    case exercises, archivedExercises, schedules, restSeconds, weightItems, goals,
+    case exercises, archivedExercises, variants, variantGoals, identityAliases,
+      completedExerciseMerges, schedules, restSeconds, weightItems, goals,
       stretchingEnabled, skills,
       skillProgress, maximumWeightObjects, backpackWeightGrams
   }
@@ -149,6 +163,12 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public init(from decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     exercises = try c.decode([TrainingExercise].self, forKey: .exercises)
+    variants = try c.decodeIfPresent([ExerciseVariant].self, forKey: .variants) ?? []
+    variantGoals = try c.decodeIfPresent([VariantGoal].self, forKey: .variantGoals) ?? []
+    identityAliases =
+      try c.decodeIfPresent([ExerciseIdentityAlias].self, forKey: .identityAliases) ?? []
+    completedExerciseMerges =
+      try c.decodeIfPresent([String].self, forKey: .completedExerciseMerges) ?? []
     archivedExercises =
       try c.decodeIfPresent([TrainingExercise].self, forKey: .archivedExercises) ?? []
     schedules = try c.decode([TrainingSchedule].self, forKey: .schedules)
@@ -169,8 +189,16 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
 
   public func exercises(for schedule: TrainingSchedule) -> [TrainingExercise] {
     schedule.exerciseIDs.compactMap { id in
-      guard var exercise = exercises.first(where: { $0.id == id && $0.isEnabled }) else {
+      guard var exercise = definition(exerciseID: id, variantID: schedule.variantIDs[id]),
+        exercise.isEnabled
+      else {
         return nil
+      }
+      let variantID = schedule.variantIDs[id] ?? exercise.variantID
+      if let variant = variants.first(where: {
+        $0.id == variantID && $0.exerciseID == exercise.parentExerciseID
+      }) {
+        exercise = variant.applying(to: exercise)
       }
       exercise.setCount = schedule.setCounts[id] ?? exercise.setCount
       return exercise
@@ -187,7 +215,7 @@ public struct TrainingSnapshot: Codable, Equatable, Sendable {
   public func schedulesEmptied(removingExerciseID id: String) -> [TrainingSchedule] {
     schedules.filter {
       $0.isEnabled && $0.exerciseIDs.contains(id)
-        && exercises(for: $0).allSatisfy { $0.id == id }
+        && exercises(for: $0).allSatisfy { $0.parentExerciseID == id }
     }
   }
 

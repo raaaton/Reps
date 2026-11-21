@@ -120,7 +120,7 @@ final class ArchivedExerciseTests: XCTestCase, @unchecked Sendable {
       JSONSerialization.jsonObject(with: original.encoded()) as? [String: Any])
     raw["version"] = 9
     let legacy = try TrainingArchive.decode(
-      JSONSerialization.data(withJSONObject: removingNewTrainingFields(raw)))
+      LegacyTrainingFixture.data(withJSONObject: removingNewTrainingFields(raw)))
     XCTAssertEqual(legacy.contents, original.contents)
     let db = try SQLiteDatabase(path: path)
     try db.execute("DROP TABLE archived_exercises")
@@ -128,7 +128,7 @@ final class ArchivedExerciseTests: XCTestCase, @unchecked Sendable {
     let migrated = try RepsRepository(path: path)
     let preserved = try await migrated.exportTraining(now: now)
     XCTAssertEqual(preserved.contents, original.contents)
-    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 21)
+    XCTAssertEqual(try db.query("PRAGMA user_version")[0].integer("user_version"), 22)
   }
 
   func testTransferRejectsDuplicateOverlappingAndMalformedArchives() async throws {
@@ -184,7 +184,8 @@ final class ArchivedExerciseTests: XCTestCase, @unchecked Sendable {
       draft("only", ids: ["chin-ups"]), now: now, calendar: calendar)
     let before = try await repo.workout(id: "mixed")
     try await repo.deleteExercise(id: "chin-ups")
-    let configuration = try await repo.snapshot()
+    var configuration = try await repo.snapshot()
+    configuration.variants.removeAll { $0.exerciseID == "chin-ups" }
     try await repo.deleteArchivedExercise(id: "chin-ups")
     let kept = try await repo.workout(id: "mixed")
     XCTAssertEqual(kept.exercises, [before.exercises[1]])

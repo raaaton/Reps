@@ -18,7 +18,7 @@ final class SkillTransferTests: XCTestCase {
       SkillCommand(practiceID: p.id, expectedRevision: p.revision, action: .pause), now: now + 1000)
     let archive = try await r.exportTraining(now: now + 2000)
     let decoded = try TrainingArchive.decode(archive.encoded())
-    XCTAssertEqual(decoded.version, 10)
+    XCTAssertEqual(decoded.version, 11)
     XCTAssertEqual(decoded.contents, archive.contents)
     let destination = try RepsRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now + 2000)
@@ -81,12 +81,14 @@ extension SkillTransferTests {
     sessions[0]["privatePhotos"] = "unrecognized"
     contents["skillSessions"] = sessions
     root["contents"] = contents
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
     sessions[0].removeValue(forKey: "privatePhotos")
     sessions[0]["state"] = "practicing"
     contents["skillSessions"] = sessions
     root["contents"] = contents
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(JSONSerialization.data(withJSONObject: root)))
   }
   func testCountdownAndPausedRestSurviveArchiveRestore() async throws {
     for format in [SkillFormat.timedHolds, .repetitions] {

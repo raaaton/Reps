@@ -38,13 +38,13 @@ final class BodyWeightTransferTests: XCTestCase, @unchecked Sendable {
       contents["configuration"] = config
     }
     root["contents"] = contents
-    return try JSONSerialization.data(withJSONObject: removingNewTrainingFields(root))
+    return try LegacyTrainingFixture.data(withJSONObject: removingNewTrainingFields(root))
   }
   func testVersionThreeRoundTripRestoresWeightsAndReminder() async throws {
     let r = try RepsRepository(path: ":memory:")
     try await setup(r)
     let archive = try await r.exportTraining(now: now)
-    XCTAssertEqual(archive.version, 10)
+    XCTAssertEqual(archive.version, 11)
     let decoded = try TrainingArchive.decode(archive.encoded())
     let destination = try RepsRepository(path: ":memory:")
     let preview = try await destination.previewArchiveImport(decoded, now: now)

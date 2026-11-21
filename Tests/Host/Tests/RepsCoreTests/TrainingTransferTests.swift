@@ -127,10 +127,12 @@ final class TrainingTransferTests: XCTestCase, @unchecked Sendable {
     var object = try XCTUnwrap(
       JSONSerialization.jsonObject(with: empty.encoded()) as? [String: Any])
     object["includesPrivatePhotos"] = true
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: object)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(LegacyTrainingFixture.data(withJSONObject: object)))
     object["includesPrivatePhotos"] = false
     object["version"] = 999
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: object)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(LegacyTrainingFixture.data(withJSONObject: object)))
   }
   func testEmptyCSVIsReadableAndUnknownPrivatePayloadIsRejected() async throws {
     XCTAssertEqual(try TrainingCSV.decode(TrainingCSV.encode([])), [])
@@ -139,7 +141,8 @@ final class TrainingTransferTests: XCTestCase, @unchecked Sendable {
     var object = try XCTUnwrap(
       JSONSerialization.jsonObject(with: archive.encoded()) as? [String: Any])
     object["privatePhotos"] = ["not-training-data"]
-    XCTAssertThrowsError(try TrainingArchive.decode(JSONSerialization.data(withJSONObject: object)))
+    XCTAssertThrowsError(
+      try TrainingArchive.decode(LegacyTrainingFixture.data(withJSONObject: object)))
   }
   func testCancelledTimedPreparationAndGoalsSurviveBothFormatsAndRestore() async throws {
     let r = try RepsRepository(path: ":memory:")

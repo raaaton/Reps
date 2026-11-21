@@ -195,7 +195,7 @@ struct WorkoutSummaryList: View {
         ForEach(skills.blocks) { SkillPracticeResultSections(practice: $0) }
       }
       ForEach(workout.exercises) { exercise in
-        Section(exercise.definition.name) {
+        Section(exercise.definition.displayName) {
           ForEach(exercise.sets) { set in
             if let components = set.components, !components.isEmpty {
               DisclosureGroup {

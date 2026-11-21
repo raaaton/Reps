@@ -2,15 +2,18 @@ import Foundation
 
 public actor RepsRepository {
   let database: SQLiteDatabase
+  let databasePath: String
 
   public init(path: String) throws {
     let database = try SQLiteDatabase(path: path)
     try TrainingSchema.migrate(database)
     self.database = database
+    self.databasePath = path
   }
 
   public func snapshot() throws -> TrainingSnapshot {
-    try database.transaction { try readSnapshot() }
+    try applyVerifiedLSitMergeIfNeeded()
+    return try database.transaction { try readSnapshot() }
   }
 
   public func saveSchedule(_ proposed: TrainingSchedule, creating: Bool = false) throws {
@@ -44,13 +47,24 @@ public actor RepsRepository {
       guard Set(schedule.exerciseIDs).count == schedule.exerciseIDs.count else {
         throw TrainingError.invalid("An exercise can appear only once in a workout.")
       }
-      guard schedule.exerciseIDs.allSatisfy({ id in snapshot.exercises.contains { $0.id == id } })
+      guard schedule.exerciseIDs.allSatisfy({ id in snapshot.definition(exerciseID: id) != nil })
       else {
         throw TrainingError.invalid("A selected exercise no longer exists.")
       }
       guard !schedule.isEnabled || !snapshot.exercises(for: schedule).isEmpty else {
         throw TrainingError.invalid(
           "Choose at least one active exercise, or disable this workout.")
+      }
+      for (id, variantID) in schedule.variantIDs {
+        guard schedule.exerciseIDs.contains(id),
+          snapshot.variants.contains(where: {
+            $0.id == variantID
+              && $0.exerciseID == snapshot.definition(exerciseID: id)?.parentExerciseID
+              && (!$0.isArchived
+                || snapshot.schedules.first(where: { $0.id == schedule.id })?.variantIDs[id]
+                  == variantID)
+          })
+        else { throw TrainingError.invalid("Choose an available progression.") }
       }
       let old = snapshot.schedules.first { $0.id == schedule.id }
       guard schedule.setCounts.keys.allSatisfy({ schedule.exerciseIDs.contains($0) }),
@@ -66,6 +80,15 @@ public actor RepsRepository {
         creating
           ? "INSERT INTO schedules(name,weekday,enabled,reminder_minutes,id) VALUES(?,?,?,?,?)"
           : "UPDATE schedules SET name=?,weekday=?,enabled=?,reminder_minutes=? WHERE id=?", values)
+      var baseGoals: [String: ExerciseGoal] = [:]
+      for assignment in try database.query(
+        "SELECT exercise_id,goal_payload FROM schedule_exercises WHERE schedule_id=?",
+        [.text(schedule.id)])
+      {
+        if let payload = try assignment.optionalText("goal_payload") {
+          baseGoals[try assignment.text("exercise_id")] = try ExerciseGoal.decode(payload)
+        }
+      }
       try database.execute(
         "DELETE FROM schedule_exercises WHERE schedule_id=?", [.text(schedule.id)])
       for (position, id) in schedule.exerciseIDs.enumerated() {
@@ -74,12 +97,31 @@ public actor RepsRepository {
           [
             .text(schedule.id), .text(id), .integer(position),
             .integer(schedule.setCounts[id] ?? old?.setCounts[id] ?? 4),
-            try old?.goals[id].map { goal in
+            try baseGoals[id].map { goal in
               var definition = goal.definition
               definition.setCount = schedule.setCounts[id] ?? old?.setCounts[id] ?? 4
               return try ExerciseGoal.encode(goal.resized(to: definition))
             } ?? .null,
           ])
+      }
+      for id in schedule.exerciseIDs {
+        if let variantID = schedule.variantIDs[id] {
+          try database.execute(
+            "INSERT INTO schedule_variants VALUES(?,?,?)",
+            [.text(schedule.id), .text(id), .text(variantID)])
+        }
+      }
+      for item in snapshot.variantGoals where item.scheduleID == schedule.id {
+        if let count = schedule.setCounts[item.goal.definition.id] {
+          var target = item.goal.definition
+          target.setCount = count
+          try database.execute(
+            "UPDATE variant_goals SET payload=? WHERE variant_id=? AND schedule_id=?",
+            [
+              try ExerciseGoal.encode(item.goal.resized(to: target)), .text(item.variantID),
+              .text(item.scheduleID),
+            ])
+        }
       }
       try writeScheduleSkills(schedule)
       let added = Set(schedule.exerciseIDs).subtracting(old?.exerciseIDs ?? [])
@@ -93,6 +135,7 @@ public actor RepsRepository {
     let exercise = try proposed.validated()
     try database.transaction {
       var snapshot = try readSnapshot()
+      let oldParentName = snapshot.exercises.first(where: { $0.id == exercise.id })?.name
       guard !snapshot.archivedExercises.contains(where: { $0.id == exercise.id }) else {
         throw TrainingError.invalid("This exercise has been archived. Add a new exercise instead.")
       }
@@ -126,6 +169,15 @@ public actor RepsRepository {
           "UPDATE exercises SET name=?,tracking=?,set_count=?,minimum_reps=?,maximum_reps=?,duration_seconds=?,enabled=? WHERE id=?",
           values)
       }
+      var base =
+        snapshot.variants.first(where: { $0.id == ExerciseVariant.baseID(for: exercise.id) })
+        ?? ExerciseVariant.base(for: exercise)
+      if base.name == oldParentName { base.name = exercise.name }
+      base.tracking = exercise.tracking
+      base.minimumReps = exercise.minimumReps
+      base.maximumReps = exercise.maximumReps
+      base.durationSeconds = exercise.durationSeconds
+      try writeVariant(base)
       try GoalReconciliation.update(for: exercise, database: database)
     }
   }
@@ -147,6 +199,7 @@ public actor RepsRepository {
   public func deleteSchedule(id: String) throws {
     try database.transaction {
       // Foreign keys remove this schedule's assignments, never the exercise catalogue.
+      try database.execute("DELETE FROM variant_goals WHERE schedule_id=?", [.text(id)])
       try database.execute("DELETE FROM schedules WHERE id=?", [.text(id)])
     }
   }
@@ -159,11 +212,15 @@ public actor RepsRepository {
 
   func removeCatalogueExercise(id: String, snapshot: TrainingSnapshot) throws {
     let emptied = snapshot.schedulesEmptied(removingExerciseID: id)
-    try database.execute("DELETE FROM schedule_exercises WHERE exercise_id=?", [.text(id)])
+    try database.execute(
+      "DELETE FROM schedule_exercises WHERE exercise_id=? OR exercise_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?)",
+      [.text(id), .text(id)])
     for schedule in emptied {
       try database.execute("UPDATE schedules SET enabled=0 WHERE id=?", [.text(schedule.id)])
     }
-    try database.execute("DELETE FROM exercises WHERE id=?", [.text(id)])
+    try database.execute(
+      "DELETE FROM exercises WHERE id=? OR id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?)",
+      [.text(id), .text(id)])
   }
 
   func readSnapshot() throws -> TrainingSnapshot {
@@ -185,16 +242,23 @@ public actor RepsRepository {
         }
       }
       let skillBlocks = try readScheduleSkills(id: id)
-      return TrainingSchedule(
+      var schedule = TrainingSchedule(
         id: id, name: try row.text("name"), weekday: try row.integer("weekday"),
         isEnabled: try row.integer("enabled") == 1,
         reminderMinutes: try row.optionalInteger("reminder_minutes"), exerciseIDs: exerciseIDs,
         setCounts: setCounts, goals: goals, skills: skillBlocks.blocks,
         skillPlacement: skillBlocks.placement)
+      for selection in try database.query(
+        "SELECT exercise_id,variant_id FROM schedule_variants WHERE schedule_id=?", [.text(id)])
+      {
+        schedule.variantIDs[try selection.text("exercise_id")] = try selection.text("variant_id")
+      }
+      schedule.baseGoals = goals
+      return schedule
     }
     guard let rest = try database.query("SELECT * FROM preferences WHERE id=1").first
     else { throw TrainingError.storage }
-    return TrainingSnapshot(
+    var snapshot = TrainingSnapshot(
       exercises: exercises, schedules: schedules, restSeconds: try rest.integer("rest_seconds"),
       weightItems: try readWeightItems(), goals: try readGoals(),
       stretchingEnabled: try rest.integer("stretching_enabled") == 1,
@@ -202,5 +266,47 @@ public actor RepsRepository {
       maximumWeightObjects: try rest.integer("maximum_weight_objects"),
       backpackWeightGrams: try rest.integer("backpack_weight_grams"),
       archivedExercises: try readArchivedExercises())
+    snapshot.variants = try readVariants()
+    snapshot.variantGoals = try database.query(
+      "SELECT * FROM variant_goals ORDER BY variant_id,schedule_id"
+    ).map {
+      VariantGoal(
+        variantID: try $0.text("variant_id"), scheduleID: try $0.text("schedule_id"),
+        goal: try ExerciseGoal.decode($0.text("payload")))
+    }
+    snapshot.identityAliases = try database.query(
+      "SELECT * FROM exercise_identity_aliases ORDER BY source_id"
+    ).map {
+      ExerciseIdentityAlias(
+        sourceID: try $0.text("source_id"), exerciseID: try $0.text("exercise_id"),
+        variantID: try $0.text("variant_id"))
+    }
+    snapshot.exercises.removeAll { exercise in
+      snapshot.identityAliases.contains {
+        $0.sourceID == exercise.id && $0.exerciseID != exercise.id
+      }
+    }
+    snapshot.completedExerciseMerges = try database.query(
+      "SELECT id FROM targeted_exercise_merges ORDER BY id"
+    ).map { try $0.text("id") }
+    for index in snapshot.schedules.indices {
+      for (id, variantID) in snapshot.schedules[index].variantIDs
+      where variantID
+        != ExerciseVariant.baseID(for: snapshot.definition(exerciseID: id)?.parentExerciseID ?? id)
+      {
+        if let goal = try variantGoal(
+          variantID: variantID, scheduleID: snapshot.schedules[index].id),
+          var target = snapshot.definition(exerciseID: id, variantID: variantID)
+        {
+          target.setCount = snapshot.schedules[index].setCounts[id] ?? target.setCount
+          snapshot.schedules[index].goals[id] = ExerciseGoal(
+            definition: target, load: goal.load, repetitions: goal.repetitions,
+            durationsMS: goal.durationsMS)
+        } else {
+          snapshot.schedules[index].goals[id] = nil
+        }
+      }
+    }
+    return snapshot
   }
 }

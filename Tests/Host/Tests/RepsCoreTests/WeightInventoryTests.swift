@@ -12,7 +12,9 @@ final class WeightInventoryTests: XCTestCase, @unchecked Sendable {
     try db.execute(
       "CREATE TABLE workout_sets(id TEXT,exercise_id TEXT,number INTEGER,repetitions INTEGER,duration_ms INTEGER,weight_grams INTEGER,completed_at INTEGER)"
     )
-    try db.execute("CREATE TABLE workout_exercises(id TEXT,set_weight_grams INTEGER)")
+    try db.execute(
+      "CREATE TABLE workout_exercises(id TEXT PRIMARY KEY,workout_id TEXT,catalogue_id TEXT,name TEXT,tracking TEXT,set_count INTEGER,minimum_reps INTEGER,maximum_reps INTEGER,duration_seconds INTEGER,position INTEGER,feeling_tenths INTEGER,set_started_at INTEGER,set_weight_grams INTEGER,set_ended_at INTEGER)"
+    )
     try db.execute("INSERT INTO workout_sets VALUES('old','exercise',1,12,NULL,2375,12345)")
     try db.execute("CREATE TABLE workouts(day_key TEXT,started_at INTEGER)")
     try db.execute("CREATE TABLE exercises(id TEXT PRIMARY KEY,set_count INTEGER)")
@@ -22,7 +24,7 @@ final class WeightInventoryTests: XCTestCase, @unchecked Sendable {
     try db.execute("INSERT INTO preferences VALUES(1,180)")
     try db.execute("PRAGMA user_version=3")
     _ = try RepsRepository(path: path)
-    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 21)
+    XCTAssertEqual(try db.query("PRAGMA user_version").first?.integer("user_version"), 22)
     XCTAssertEqual(
       try db.query("SELECT weight_grams FROM workout_sets").first?.integer("weight_grams"), 2375)
     XCTAssertEqual(try db.query("SELECT count(*) AS n FROM weight_items").first?.integer("n"), 3)

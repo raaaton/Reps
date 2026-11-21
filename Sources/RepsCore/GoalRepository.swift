@@ -6,7 +6,8 @@ extension RepsRepository {
     let workout = try readWorkout(id: id)
     guard workout.status == .completed else { return }
     try LatestExerciseGoals.update(
-      database, exerciseIDs: Set(workout.exercises.map { $0.definition.id }))
+      database, exerciseIDs: Set(workout.exercises.map { $0.definition.parentExerciseID }),
+      variantIDs: Set(workout.exercises.map { $0.definition.variantID }))
   }
   func readGoals() throws -> [ExerciseGoal] {
     try database.query("SELECT payload FROM exercise_goals ORDER BY catalogue_id").map {
@@ -23,24 +24,28 @@ extension RepsRepository {
   }
   func readLatestPerformance(
     exerciseID: String, excludingWorkoutID: String = "", scheduleID: String? = nil,
-    setCount: Int? = nil
+    setCount: Int? = nil, variantID: String? = nil
   ) throws
     -> WorkoutExercise?
   {
     try database.query(
-      "SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE e.catalogue_id=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=? AND (? IS NULL OR w.schedule_id=? OR w.schedule_id='manual') AND (? IS NULL OR e.set_count=?) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1",
+      "SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL AND w.id!=? AND (? IS NULL OR w.schedule_id=? OR w.schedule_id='manual') AND (? IS NULL OR e.set_count=?) ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1",
       [
-        .text(exerciseID), .text(excludingWorkoutID), scheduleID.map(SQLValue.text) ?? .null,
+        .text(exerciseID), .text(exerciseID), .text(exerciseID),
+        .text(variantID ?? ExerciseVariant.baseID(for: exerciseID)),
+        .text(excludingWorkoutID), scheduleID.map(SQLValue.text) ?? .null,
         scheduleID.map(SQLValue.text) ?? .null, setCount.map(SQLValue.integer) ?? .null,
         setCount.map(SQLValue.integer) ?? .null,
       ]
     ).first.map(readExercise)
   }
   // Explicit workout context wins. Existing callers for a uniquely assigned exercise remain valid.
-  func goalTarget(exerciseID: String, scheduleID: String?, snapshot: TrainingSnapshot) throws -> (
+  func goalTarget(
+    exerciseID: String, scheduleID: String?, snapshot: TrainingSnapshot, variantID: String? = nil
+  ) throws -> (
     TrainingExercise, TrainingSchedule?
   ) {
-    guard var exercise = snapshot.exercises.first(where: { $0.id == exerciseID }) else {
+    guard var exercise = snapshot.definition(exerciseID: exerciseID, variantID: variantID) else {
       throw TrainingError.invalid("This exercise has been deleted.")
     }
     let assignments = snapshot.schedules.filter { $0.exerciseIDs.contains(exerciseID) }
@@ -53,22 +58,38 @@ extension RepsRepository {
     } else {
       schedule = assignments.count == 1 ? assignments.first : nil
     }
-    if let count = schedule?.setCounts[exerciseID] { exercise.setCount = count }
+    let selection = variantID ?? schedule?.variantIDs[exerciseID] ?? exercise.variantID
+    guard let resolved = snapshot.definition(exerciseID: exerciseID, variantID: selection) else {
+      throw TrainingError.invalid("This progression is no longer available.")
+    }
+    exercise = resolved
+    let slotID =
+      schedule?.exerciseIDs.first(where: { slot in
+        (schedule?.variantIDs[slot] ?? ExerciseVariant.baseID(for: slot)) == selection
+          && snapshot.definition(exerciseID: slot)?.parentExerciseID == exercise.parentExerciseID
+      }) ?? exerciseID
+    if let count = schedule?.setCounts[slotID] { exercise.setCount = count }
     return (exercise, schedule)
   }
 
-  func readGoalContext(exerciseID: String, scheduleID: String? = nil) throws -> GoalContext {
+  func readGoalContext(exerciseID: String, scheduleID: String? = nil, variantID: String? = nil)
+    throws -> GoalContext
+  {
     let snapshot = try readSnapshot()
     let (exercise, schedule) = try goalTarget(
-      exerciseID: exerciseID, scheduleID: scheduleID, snapshot: snapshot)
+      exerciseID: exerciseID, scheduleID: scheduleID, snapshot: snapshot, variantID: variantID)
     let goal =
-      schedule.map { $0.goals[exerciseID] }
-      ?? snapshot.goals.first { $0.definition.id == exerciseID }
+      try variantGoal(variantID: exercise.variantID, scheduleID: schedule?.id)
+      ?? (exercise.variantID == ExerciseVariant.baseID(for: exerciseID)
+        ? (schedule.map { $0.baseGoals[exerciseID] }
+          ?? snapshot.goals.first {
+            $0.definition.id == exerciseID && $0.definition.variantID == exercise.variantID
+          }) : nil)
     let loads = try WeightInventory.loads(
       items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects,
       backpackGrams: snapshot.backpackWeightGrams)
     let previous = try readLatestPerformance(
-      exerciseID: exerciseID)
+      exerciseID: exerciseID, variantID: exercise.variantID)
     return GoalContext(
       exercise: exercise, adopted: goal,
       suggestion: GoalEngine.suggestion(target: exercise, previous: previous, loads: loads),
@@ -80,8 +101,12 @@ extension RepsRepository {
       } ?? true,
       scheduleID: schedule?.id)
   }
-  public func goalContext(exerciseID: String, scheduleID: String? = nil) throws -> GoalContext {
-    try database.transaction { try readGoalContext(exerciseID: exerciseID, scheduleID: scheduleID) }
+  public func goalContext(exerciseID: String, scheduleID: String? = nil, variantID: String? = nil)
+    throws -> GoalContext
+  {
+    try database.transaction {
+      try readGoalContext(exerciseID: exerciseID, scheduleID: scheduleID, variantID: variantID)
+    }
   }
   public func saveGoal(_ goal: ExerciseGoal, original: ExerciseGoal?, scheduleID: String? = nil)
     throws
@@ -101,17 +126,34 @@ extension RepsRepository {
     try database.transaction {
       let snapshot = try readSnapshot()
       guard
-        try goalTarget(exerciseID: originalExercise.id, scheduleID: scheduleID, snapshot: snapshot)
-          .0 == originalExercise
+        try goalTarget(
+          exerciseID: originalExercise.id, scheduleID: scheduleID, snapshot: snapshot,
+          variantID: originalExercise.variantID
+        )
+        .0 == originalExercise
       else {
         throw TrainingError.invalid("The exercise has changed. Open its goal again.")
       }
-      try database.execute(
-        "UPDATE exercises SET duration_seconds=? WHERE id=?",
-        [
-          goal.definition.durationSeconds.map(SQLValue.integer) ?? .null,
-          .text(originalExercise.id),
-        ])
+      if originalExercise.variant != nil {
+        guard var variant = snapshot.variants.first(where: { $0.id == originalExercise.variantID })
+        else { throw TrainingError.storage }
+        variant.durationSeconds = goal.definition.durationSeconds
+        try writeVariant(variant)
+      } else {
+        try database.execute(
+          "UPDATE exercises SET duration_seconds=? WHERE id=?",
+          [
+            goal.definition.durationSeconds.map(SQLValue.integer) ?? .null,
+            .text(originalExercise.id),
+          ])
+      }
+      if originalExercise.variant == nil,
+        let parent = try database.query(
+          "SELECT * FROM exercises WHERE id=?", [.text(originalExercise.id)]
+        ).first
+      {
+        try writeVariant(ExerciseVariant.base(for: TrainingExercise.read(parent)))
+      }
       try writeGoal(goal, original: original, scheduleID: scheduleID)
       try GoalReconciliation.updateAll(database)
     }
@@ -121,7 +163,8 @@ extension RepsRepository {
   ) throws {
     try database.transaction {
       let context = try readGoalContext(
-        exerciseID: suggestion.goal.definition.id, scheduleID: scheduleID)
+        exerciseID: suggestion.goal.definition.id, scheduleID: scheduleID,
+        variantID: suggestion.goal.definition.variantID)
       guard context.suggestion == suggestion else {
         throw TrainingError.invalid(
           "The latest result has changed. Review the suggestion again.")
@@ -152,11 +195,12 @@ extension RepsRepository {
     }
     let snapshot = try readSnapshot()
     guard let schedule = snapshot.schedules.first(where: { $0.id == workout.scheduleID }),
-      let target = snapshot.exercises(for: schedule).first(where: {
-        $0.id == exercise.definition.id
-      }),
-      target == exercise.definition
+      schedule.exerciseIDs.contains(exercise.definition.id),
+      var target = snapshot.definition(
+        exerciseID: exercise.definition.id, variantID: exercise.definition.variantID)
     else { return nil }
+    target.setCount = schedule.setCounts[exercise.definition.id] ?? target.setCount
+    guard target == exercise.definition else { return nil }
     let loads = try WeightInventory.loads(
       items: snapshot.weightItems, maximumObjects: snapshot.maximumWeightObjects,
       backpackGrams: snapshot.backpackWeightGrams)
@@ -165,7 +209,9 @@ extension RepsRepository {
       feelingTenths: feelingTenths, setStartedAt: exercise.setStartedAt,
       setWeightGrams: exercise.setWeightGrams,
       setEndedAt: exercise.setEndedAt, setComponents: exercise.setComponents, goal: exercise.goal)
-    let original = schedule.goals[target.id]
+    let original = try readGoalContext(
+      exerciseID: target.id, scheduleID: schedule.id, variantID: target.variantID
+    ).adopted
     guard let suggestion = GoalEngine.suggestion(target: target, previous: rated, loads: loads),
       suggestion.reason == .increaseLoad || suggestion.reason == .decreaseLoad,
       suggestion.goal != original
@@ -206,7 +252,8 @@ extension RepsRepository {
     throws
   {
     _ = try goal.validated()
-    let context = try readGoalContext(exerciseID: goal.definition.id, scheduleID: scheduleID)
+    let context = try readGoalContext(
+      exerciseID: goal.definition.id, scheduleID: scheduleID, variantID: goal.definition.variantID)
     guard goal.isCompatible(with: context.exercise), context.adopted == original else {
       throw TrainingError.invalid("The goal or exercise has changed. Open its details again.")
     }
@@ -214,7 +261,18 @@ extension RepsRepository {
     try storeGoal(goal, scheduleID: context.scheduleID)
   }
 
-  func storeGoal(_ goal: ExerciseGoal, scheduleID: String?) throws {
+  func storeGoal(_ proposed: ExerciseGoal, scheduleID: String?) throws {
+    var definition = proposed.definition
+    definition.id = definition.parentExerciseID
+    let goal = ExerciseGoal(
+      definition: definition, load: proposed.load, repetitions: proposed.repetitions,
+      durationsMS: proposed.durationsMS)
+    if goal.definition.variantID != ExerciseVariant.baseID(for: goal.definition.id) {
+      try database.execute(
+        "INSERT INTO variant_goals VALUES(?,?,?) ON CONFLICT(variant_id,schedule_id) DO UPDATE SET payload=excluded.payload",
+        [.text(goal.definition.variantID), .text(scheduleID ?? ""), try ExerciseGoal.encode(goal)])
+      return
+    }
     if let scheduleID {
       try database.execute(
         "UPDATE schedule_exercises SET goal_payload=? WHERE schedule_id=? AND exercise_id=?",

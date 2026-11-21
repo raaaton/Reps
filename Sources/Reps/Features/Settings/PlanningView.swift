@@ -143,16 +143,38 @@ struct ScheduleEditor: View {
       }
       Section {
         ForEach(draft.exerciseIDs, id: \.self) { id in
-          if let exercise = snapshot.exercises.first(where: { $0.id == id }) {
-            WorkoutExerciseRow(
-              exercise: exercise,
-              setCount: Binding(
-                get: { draft.setCounts[id] ?? 4 },
-                set: { draft.setCounts[id] = $0 })
-            )
+          if let exercise = snapshot.definition(exerciseID: id) {
+            VStack(alignment: .leading, spacing: 8) {
+              WorkoutExerciseRow(
+                exercise: snapshot.definition(exerciseID: id, variantID: draft.variantIDs[id])
+                  ?? exercise,
+                setCount: Binding(
+                  get: { draft.setCounts[id] ?? 4 },
+                  set: { draft.setCounts[id] = $0 })
+              )
+              if snapshot.variants.filter({ $0.exerciseID == id }).count > 1 {
+                Picker(
+                  "Progression for \(exercise.name)",
+                  selection: Binding(
+                    get: { draft.variantIDs[id] ?? ExerciseVariant.baseID(for: id) },
+                    set: { draft.variantIDs[id] = $0 }
+                  )
+                ) {
+                  ForEach(
+                    snapshot.variants.filter {
+                      $0.exerciseID == id && (!$0.isArchived || $0.id == draft.variantIDs[id])
+                    }
+                  ) { variant in
+                    Text(variant.displayName + (variant.isArchived ? " (Archived)" : "")).tag(
+                      variant.id)
+                  }
+                }.pickerStyle(.menu).moveDisabled(true).deleteDisabled(true)
+              }
+            }
             .swipeActions(edge: .trailing) {
               Button("Delete", systemImage: "trash", role: .destructive) {
                 draft.setCounts.removeValue(forKey: id)
+                draft.variantIDs.removeValue(forKey: id)
                 draft.exerciseIDs.removeAll { $0 == id }
               }.tint(.red).labelStyle(.titleAndIcon)
             }
@@ -160,7 +182,10 @@ struct ScheduleEditor: View {
         }
         .onMove { draft.exerciseIDs.move(fromOffsets: $0, toOffset: $1) }
         .onDelete { offsets in
-          for index in offsets { draft.setCounts.removeValue(forKey: draft.exerciseIDs[index]) }
+          for index in offsets {
+            draft.variantIDs.removeValue(forKey: draft.exerciseIDs[index])
+            draft.setCounts.removeValue(forKey: draft.exerciseIDs[index])
+          }
           draft.exerciseIDs.remove(atOffsets: offsets)
         }
         Button("Choose Exercises", systemImage: "plus") { selecting = true }
@@ -247,6 +272,7 @@ struct ScheduleEditor: View {
                   } else {
                     draft.exerciseIDs.removeAll { $0 == exercise.id }
                     draft.setCounts.removeValue(forKey: exercise.id)
+                    draft.variantIDs.removeValue(forKey: exercise.id)
                   }
                 }
               ))

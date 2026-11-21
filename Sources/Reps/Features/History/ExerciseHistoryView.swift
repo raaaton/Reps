@@ -43,6 +43,7 @@ struct ExerciseHistoryIndex: View {
 struct ExerciseHistoryView: View {
   @EnvironmentObject private var store: TrainingStore
   let exercise: TrainingExercise
+  var variantID: String? = nil
   @State private var records: [ExercisePerformance] = []
   @State private var loading = true
   @State private var error: String?
@@ -58,6 +59,8 @@ struct ExerciseHistoryView: View {
       }
       ForEach(records) { record in
         Section(WorkoutLabels.day(record.dayKey)) {
+          Text(record.exercise.definition.variantDisplayName).font(.subheadline).foregroundStyle(
+            .secondary)
           NavigationLink(record.workoutName) { WorkoutHistoryDetail(workoutID: record.workoutID) }
           if record.status == .cancelled { Text("Workout Canceled").foregroundStyle(.secondary) }
           ForEach(record.exercise.sets) { set in
@@ -75,7 +78,7 @@ struct ExerciseHistoryView: View {
     .navigationTitle(exercise.name).navigationBarTitleDisplayMode(.inline)
     .task(id: store.historyRevision) {
       do {
-        let result = try await store.exerciseHistory(exerciseID: exercise.id)
+        let result = try await store.exerciseHistory(exerciseID: exercise.id, variantID: variantID)
         guard !Task.isCancelled else { return }
         records = result
         error = nil

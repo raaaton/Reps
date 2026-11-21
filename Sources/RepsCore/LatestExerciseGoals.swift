@@ -1,17 +1,42 @@
+import Foundation
+
 // Shared by completion and the one-time upgrade. Caller owns the SQLite transaction.
 enum LatestExerciseGoals {
   static func update(
-    _ database: SQLiteDatabase, exerciseIDs: Set<String>? = nil, scheduleIDs: Set<String>? = nil
+    _ database: SQLiteDatabase, exerciseIDs: Set<String>? = nil, scheduleIDs: Set<String>? = nil,
+    variantIDs: Set<String>? = nil
   ) throws {
-    for row in try database.query("SELECT * FROM exercises") {
-      let exercise = try TrainingExercise.read(row)
+    let hasVariants =
+      !(try database.query(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='exercise_variants'")).isEmpty
+    let parents = try database.query("SELECT * FROM exercises").map(TrainingExercise.read)
+    var targets: [TrainingExercise] = []
+    for parent in parents {
+      if hasVariants {
+        let variants = try database.query(
+          "SELECT payload FROM exercise_variants WHERE exercise_id=?", [.text(parent.id)]
+        ).map {
+          try JSONDecoder().decode(ExerciseVariant.self, from: Data($0.text("payload").utf8))
+        }
+        targets += variants.map { $0.applying(to: parent) }
+      } else {
+        targets.append(parent)
+      }
+    }
+    for exercise in targets {
       guard exerciseIDs?.contains(exercise.id) ?? true,
+        variantIDs?.contains(exercise.variantID) ?? true,
         let latest = try database.query(
           """
           SELECT e.*,w.schedule_id FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id
-          WHERE e.catalogue_id=? AND w.status='completed' AND e.feeling_tenths IS NOT NULL
+          WHERE \(hasVariants ? "(e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?))" : "e.catalogue_id=?") AND \(hasVariants ? "COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=? AND" : "") w.status='completed' AND e.feeling_tenths IS NOT NULL
           ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC LIMIT 1
-          """, [.text(exercise.id)]
+          """,
+          hasVariants
+            ? [
+              .text(exercise.id), .text(exercise.id), .text(exercise.id), .text(exercise.variantID),
+            ]
+            : [.text(exercise.id)]
         ).first
       else { continue }
       let previous = try WorkoutExercise.read(latest, database: database)
@@ -49,6 +74,12 @@ enum LatestExerciseGoals {
           goal = baseline
         }
         guard let goal else { continue }
+        if hasVariants && exercise.variantID != ExerciseVariant.baseID(for: exercise.id) {
+          try database.execute(
+            "INSERT INTO variant_goals VALUES(?,?,?) ON CONFLICT(variant_id,schedule_id) DO UPDATE SET payload=excluded.payload",
+            [.text(exercise.variantID), .text(scheduleID), try ExerciseGoal.encode(goal)])
+          continue
+        }
         try database.execute(
           "UPDATE schedule_exercises SET goal_payload=? WHERE schedule_id=? AND exercise_id=?",
           [

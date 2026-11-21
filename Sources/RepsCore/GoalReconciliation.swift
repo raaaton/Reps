@@ -1,3 +1,5 @@
+import Foundation
+
 extension TrainingExercise {
   static func read(_ row: SQLRow) throws -> Self {
     guard let tracking = TrackingMode(rawValue: try row.text("tracking")) else {
@@ -17,6 +19,27 @@ enum GoalReconciliation {
   static func updateAll(_ database: SQLiteDatabase) throws {
     for row in try database.query("SELECT * FROM exercises") {
       try update(for: TrainingExercise.read(row), database: database)
+    }
+    let hasVariants =
+      !(try database.query("SELECT name FROM sqlite_master WHERE name='exercise_variants'")).isEmpty
+    if hasVariants {
+      for row in try database.query(
+        "SELECT g.*,v.payload AS variant_payload FROM variant_goals g JOIN exercise_variants v ON v.id=g.variant_id"
+      ) {
+        let variant = try JSONDecoder().decode(
+          ExerciseVariant.self, from: Data(row.text("variant_payload").utf8))
+        let goal = try ExerciseGoal.decode(row.text("payload"))
+        var target = variant.applying(to: goal.definition)
+        target.setCount = goal.definition.setCount
+        if !goal.isCompatible(with: target) {
+          try database.execute(
+            "UPDATE variant_goals SET payload=? WHERE variant_id=? AND schedule_id=?",
+            [
+              try ExerciseGoal.encode(goal.reconciled(to: target)), .text(variant.id),
+              .text(try row.text("schedule_id")),
+            ])
+        }
+      }
     }
   }
 
@@ -56,12 +79,24 @@ extension TrainingSnapshot {
     var result = self
     for index in result.schedules.indices {
       for id in result.schedules[index].exerciseIDs {
-        guard var target = exercises.first(where: { $0.id == id }),
+        guard
+          var target = definition(
+            exerciseID: id, variantID: result.schedules[index].variantIDs[id]),
           let goal = result.schedules[index].goals[id]
         else { continue }
         target.setCount = result.schedules[index].setCounts[id] ?? target.setCount
         if !goal.isCompatible(with: target) {
           result.schedules[index].goals[id] = try goal.reconciled(to: target)
+        }
+      }
+    }
+    for index in result.schedules.indices {
+      for (id, goal) in result.schedules[index].baseGoals {
+        guard var target = definition(exerciseID: id, variantID: ExerciseVariant.baseID(for: id))
+        else { continue }
+        target.setCount = result.schedules[index].setCounts[id] ?? target.setCount
+        if !goal.isCompatible(with: target) {
+          result.schedules[index].baseGoals[id] = try goal.reconciled(to: target)
         }
       }
     }

@@ -1,5 +1,25 @@
 > Installed 1.5.8 (130): native Edit/Done reordering in Progress and Settings → Exercises, sharing one persisted catalogue order.457host tests,13metadata checks, strict lint and native build/inspection pass; direct USB postflight confirms unchanged identity/certificate/capabilities. Native drag/UI await owner review. See [implementation and delivery](docs/exec-plans/2026-11-06-exercise-order.md).
 
+## Exercise progressions — 1.5.9 (131)
+
+Exercises now have named manual progressions with optional fixed decimal measurements
+and freely entered units. Each progression keeps its own targets and added-weight
+goals within the existing workout context. Workouts retain their set counts; an
+in-session selection stays local and locks when the first set starts. Progress
+filters charts, details and goals by progression; old labels remain frozen.
+
+Schema 22, training archive 11 and CSV 3 preserve older readers' input compatibility.
+The targeted personal L-sit/V-sit migration uses verified identities, a full SQLite
+recovery copy, a transaction and an idempotent marker; affected active sessions defer
+it. The iPhone migration is verified: six L-sit and one V-sit occurrences, unchanged
+session/set/rest/decision/goal rows, and V-sit retained in Pull + Abs.
+
+467 XCTest and 10 Swift Testing cases pass, as do strict lint, 13 metadata checks,
+real native build, App Intents embedding and unsigned inspection. USB installation
+and postflight confirm 1.5.9 (131), unchanged identity/capabilities/certificate and
+valid app/widget profiles. Native menus, Dynamic Type and VoiceOver still require
+owner acceptance on iPhone. No GitHub publication requested.
+
 > Previous 1.5.7 (129): exercise archives in Progress, load increases below Feeling9 only after all maximum targets, green contour stencil and optional post-capture similarity alignment.454host tests,13metadata checks, strict lint, native build/inspection and actual generated-image renderer/encrypted-metadata probe pass. Real camera and UI remain owner checks. See [implementation and device evidence](docs/exec-plans/2026-11-06-archives-stencil-progression.md).
 
 > Previous 1.5.6 (127): photo stencil at50% adjustable opacity and Photo Session with one step per photo in the latest daily folder, including repeated/unassigned types.436host tests, native generated-image/crypto checks, lint, metadata and build inspection pass. Real camera framing/mirror/timer and UI await owner review. See [implementation and device evidence](docs/exec-plans/2026-11-02-photo-stencil.md).

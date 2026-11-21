@@ -32,7 +32,7 @@ public struct TrainingDataSet: Codable, Equatable, Sendable {
 }
 public struct TrainingArchive: Codable, Equatable, Sendable {
   public var format = "sport.training"
-  public var version = 10
+  public var version = 11
   public var includesPrivatePhotos = false
   public var createdAt: Int
   public var contents: TrainingDataSet
@@ -93,12 +93,22 @@ public struct TrainingArchive: Codable, Equatable, Sendable {
       if value.version == 7 { value.version = 8 }
       if value.version == 8 { value.version = 9 }
       if value.version == 9 { value.version = 10 }
+      if value.version == 10 {
+        value.version = 11
+        var definitions =
+          value.contents.configuration.exercises + value.contents.configuration.archivedExercises
+        for definition in value.contents.workouts.flatMap(\.exercises).map(\.definition)
+        where !definitions.contains(where: { $0.id == definition.id }) {
+          definitions.append(definition)
+        }
+        value.contents.configuration.variants = definitions.map(ExerciseVariant.base)
+      }
       try value.validate()
       return value
     } catch let error as TrainingError { throw error } catch { throw TrainingTransfer.invalid }
   }
   func validate() throws {
-    guard format == "sport.training", version == 10, !includesPrivatePhotos else {
+    guard format == "sport.training", version == 11, !includesPrivatePhotos else {
       throw TrainingError.invalid(
         "This is not a compatible Reps training backup. Private photos are not supported."
       )

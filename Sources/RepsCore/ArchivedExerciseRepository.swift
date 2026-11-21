@@ -27,14 +27,31 @@ extension RepsRepository {
 
   public func deleteArchivedExercise(id: String) throws {
     try database.transaction {
+      if let alias = try database.query(
+        "SELECT exercise_id FROM exercise_identity_aliases WHERE source_id=?", [.text(id)]
+      ).first,
+        !(try database.query(
+          "SELECT id FROM exercises WHERE id=?", [.text(try alias.text("exercise_id"))])).isEmpty
+      {
+        throw TrainingError.invalid(
+          "This progression belongs to an active exercise. Archive the parent exercise first.")
+      }
       guard try database.query("SELECT id FROM exercises WHERE id=?", [.text(id)]).isEmpty else {
         throw TrainingError.invalid(
           "This exercise is still in the catalog. Remove it from Exercises first.")
       }
+      let sources =
+        [id]
+        + (try database.query(
+          "SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=? AND source_id!=?",
+          [.text(id), .text(id)]
+        ).map { try $0.text("source_id") })
+      let placeholders = sources.map { _ in "?" }.joined(separator: ",")
+      let arguments = sources.map(SQLValue.text)
       guard
         try database.query(
-          "SELECT e.id FROM workout_exercises e JOIN workouts w ON w.id=e.workout_id WHERE e.catalogue_id=? AND w.status='active'",
-          [.text(id)]
+          "SELECT e.id FROM workout_exercises e JOIN workouts w ON w.id=e.workout_id WHERE e.catalogue_id IN (\(placeholders)) AND w.status='active'",
+          arguments
         ).isEmpty
       else {
         throw TrainingError.invalid(
@@ -42,13 +59,20 @@ extension RepsRepository {
       }
       try database.execute("DELETE FROM archived_exercises WHERE id=?", [.text(id)])
       let affected = try database.query(
-        "SELECT DISTINCT workout_id FROM workout_exercises WHERE catalogue_id=?", [.text(id)]
+        "SELECT DISTINCT workout_id FROM workout_exercises WHERE catalogue_id IN (\(placeholders))",
+        arguments
       )
       .map { try $0.text("workout_id") }
       try database.execute(
-        "DELETE FROM workout_rests WHERE exercise_id IN (SELECT id FROM workout_exercises WHERE catalogue_id=?)",
+        "DELETE FROM workout_rests WHERE exercise_id IN (SELECT id FROM workout_exercises WHERE catalogue_id IN (\(placeholders)))",
+        arguments)
+      try database.execute(
+        "DELETE FROM workout_exercises WHERE catalogue_id IN (\(placeholders))", arguments)
+      try database.execute(
+        "DELETE FROM variant_goals WHERE variant_id IN (SELECT id FROM exercise_variants WHERE exercise_id=?)",
         [.text(id)])
-      try database.execute("DELETE FROM workout_exercises WHERE catalogue_id=?", [.text(id)])
+      try database.execute("DELETE FROM exercise_variants WHERE exercise_id=?", [.text(id)])
+      try database.execute("DELETE FROM exercise_identity_aliases WHERE exercise_id=?", [.text(id)])
       for workoutID in affected {
         let remaining = try database.query(
           "SELECT id FROM workout_exercises WHERE workout_id=? ORDER BY position",

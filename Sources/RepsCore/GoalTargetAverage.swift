@@ -25,7 +25,9 @@ enum GoalTargetAverage {
 extension ExerciseGoal {
   // Learned future targets use one whole-number mean; manual per-set edits stay available.
   func averaged(to target: TrainingExercise) -> Self? {
-    guard (1...1000).contains(target.setCount) else { return nil }
+    guard definition.variantID == target.variantID,
+      definition.parentExerciseID == target.parentExerciseID, (1...1000).contains(target.setCount)
+    else { return nil }
     if let repetitions {
       guard let mean = GoalTargetAverage.ceiling(repetitions) else { return nil }
       return Self(

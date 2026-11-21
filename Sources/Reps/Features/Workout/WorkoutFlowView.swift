@@ -92,7 +92,7 @@ private struct WorkoutPreparationView: View {
           Section("Planned Exercises") {
             ForEach(snapshot.exercises(for: schedule)) { exercise in
               VStack(alignment: .leading, spacing: 4) {
-                Text(exercise.name)
+                Text(exercise.displayName)
                 ExerciseGoalRow(exercise: exercise, scheduleID: schedule.id)
               }
             }
@@ -196,7 +196,7 @@ struct WorkoutSessionView: View {
                   let index = session.exercises.firstIndex(where: { $0.id == exercise.id }) ?? 0
                   Text("Exercise \(index + 1) of \(session.exercises.count)")
                     .font(.subheadline).foregroundStyle(.secondary)
-                  Text(exercise.definition.name).font(.title2).fontWeight(.semibold)
+                  Text(exercise.definition.displayName).font(.title2).fontWeight(.semibold)
                     .contentTransition(.opacity)
                     .accessibilityAddTraits(.isHeader)
                   Text(TrainingLabels.target(exercise.definition))
@@ -212,7 +212,7 @@ struct WorkoutSessionView: View {
                 if exercise.definition.tracking == .duration {
                   TimedSetPreparation(
                     workout: session, exercise: exercise, busy: busy, focused: $focused
-                  ).id("\(exercise.id)-\(exercise.sets.count)")
+                  ).id("\(exercise.id)-\(exercise.definition.variantID)-\(exercise.sets.count)")
                 } else {
                   Section {
                     Button {
@@ -247,14 +247,14 @@ struct WorkoutSessionView: View {
                         try await store.finishTimedSet(workout: session, exercise: exercise)
                       }
                     }
-                  ).id("\(exercise.id)-\(exercise.sets.count)")
+                  ).id("\(exercise.id)-\(exercise.definition.variantID)-\(exercise.sets.count)")
                 } else {
                   ActiveSetForm(workout: session, exercise: exercise, focused: $focused)
-                    .id("\(exercise.id)-\(exercise.sets.count)")
+                    .id("\(exercise.id)-\(exercise.definition.variantID)-\(exercise.sets.count)")
                 }
               case .completedSet:
                 ActiveSetForm(workout: session, exercise: exercise, focused: $focused)
-                  .id("\(exercise.id)-\(exercise.sets.count)")
+                  .id("\(exercise.id)-\(exercise.definition.variantID)-\(exercise.sets.count)")
               case .resting:
                 if let rest = session.rest {
                   RestControls(rest: rest, nextSet: exercise.sets.count + 1, busy: busy) { action in
@@ -270,9 +270,10 @@ struct WorkoutSessionView: View {
                   }
                 }
               case .feeling:
-                FeelingForm(workout: session, exercise: exercise).id(exercise.id)
+                FeelingForm(workout: session, exercise: exercise).id(exercise.definition.variantID)
               case .skills, .support, .completed, .cancelled: EmptyView()
               }
+              WorkoutVariantPicker(workout: session, exercise: exercise)
               Section("Reference") {
                 if !exercise.sets.isEmpty {
                   DisclosureGroup("Recorded Sets (\(exercise.sets.count))") {
@@ -287,12 +288,16 @@ struct WorkoutSessionView: View {
                     }
                   }
                 }
-                PreviousPerformanceRow(exerciseID: exercise.definition.id, workoutID: workoutID)
-                  .id(exercise.id)
+                PreviousPerformanceRow(
+                  exerciseID: exercise.definition.id, workoutID: workoutID,
+                  variantID: exercise.definition.variantID
+                )
+                .id(exercise.definition.variantID)
                 if let index = session.exercises.firstIndex(where: { $0.id == exercise.id }),
                   index + 1 < session.exercises.count
                 {
-                  LabeledContent("Up Next", value: session.exercises[index + 1].definition.name)
+                  LabeledContent(
+                    "Up Next", value: session.exercises[index + 1].definition.displayName)
                 }
               }
               if let error = store.workoutError {

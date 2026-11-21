@@ -1,5 +1,27 @@
 # Reps — design et interactions
 
+## 21 November 2026 — manual exercise progressions
+
+Exercise editing opens a native Progressions list and focused Form editor. Each
+stable identity has a name, optional decimal measurement with a required free-text
+unit, and repetition/duration targets; sets stay in the workout. New exercises get
+a base automatically. Separate created 15 cm and 20 cm records keep separate IDs.
+Later edits retain the same identity and leave historical metadata frozen, as
+requested. Archiving excludes future choices while keeping existing results.
+An archived program selection must be changed explicitly before a new workout.
+
+Programs select a progression. A session-only menu changes only its snapshot and
+loads that progression's context-specific goal; first-set start (including the
+countdown) persists a lock that cancellation/relaunch/restore cannot reset.
+Progress initially selects the last trained progression, then a program choice,
+then base. Charts, results, goals, previous performance and summary facts are
+filtered by identity. Summary labels use captured metadata. The existing rule
+against automatically recalculating future goals on historical edits is retained.
+
+Menus and labeled text fields follow the HIG Pickers/Text fields guidance consulted
+21 November. Navigation, grouping, lock timing and fallback order are Reps choices.
+Native menus, maximum Dynamic Type and VoiceOver remain physical owner checks.
+
 6 November2026 — catalogue ordering: Progress and Settings → Exercises offer the
 same native Edit/Done reorder controls. A shared optimistic controller persists one
 catalogue order through existing position columns, rolling back the displayed draft

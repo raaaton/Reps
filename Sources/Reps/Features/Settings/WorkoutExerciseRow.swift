@@ -45,7 +45,7 @@ struct WorkoutExerciseRow: View {
 
   private var description: some View {
     VStack(alignment: .leading, spacing: 4) {
-      Text(exercise.name).foregroundStyle(.primary)
+      Text(exercise.displayName).foregroundStyle(.primary)
       Text(
         exercise.isEnabled
           ? TrainingLabels.metric(exercise, includePerSet: false) : "Exercise disabled"

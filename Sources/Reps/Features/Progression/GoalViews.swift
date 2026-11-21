@@ -55,13 +55,14 @@ struct ExerciseGoalRow: View {
       }
     }
     .repsAnimation(value: context?.adopted)
-    .task(id: [scheduleID ?? "", exercise.id, String(store.historyRevision)]) {
+    .task(id: [scheduleID ?? "", exercise.id, exercise.variantID, String(store.historyRevision)]) {
       if let context, context.scheduleID != scheduleID || context.exercise.id != exercise.id {
         self.context = nil
         editing = false
       }
       do {
-        let result = try await store.goalContext(exerciseID: exercise.id, scheduleID: scheduleID)
+        let result = try await store.goalContext(
+          exerciseID: exercise.id, scheduleID: scheduleID, variantID: exercise.variantID)
         guard !Task.isCancelled else { return }
         context = result
         error = nil
@@ -356,9 +357,12 @@ struct ExerciseWorkoutGoals: View {
           VStack(alignment: .leading, spacing: 4) {
             Text("\(schedule.name) · \(TrainingLabels.weekday(schedule.weekday))")
               .font(.subheadline).foregroundStyle(.secondary)
-            if let definition = snapshot.exercises(for: schedule).first(where: {
-              $0.id == exercise.id
-            }) {
+            if var definition = snapshot.definition(
+              exerciseID: exercise.id, variantID: exercise.variantID)
+            {
+              let _ = {
+                definition.setCount = schedule.setCounts[exercise.id] ?? exercise.setCount
+              }()
               ExerciseGoalRow(exercise: definition, scheduleID: schedule.id)
             }
           }

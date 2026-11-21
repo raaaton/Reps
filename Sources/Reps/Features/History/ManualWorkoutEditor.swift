@@ -9,7 +9,7 @@ private struct HistoricalSetDraft: Identifiable {
 }
 
 private struct HistoricalExerciseDraft: Identifiable {
-  let definition: TrainingExercise
+  var definition: TrainingExercise
   var id: String { definition.id }
   var sets = [HistoricalSetDraft()]
   var feeling = ""
@@ -53,7 +53,7 @@ private struct HistoricalExerciseDraft: Identifiable {
     }
     return ManualWorkoutExercise(
       catalogueID: id, tracking: definition.tracking,
-      sets: performances, feelingTenths: tenths)
+      sets: performances, feelingTenths: tenths, variantID: definition.variantID)
   }
 }
 
@@ -115,10 +115,10 @@ struct ManualWorkoutEditor: View {
           Section("Completed Exercises") {
             ForEach($exercises) { $exercise in
               NavigationLink {
-                HistoricalExerciseEditor(exercise: $exercise)
+                HistoricalExerciseEditor(allowsVariantChange: original == nil, exercise: $exercise)
               } label: {
                 VStack(alignment: .leading, spacing: 4) {
-                  Text(exercise.definition.name).foregroundStyle(.primary)
+                  Text(exercise.definition.displayName).foregroundStyle(.primary)
                   Text(
                     "\(exercise.sets.count) sets · \(exercise.feeling.isEmpty ? "Feeling needed" : "Feeling \(exercise.feeling)")"
                   )
@@ -278,11 +278,38 @@ private struct HistoricalExercisePicker: View {
 }
 
 private struct HistoricalExerciseEditor: View {
+  @EnvironmentObject private var store: TrainingStore
+  var allowsVariantChange = false
   @Binding var exercise: HistoricalExerciseDraft
   @FocusState private var focused: Bool
 
   var body: some View {
     Form {
+      if allowsVariantChange, case .ready(let snapshot) = store.phase {
+        Section {
+          Picker(
+            "Progression",
+            selection: Binding(
+              get: { exercise.definition.variantID },
+              set: { id in
+                if let definition = snapshot.definition(
+                  exerciseID: exercise.definition.id, variantID: id)
+                {
+                  if definition.tracking != exercise.definition.tracking {
+                    exercise.sets = [HistoricalSetDraft()]
+                  }
+                  exercise.definition = definition
+                }
+              })
+          ) {
+            ForEach(
+              snapshot.variants.filter {
+                $0.exerciseID == exercise.definition.parentExerciseID && !$0.isArchived
+              }
+            ) { variant in Text(variant.displayName).tag(variant.id) }
+          }.pickerStyle(.menu)
+        }
+      }
       Section {
         ForEach($exercise.sets) { $set in
           VStack(alignment: .leading, spacing: 12) {
@@ -335,7 +362,7 @@ private struct HistoricalExerciseEditor: View {
         )
       }
     }
-    .navigationTitle(exercise.definition.name)
+    .navigationTitle(exercise.definition.displayName)
     .navigationBarTitleDisplayMode(.inline)
     .scrollDismissesKeyboard(.interactively)
     .toolbar {

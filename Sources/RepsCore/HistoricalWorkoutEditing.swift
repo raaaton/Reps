@@ -16,19 +16,29 @@ extension RepsRepository {
       let rows = try database.query(
         "SELECT e.* FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE w.status!='active' ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC,e.position"
       )
+      let snapshot = try readSnapshot()
       var seen = Set<String>()
       return try rows.compactMap { row in
-        let id = try row.text("catalogue_id")
+        let sourceID = try row.text("catalogue_id")
+        let id =
+          snapshot.identityAliases.first(where: { $0.sourceID == sourceID })?.exerciseID ?? sourceID
         guard seen.insert(id).inserted else { return nil }
-        return try readExercise(row).definition
+        return try (snapshot.exercises + snapshot.archivedExercises).first(where: { $0.id == id })
+          ?? (try readExercise(row).definition)
       }
     }
   }
-  public func exerciseHistory(exerciseID: String) throws -> [ExercisePerformance] {
+  public func exerciseHistory(exerciseID: String, variantID: String? = nil) throws
+    -> [ExercisePerformance]
+  {
     try database.transaction {
       try database.query(
-        "SELECT e.*,w.id AS session_id,w.name AS session_name,w.day_key,w.status,w.schedule_id,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE e.catalogue_id=? AND w.status!='active' ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC",
-        [.text(exerciseID)]
+        "SELECT e.*,w.id AS session_id,w.name AS session_name,w.day_key,w.status,w.schedule_id,w.rest_seconds FROM workout_exercises e JOIN workouts w ON e.workout_id=w.id WHERE (e.catalogue_id=? OR e.catalogue_id IN (SELECT source_id FROM exercise_identity_aliases WHERE exercise_id=?) OR e.id IN (SELECT v.exercise_id FROM workout_variants v JOIN exercise_variants d ON d.id=v.variant_id WHERE d.exercise_id=?)) AND (? IS NULL OR COALESCE((SELECT variant_id FROM workout_variants v WHERE v.exercise_id=e.id),e.catalogue_id||':base')=?) AND w.status!='active' ORDER BY w.day_key DESC,w.started_at DESC,w.rowid DESC",
+        [
+          .text(exerciseID), .text(exerciseID), .text(exerciseID),
+          variantID.map(SQLValue.text) ?? .null,
+          variantID.map(SQLValue.text) ?? .null,
+        ]
       ).map { row in
         guard let status = WorkoutStatus(rawValue: try row.text("status")) else {
           throw TrainingError.storage
@@ -123,6 +133,7 @@ extension RepsRepository {
             definition.durationSeconds.map(SQLValue.integer) ?? .null, .integer(position),
             entry.feelingTenths.map(SQLValue.integer) ?? .null,
           ])
+        try writeWorkoutVariant(definition, occurrenceID: exerciseID, locked: true)
         if let goal = prior?.goal { try writeWorkoutGoal(goal, exerciseID: exerciseID) }
         if let prior, entry.preservesDecision(for: prior),
           let decision = try decisions.first(where: { try $0.text("exercise_id") == prior.id })

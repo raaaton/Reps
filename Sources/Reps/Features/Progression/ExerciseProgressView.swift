@@ -8,6 +8,7 @@ private struct TrendRequest: Hashable, Sendable {
   let revision: Int
   let tracking: TrackingMode
   let retry: Int
+  let variantID: String?
 }
 private struct TrendProjection: Sendable {
   let request: TrendRequest
@@ -22,6 +23,7 @@ struct ExerciseProgressView: View {
   @State private var metric: SessionTrendMetric
   @State private var projection: TrendProjection?
   @State private var selectedIndex: Int?
+  @State private var selectedVariantID: String?
   @State private var retry = 0
   @State private var loading = true
   @State private var error: String?
@@ -32,13 +34,22 @@ struct ExerciseProgressView: View {
   private var request: TrendRequest {
     TrendRequest(
       months: period.rawValue, metric: metric, revision: store.historyRevision,
-      tracking: exercise.tracking, retry: retry)
+      tracking: selectedDefinition.tracking, retry: retry,
+      variantID: selectedVariantID)
   }
   private var definition: TrainingExercise? {
     if case .ready(let snapshot) = store.phase {
-      return snapshot.exercises.first { $0.id == exercise.id }
+      return snapshot.definition(
+        exerciseID: exercise.id, variantID: selectedVariantID)
     }
     return nil
+  }
+  private var selectedDefinition: TrainingExercise { definition ?? exercise }
+  private var variants: [ExerciseVariant] {
+    if case .ready(let snapshot) = store.phase {
+      return snapshot.variants.filter { $0.exerciseID == exercise.id }
+    }
+    return []
   }
   private var displayedMetric: SessionTrendMetric { projection?.request.metric ?? metric }
   private var displayedPeriod: ChartPeriod {
@@ -60,6 +71,17 @@ struct ExerciseProgressView: View {
   var body: some View {
     List {
       Section {
+        if variants.count > 1 {
+          Picker(
+            "Progression",
+            selection: Binding(
+              get: { selectedVariantID ?? exercise.variantID }, set: { selectedVariantID = $0 })
+          ) {
+            ForEach(variants) { variant in
+              Text(variant.displayName + (variant.isArchived ? " (Archived)" : "")).tag(variant.id)
+            }
+          }.pickerStyle(.menu)
+        }
         ChartPeriodPicker(selection: $period)
         if typeSize >= .xxxLarge {
           metricPicker.pickerStyle(.menu)
@@ -174,34 +196,63 @@ struct ExerciseProgressView: View {
         }
       }
       Section {
-        NavigationLink("All Results") { ExerciseHistoryView(exercise: exercise) }
+        NavigationLink("All Results") {
+          ExerciseHistoryView(
+            exercise: selectedDefinition, variantID: selectedVariantID)
+        }
       }
     }
     .navigationTitle(exercise.name).navigationBarTitleDisplayMode(.inline)
-    .onChange(of: exercise.tracking) { _, mode in
+    .onChange(of: selectedVariantID) { _, _ in
+      projection = nil
+      selectedIndex = nil
+      metric = selectedDefinition.tracking == .duration ? .duration : .volume
+    }
+    .onChange(of: selectedDefinition.tracking) { _, mode in
       metric = mode == .duration ? .duration : .volume
     }
     .task(id: request) { await load() }
   }
   private var metricPicker: some View {
     Picker("Metric", selection: $metric) {
-      if exercise.tracking == .repetitions {
+      if selectedDefinition.tracking == .repetitions {
         Text("Volume").tag(SessionTrendMetric.volume)
       }
-      Text(exercise.tracking == .duration ? "Duration" : "Repetitions").tag(
-        exercise.tracking == .duration ? SessionTrendMetric.duration : .repetitions)
+      Text(selectedDefinition.tracking == .duration ? "Duration" : "Repetitions").tag(
+        selectedDefinition.tracking == .duration ? SessionTrendMetric.duration : .repetitions)
       Text("Added Weight").tag(SessionTrendMetric.load)
     }
   }
   private func load() async {
     loading = true
     error = nil
+    if selectedVariantID == nil {
+      do {
+        let records = try await store.exerciseHistory(exerciseID: exercise.id)
+        guard !Task.isCancelled else { return }
+        let trained = records.first { !$0.exercise.sets.isEmpty }?.exercise.definition.variantID
+        var assigned: String?
+        if case .ready(let snapshot) = store.phase {
+          let schedule = snapshot.schedules.first { $0.exerciseIDs.contains(exercise.id) }
+          assigned = schedule.map {
+            $0.variantIDs[exercise.id] ?? ExerciseVariant.baseID(for: exercise.id)
+          }
+        }
+        selectedVariantID = trained ?? assigned ?? exercise.variantID
+        return
+      } catch {
+        self.error = error.localizedDescription
+        loading = false
+        return
+      }
+    }
     let request = request
     let metric = request.metric
     let months = request.months
     let tracking = request.tracking
     do {
-      let records = try await store.exerciseHistory(exerciseID: exercise.id)
+      let records = try await store.exerciseHistory(
+        exerciseID: exercise.id, variantID: request.variantID)
       let value = try await Task.detached(priority: .userInitiated) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
